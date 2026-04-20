@@ -1,0 +1,9 @@
+{
+  "name": "RegGE",
+  "description": "A comprehensive CRUD application for clinical research centers, managing team members, patients, studies, ethical amendments, and complex scheduling with role-based access control.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": []
+}
