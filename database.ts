@@ -125,7 +125,7 @@ class AppDatabase {
         const response = await fetch(`${this.API_URL}/${collection}`);
         if (response.ok) return await response.json();
       } catch (error) {
-        console.error(`Erro ao buscar ${collection} da API, usando localStorage:`, error);
+        // Silently fallback to localStorage to avoid console clutter.
       }
     }
 
@@ -152,7 +152,7 @@ class AppDatabase {
         const errorText = await response.text();
         return errorText || `Erro ${response.status}: Falha ao salvar ${collection}`;
       } catch (error) {
-        console.error(`Erro ao salvar ${collection} na API, usando localStorage:`, error);
+        // Silently fallback
       }
     }
 
@@ -183,7 +183,7 @@ class AppDatabase {
         });
         if (response.ok) return true;
       } catch (error) {
-        console.error(`Erro ao deletar ${collection} da API, usando localStorage:`, error);
+        // Silently fallback
       }
     }
 
@@ -205,7 +205,7 @@ class AppDatabase {
         });
         if (response.ok) return await response.json();
       } catch (error) {
-        console.error(`Erro ao aplicar patch em ${collection} na API, usando localStorage:`, error);
+        // Silently fallback
       }
     }
 

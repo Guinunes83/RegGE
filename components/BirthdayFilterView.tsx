@@ -148,13 +148,13 @@ export const BirthdayFilterView: React.FC = () => {
                      {/* Membros */}
                      {group.members.map(member => (
                        <tr key={member.id} className="hover:bg-gray-50 transition-colors">
-                         <td className="px-6 py-4 font-bold text-gray-500">
+                         <td className="px-6 py-2 font-bold text-gray-500">
                             {getFormattedDay(member.birthDate)}
                          </td>
-                         <td className="px-6 py-4 font-medium text-gray-800">
+                         <td className="px-6 py-2 font-medium text-gray-800">
                             {member.name}
                          </td>
-                         <td className="px-6 py-4 text-gray-600">
+                         <td className="px-6 py-2 text-gray-600">
                             <span className="bg-gray-100 px-2 py-1 rounded text-xs border border-gray-200">
                                 {member.role}
                             </span>

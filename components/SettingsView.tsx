@@ -3,11 +3,13 @@ import React, { useState } from 'react';
 
 interface SettingsViewProps {
   currentLogo: string | null;
-  onLogoUpdate: (logoData: string | null) => void;
+  currentText: string;
+  onConfigUpdate: (logoData: string | null, text: string) => void;
 }
 
-export const SettingsView: React.FC<SettingsViewProps> = ({ currentLogo, onLogoUpdate }) => {
+export const SettingsView: React.FC<SettingsViewProps> = ({ currentLogo, currentText, onConfigUpdate }) => {
   const [preview, setPreview] = useState<string | null>(currentLogo);
+  const [textPreview, setTextPreview] = useState<string>(currentText);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -17,7 +19,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ currentLogo, onLogoU
         reader.onloadend = () => {
           const result = reader.result as string;
           setPreview(result);
-          onLogoUpdate(result);
         };
         reader.readAsDataURL(file);
       } else {
@@ -26,9 +27,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ currentLogo, onLogoU
     }
   };
 
+  const handleSave = () => {
+    onConfigUpdate(preview, textPreview);
+    alert('Configurações salvas com sucesso!');
+  };
+
   const handleReset = () => {
     setPreview(null);
-    onLogoUpdate(null);
+    setTextPreview('GRUPO ELORA');
+    onConfigUpdate(null, 'GRUPO ELORA');
   };
 
   return (
@@ -42,13 +49,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ currentLogo, onLogoU
         <div className="flex flex-col gap-4">
           <label className="text-sm font-bold text-gray-700 uppercase tracking-wide">Logo do Painel Principal</label>
           <p className="text-xs text-gray-500 text-justify">
-            Selecione uma imagem (.png ou .jpeg) para substituir o logo padrão do Grupo Elora na tela inicial (Dashboard). 
-            Recomendamos imagens com fundo transparente.
+            Selecione uma imagem (.png ou .jpeg) para substituir o logo padrão na tela inicial e no menu lateral. 
+            Recomendamos imagens horizontais com fundo transparente. E edite o texto abaixo do logo.
           </p>
           
-          <div className="mt-4">
-            <label className="cursor-pointer bg-[#007b63] text-white px-6 py-3 rounded-xl font-bold uppercase text-xs shadow-lg hover:bg-[#00604d] transition-colors inline-block text-center w-full md:w-auto">
-              <span>Carregar Nova Imagem</span>
+          <div className="mt-4 flex flex-col gap-4">
+            <label className="cursor-pointer bg-[#d1e7e4] text-[#007b63] px-6 py-2 rounded-lg font-bold text-sm text-center border border-[#007b63]/20 hover:bg-[#007b63] hover:text-white transition-colors w-full">
+              <span>Selecionar Imagem</span>
               <input 
                 type="file" 
                 accept="image/png, image/jpeg" 
@@ -56,23 +63,48 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ currentLogo, onLogoU
                 className="hidden" 
               />
             </label>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-bold text-gray-700">Texto abaixo da logo</label>
+              <input 
+                type="text" 
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#007b63]"
+                value={textPreview}
+                onChange={(e) => setTextPreview(e.target.value)}
+                placeholder="Ex: Grupo Elora, Meu Sistema..."
+              />
+            </div>
+            
+            <button 
+              onClick={handleSave}
+              className="bg-[#007b63] text-white px-6 py-3 rounded-xl font-bold uppercase text-xs shadow-lg hover:bg-[#00604d] transition-colors w-full mt-2"
+            >
+              OK (Salvar Configuração)
+            </button>
           </div>
 
           <button 
             onClick={handleReset}
             className="text-red-500 text-xs font-bold uppercase hover:underline text-left mt-2"
           >
-            Restaurar Logo Padrão
+            Restaurar Padrões
           </button>
         </div>
 
-        <div className="flex flex-col items-center justify-center p-8 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-300 min-h-[300px]">
-          <p className="text-[10px] text-gray-400 font-bold uppercase mb-4 tracking-widest">Pré-visualização</p>
-          {preview ? (
-            <img src={preview} alt="Logo Preview" className="max-w-full max-h-[250px] object-contain" />
-          ) : (
-             <div className="text-gray-300 font-bold italic text-sm">Logo Padrão (SVG) Ativo</div>
-          )}
+        <div className="flex flex-col items-center justify-center p-8 bg-gray-800 rounded-2xl min-h-[300px]">
+          <p className="text-[10px] text-gray-400 font-bold uppercase mb-4 tracking-widest">Pré-visualização do Menu Lateral</p>
+          <div className="flex flex-col cursor-pointer border border-dashed border-gray-600 p-4 rounded-lg bg-[#006b56]">
+            {preview ? (
+              <img src={preview} alt="Logo Preview" className="max-w-[200px] max-h-[80px] object-contain mb-1" />
+            ) : (
+              <span className="text-white font-black text-xl tracking-tighter leading-none mb-1">
+                {textPreview ? '' : 'GRUPO ELORA'}
+              </span>
+            )}
+            <span className="text-[9px] text-white/70 font-bold uppercase tracking-widest leading-none mt-0.5" style={{ textAlign: preview ? 'center' : 'left' }}>
+              {textPreview}
+            </span>
+          </div>
         </div>
       </div>
     </div>
