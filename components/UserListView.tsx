@@ -87,20 +87,20 @@ export const UserListView: React.FC<UserListViewProps> = ({ onEditUser }) => {
                      onClick={() => onEditUser && onEditUser(user)}
                      title="Clique para editar"
                    >
-                     <td className="px-6 py-4 font-bold text-gray-800 group-hover:text-[#007b63] transition-colors">{user.name}</td>
-                     <td className="px-6 py-4 text-gray-600">{user.login}</td>
-                     <td className="px-6 py-4 text-gray-600">{user.jobTitle}</td>
-                     <td className="px-6 py-4">
-                       <span className="bg-[#d1e7e4] text-[#007b63] px-2 py-1 rounded text-[10px] font-bold uppercase border border-[#007b63]/20">
+                     <td className="px-6 py-1 font-bold text-gray-800 group-hover:text-[#007b63] transition-colors">{user.name}</td>
+                     <td className="px-6 py-1 text-gray-600">{user.login}</td>
+                     <td className="px-6 py-1 text-gray-600">{user.jobTitle}</td>
+                     <td className="px-6 py-1">
+                       <span className="bg-[#d1e7e4] text-[#007b63] px-2 py-0.5 rounded text-[10px] font-bold uppercase border border-[#007b63]/20">
                          {getProfileLabel(user.profile)}
                        </span>
                      </td>
-                     <td className="px-6 py-4">
-                        <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${user.active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                     <td className="px-6 py-1">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${user.active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                           {user.active ? 'Ativo' : 'Inativo'}
                         </span>
                      </td>
-                     <td className="px-6 py-4 text-right">
+                     <td className="px-6 py-1 text-right">
                        <button 
                          onClick={(e) => confirmDelete(user.id, e)}
                          className="text-red-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded transition-colors"

@@ -13,6 +13,7 @@ interface LayoutProps {
   currentUserPermissions?: string[];
   children: React.ReactNode; 
   customLogo: string | null;
+  customLogoText: string;
 }
 
 type MenuItem = {
@@ -25,7 +26,7 @@ type MenuItem = {
   permission?: string;
 };
 
-export const Layout: React.FC<LayoutProps> = ({ onNavigate, onLogout, onSwitchProfile, userProfile, currentUser, currentUserPermissions = [], children, customLogo }) => {
+export const Layout: React.FC<LayoutProps> = ({ onNavigate, onLogout, onSwitchProfile, userProfile, currentUser, currentUserPermissions = [], children, customLogo, customLogoText }) => {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   
@@ -271,8 +272,16 @@ export const Layout: React.FC<LayoutProps> = ({ onNavigate, onLogout, onSwitchPr
         {/* Logo Area */}
         <div className="h-16 flex items-center px-6 border-b border-white/10 bg-[#006b56]">
            <div className="flex flex-col cursor-pointer" onClick={() => handleNavigation('Dashboard', 'Dashboard')}>
-             <span className="text-white font-black text-xl tracking-tighter leading-none">GRUPO ELORA</span>
-             <span className="text-[9px] text-white/50 font-bold uppercase tracking-widest leading-none mt-0.5">Pesquisa Clínica</span>
+             {customLogo ? (
+               <img src={customLogo} alt="Logo" className="max-w-[150px] max-h-[32px] object-contain mb-1" />
+             ) : (
+               <span className="text-white font-black text-xl tracking-tighter leading-none mb-1">
+                 {customLogoText ? '' : 'GRUPO ELORA'}
+               </span>
+             )}
+             <span className="text-[9px] text-white/70 font-bold uppercase tracking-widest leading-none mt-0.5" style={{ textAlign: customLogo ? 'center' : 'left' }}>
+               {customLogoText}
+             </span>
            </div>
         </div>
 

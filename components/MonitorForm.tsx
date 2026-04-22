@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { MonitorEntry, MonitorLogin, Study } from '../types';
 import { DROPDOWN_OPTIONS } from '../constants';
 import { ConfirmationModal } from './ConfirmationModal';
+import { UnsavedChangesModal, useUnsavedChanges } from './UnsavedChangesModal';
 
 interface MonitorFormProps {
   monitor?: MonitorEntry;
@@ -103,12 +104,29 @@ export const MonitorForm: React.FC<MonitorFormProps> = ({ monitor, studies, mode
     setConfirmModal({ isOpen: false, id: '' });
   };
 
-  const handleSaveClick = () => {
+  const performValidationAndSave = async (): Promise<boolean> => {
+    if (!formData.name) {
+       alert('O campo Nome é obrigatório.');
+       return false;
+    }
     if (formData.email && !validateEmail(formData.email)) {
        alert('Por favor, corrija o e-mail antes de salvar.');
-       return;
+       return false;
     }
-    onSave(formData);
+    await onSave(formData);
+    return true;
+  };
+
+  const { isModalOpen, handleSaveAndLeave, handleDiscard, handleCancel, bypassInterceptor } = useUnsavedChanges(!isView && !isReadOnly, performValidationAndSave);
+
+  const handleSaveClick = async () => {
+    bypassInterceptor();
+    await performValidationAndSave();
+  };
+
+  const handleCancelClick = () => {
+    bypassInterceptor();
+    onCancel();
   };
 
   // Only show Active studies in the dropdown
@@ -124,11 +142,17 @@ export const MonitorForm: React.FC<MonitorFormProps> = ({ monitor, studies, mode
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl shadow-2xl w-full max-w-5xl mx-auto overflow-hidden">
+      <UnsavedChangesModal 
+        isOpen={isModalOpen}
+        onSaveAndLeave={handleSaveAndLeave}
+        onDiscardAndLeave={handleDiscard}
+        onCancel={handleCancel}
+      />
       <div className="bg-[#007b63] text-white py-4 px-6 flex justify-between items-center">
         <h2 className="text-xl font-bold tracking-tight">
           {isView ? 'Visualização de Dados Monitoria' : 'Cadastro de Dados Monitoria'}
         </h2>
-        <button onClick={onCancel} className="text-white/80 hover:text-white hover:bg-white/10 p-2 rounded-full transition-colors">
+        <button onClick={handleCancelClick} className="text-white/80 hover:text-white hover:bg-white/10 p-2 rounded-full transition-colors">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
@@ -287,7 +311,7 @@ export const MonitorForm: React.FC<MonitorFormProps> = ({ monitor, studies, mode
       <div className="p-4 bg-white border-t border-gray-200 flex justify-end gap-3 px-8 py-6">
         {isView || isReadOnly ? (
           <>
-             <button onClick={onCancel} className="px-6 py-2 border border-gray-300 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors">
+             <button onClick={handleCancelClick} className="px-6 py-2 border border-gray-300 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors">
                Fechar
              </button>
              {!isReadOnly && (
@@ -298,7 +322,7 @@ export const MonitorForm: React.FC<MonitorFormProps> = ({ monitor, studies, mode
           </>
         ) : (
           <>
-            <button onClick={onCancel} className="px-6 py-2 border border-gray-300 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors">
+            <button onClick={handleCancelClick} className="px-6 py-2 border border-gray-300 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors">
               Cancelar
             </button>
             <button onClick={handleSaveClick} className="px-8 py-2 bg-[#007b63] text-white rounded-lg text-sm font-bold shadow-lg shadow-[#007b63]/20 hover:bg-[#005a48] transition-all">

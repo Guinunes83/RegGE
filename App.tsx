@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ViewState, User, UserProfile, Study, Sponsor, TeamMember, Patient, MonitorEntry, AppNotification, Calibration, FinancialTransaction } from './types';
 import { Layout } from './components/Layout';
 import { LoginView } from './components/LoginView';
@@ -41,6 +41,7 @@ import { FinanceReportView } from './components/FinanceReportView';
 import { ManageRolesView } from './components/ManageRolesView';
 import { ConfirmationModal } from './components/ConfirmationModal';
 import { Associate } from './types';
+import { NavigationContext } from './contexts/NavigationContext';
 
 const HeaderCell = ({ label, sortKey, onClick }: { label: string, sortKey?: string, onClick?: () => void }) => (
   <th className="px-6 py-3 text-xs font-bold uppercase tracking-wider cursor-pointer hover:text-gray-200 transition-colors" onClick={onClick}>
@@ -71,6 +72,20 @@ export default function App() {
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
 
   const [currentUserPermissions, setCurrentUserPermissions] = useState<string[]>([]);
+  const [appConfig, setAppConfig] = useState({
+    logo: localStorage.getItem('appCustomLogo'),
+    text: localStorage.getItem('appCustomLogoText') || 'GRUPO ELORA'
+  });
+
+  const handleConfigUpdate = (logo: string | null, text: string) => {
+    if (logo) {
+      localStorage.setItem('appCustomLogo', logo);
+    } else {
+      localStorage.removeItem('appCustomLogo');
+    }
+    localStorage.setItem('appCustomLogoText', text);
+    setAppConfig({ logo, text });
+  };
 
   useEffect(() => {
     const loadPermissions = async () => {
@@ -258,7 +273,21 @@ export default function App() {
     refreshData();
   };
 
-  const navigate = (view: ViewState, props: any = {}) => {
+  const navigationInterceptorRef = useRef<((view: string, props: any) => Promise<boolean>) | null>(null);
+
+  const registerInterceptor = React.useCallback((interceptor: ((view: string, props: any) => Promise<boolean>) | null) => {
+    navigationInterceptorRef.current = interceptor;
+  }, []);
+
+  const navigate = async (view: ViewState, props: any = {}) => {
+    if (navigationInterceptorRef.current && !props.forceRouting) {
+      const shouldProceed = await navigationInterceptorRef.current(view, props);
+      if (!shouldProceed) {
+        return;
+      }
+    }
+    // Clear interceptor when successfully navigating
+    navigationInterceptorRef.current = null;
     setActiveView(view);
     setActiveProps(props);
     setSortConfig(null); // Reset sort when changing views
@@ -310,7 +339,7 @@ export default function App() {
       case 'Notepad':
         return <NotepadView />;
       case 'Settings':
-        return <SettingsView currentLogo={null} onLogoUpdate={() => {}} />;
+        return <SettingsView currentLogo={appConfig.logo} currentText={appConfig.text} onConfigUpdate={handleConfigUpdate} />;
       case 'CreateProfile':
         return <CreateProfileView onCancel={() => navigate('Dashboard')} onSave={() => navigate('UserList')} userToEdit={activeProps.userToEdit} />;
       case 'ManageRoles':
@@ -347,17 +376,17 @@ export default function App() {
                 <tbody className="divide-y">
                   {getSortedData(team).map((t: TeamMember) => (
                     <tr key={t.id} onClick={() => navigate('PI', { mode: 'view', pi: t })} className="hover:bg-gray-50 cursor-pointer transition-colors group">
-                      <td className="px-6 py-4 text-sm font-bold text-blue-600 hover:underline">{t.name}</td>
-                      <td className="px-6 py-4 text-sm text-gray-500">{t.role}</td>
-                      <td className="px-6 py-4 text-sm">{t.cpf}</td>
-                      <td className="px-6 py-4 text-sm text-gray-500">{t.cellphone || '-'}</td>
-                      <td className="px-6 py-4 text-sm text-gray-500">
-                        <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${t.active !== false ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                      <td className="px-6 py-1 text-sm font-bold text-blue-600 hover:underline">{t.name}</td>
+                      <td className="px-6 py-1 text-sm text-gray-500">{t.role}</td>
+                      <td className="px-6 py-1 text-sm">{t.cpf}</td>
+                      <td className="px-6 py-1 text-sm text-gray-500">{t.cellphone || '-'}</td>
+                      <td className="px-6 py-1 text-sm text-gray-500">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${t.active !== false ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                             {t.active !== false ? 'Ativo' : 'Desativado'}
                         </span>
                       </td>
                       {hasPermission('delete_team') && (
-                        <td className="px-6 py-4 text-sm text-right" onClick={(e) => e.stopPropagation()}>
+                        <td className="px-6 py-1 text-sm text-right" onClick={(e) => e.stopPropagation()}>
                           <button
                             onClick={() => setDeleteTeamMemberPhase({ phase: 1, id: t.id! })}
                             className="text-red-500 hover:text-red-700 font-bold uppercase text-[10px] px-3 py-1 border border-red-200 hover:border-red-500 rounded bg-red-50 hover:bg-red-100 transition-colors"
@@ -449,11 +478,11 @@ export default function App() {
                 <tbody className="divide-y">
                   {getSortedData(studies).map((s: Study) => (
                     <tr key={s.id} onClick={() => navigate('Studies', { mode: 'view', study: s })} className="hover:bg-gray-50 cursor-pointer">
-                      <td className="px-6 py-4 text-sm font-bold text-blue-600 hover:underline">{s.name}</td>
-                      <td className="px-6 py-4 text-sm">{s.protocol}</td>
-                      <td className="px-6 py-4 text-sm">{s.pi}</td>
-                      <td className="px-6 py-4 text-sm">{s.sponsor}</td>
-                      <td className="px-6 py-4 text-sm"><span className={`px-2 py-1 rounded text-xs font-bold ${s.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{s.status}</span></td>
+                      <td className="px-6 py-1 text-sm font-bold text-blue-600 hover:underline">{s.name}</td>
+                      <td className="px-6 py-1 text-sm">{s.protocol}</td>
+                      <td className="px-6 py-1 text-sm">{s.pi}</td>
+                      <td className="px-6 py-1 text-sm">{s.sponsor}</td>
+                      <td className="px-6 py-1 text-sm"><span className={`px-2 py-0.5 rounded text-xs font-bold ${s.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{s.status}</span></td>
                     </tr>
                   ))}
                 </tbody>
@@ -500,15 +529,15 @@ export default function App() {
                 <tbody className="divide-y">
                   {getSortedData(filteredSponsors).map((s: Sponsor) => (
                     <tr key={s.id} onClick={() => navigate('Sponsors', { mode: 'view', sponsor: s })} className="hover:bg-gray-50 cursor-pointer group">
-                      <td className="px-6 py-4 text-sm font-bold text-blue-600">{s.name}</td>
-                      <td className="px-6 py-4 text-sm">{s.cro}</td>
-                      <td className="px-6 py-4 text-sm">
-                        <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${s.active !== false ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                      <td className="px-6 py-1 text-sm font-bold text-blue-600">{s.name}</td>
+                      <td className="px-6 py-1 text-sm">{s.cro}</td>
+                      <td className="px-6 py-1 text-sm">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${s.active !== false ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                           {s.active !== false ? 'Ativo' : 'Inativo'}
                         </span>
                       </td>
                       {true && (
-                        <td className="px-6 py-4 text-sm" onClick={(e) => e.stopPropagation()}>
+                        <td className="px-6 py-1 text-sm" onClick={(e) => e.stopPropagation()}>
                           <div className="flex gap-2">
                             <button
                               onClick={() => handleToggleSponsorActive(s.id)}
@@ -546,7 +575,7 @@ export default function App() {
                <div className="overflow-hidden rounded-xl border bg-white shadow-sm flex-1 overflow-y-auto">
                   <table className="w-full text-left">
                     <thead className="bg-[#007b63] text-white sticky top-0"><tr><HeaderCell label="Nome" sortKey="name" onClick={() => handleSort('name')} /><HeaderCell label="CPF" /><HeaderCell label="Estudo" /></tr></thead>
-                    <tbody className="divide-y">{getSortedData(patients).map((p: Patient) => (<tr key={p.id} onClick={() => navigate('Participants', { mode: 'view', patient: p })} className="hover:bg-gray-50 cursor-pointer"><td className="px-6 py-4 text-sm font-bold text-blue-600">{p.name}</td><td className="px-6 py-4 text-sm">{p.cpf}</td><td className="px-6 py-4 text-sm">{studies.find(s=>s.id===p.studyId)?.name}</td></tr>))}</tbody>
+                    <tbody className="divide-y">{getSortedData(patients).map((p: Patient) => (<tr key={p.id} onClick={() => navigate('Participants', { mode: 'view', patient: p })} className="hover:bg-gray-50 cursor-pointer"><td className="px-6 py-1 text-sm font-bold text-blue-600">{p.name}</td><td className="px-6 py-1 text-sm">{p.cpf}</td><td className="px-6 py-1 text-sm">{studies.find(s=>s.id===p.studyId)?.name}</td></tr>))}</tbody>
                   </table>
                </div>
             </div>
@@ -569,7 +598,7 @@ export default function App() {
                          const mStudies = m.studyIds && m.studyIds.length > 0 
                              ? m.studyIds.map(id => studies.find(s=>s.id===id)?.name).filter(Boolean).join(', ')
                              : studies.find(s=>s.id===m.studyId)?.name || '';
-                         return (<tr key={m.id} onClick={() => navigate('MonitoriaData', { mode: 'view', monitor: m })} className="hover:bg-gray-50 cursor-pointer"><td className="px-6 py-4 text-sm font-bold text-blue-600">{m.name}</td><td className="px-6 py-4 text-sm">{mStudies}</td><td className="px-6 py-4 text-sm">{m.cro}</td></tr>);
+                         return (<tr key={m.id} onClick={() => navigate('MonitoriaData', { mode: 'view', monitor: m })} className="hover:bg-gray-50 cursor-pointer"><td className="px-6 py-1 text-sm font-bold text-blue-600">{m.name}</td><td className="px-6 py-1 text-sm">{mStudies}</td><td className="px-6 py-1 text-sm">{m.cro}</td></tr>);
                      })}</tbody>
                    </table>
                 </div>
@@ -615,47 +644,50 @@ export default function App() {
   };
 
   return (
-    <Layout 
-      onNavigate={navigate} 
-      onLogout={handleLogout} 
-      onSwitchProfile={handleSwitchProfile}
-      userProfile={currentUser.profile} 
-      currentUser={currentUser} 
-      currentUserPermissions={currentUserPermissions}
-      customLogo={null}
-    >
-      {renderContent()}
-      <SuccessModal 
-        isOpen={successModal.isOpen} 
-        title={successModal.title} 
-        message={successModal.message} 
-        onConfirm={() => setSuccessModal({ ...successModal, isOpen: false })} 
-      />
-      <ConfirmationModal
-        isOpen={deleteTeamMemberPhase.phase === 1}
-        title="Exclusão de Membro da Equipe"
-        message="Essa exclusão é permanente e irreversível. Você deseja mesmo fazer ela?"
-        onConfirm={() => setDeleteTeamMemberPhase(prev => ({ ...prev, phase: 2 }))}
-        onCancel={() => setDeleteTeamMemberPhase({ phase: 0, id: null })}
-        confirmText="SIM"
-        cancelText="NÃO"
-      />
-      <ConfirmationModal
-        isOpen={deleteTeamMemberPhase.phase === 2}
-        title="Confirmar Exclusão"
-        message="Tem certeza disso?"
-        onConfirm={async () => {
-          if (deleteTeamMemberPhase.id) {
-            await db.delete('team-members', deleteTeamMemberPhase.id);
-            showSuccess('Excluído', 'Membro da equipe foi excluído permanentemente.');
-            refreshData();
-          }
-          setDeleteTeamMemberPhase({ phase: 0, id: null });
-        }}
-        onCancel={() => setDeleteTeamMemberPhase({ phase: 0, id: null })}
-        confirmText="OK"
-        cancelText="CANCELAR"
-      />
-    </Layout>
+    <NavigationContext.Provider value={{ registerInterceptor }}>
+      <Layout 
+        onNavigate={navigate} 
+        onLogout={handleLogout} 
+        onSwitchProfile={handleSwitchProfile}
+        userProfile={currentUser.profile} 
+        currentUser={currentUser} 
+        currentUserPermissions={currentUserPermissions}
+        customLogo={appConfig.logo}
+        customLogoText={appConfig.text}
+      >
+        {renderContent()}
+        <SuccessModal 
+          isOpen={successModal.isOpen} 
+          title={successModal.title} 
+          message={successModal.message} 
+          onConfirm={() => setSuccessModal({ ...successModal, isOpen: false })} 
+        />
+        <ConfirmationModal
+          isOpen={deleteTeamMemberPhase.phase === 1}
+          title="Exclusão de Membro da Equipe"
+          message="Essa exclusão é permanente e irreversível. Você deseja mesmo fazer ela?"
+          onConfirm={() => setDeleteTeamMemberPhase(prev => ({ ...prev, phase: 2 }))}
+          onCancel={() => setDeleteTeamMemberPhase({ phase: 0, id: null })}
+          confirmText="SIM"
+          cancelText="NÃO"
+        />
+        <ConfirmationModal
+          isOpen={deleteTeamMemberPhase.phase === 2}
+          title="Confirmar Exclusão"
+          message="Tem certeza disso?"
+          onConfirm={async () => {
+            if (deleteTeamMemberPhase.id) {
+              await db.delete('team-members', deleteTeamMemberPhase.id);
+              showSuccess('Excluído', 'Membro da equipe foi excluído permanentemente.');
+              refreshData();
+            }
+            setDeleteTeamMemberPhase({ phase: 0, id: null });
+          }}
+          onCancel={() => setDeleteTeamMemberPhase({ phase: 0, id: null })}
+          confirmText="OK"
+          cancelText="CANCELAR"
+        />
+      </Layout>
+    </NavigationContext.Provider>
   );
 }

@@ -187,18 +187,18 @@ export const CalibrationView: React.FC<CalibrationViewProps> = ({ userProfile, c
           <tbody className="divide-y divide-gray-100">
             {calibrations.map((item) => (
               <tr key={item.id} className="hover:bg-gray-50 transition-colors">
-                <td className="px-6 py-4 text-sm font-medium text-gray-900">{item.assetCode}</td>
-                <td className="px-6 py-4 text-sm text-gray-500">{item.reference}</td>
-                <td className="px-6 py-4 text-sm text-gray-500">{formatDate(item.calibrationDate)}</td>
-                <td className="px-6 py-4 text-sm text-gray-500">
+                <td className="px-6 py-1 text-sm font-medium text-gray-900">{item.assetCode}</td>
+                <td className="px-6 py-1 text-sm text-gray-500">{item.reference}</td>
+                <td className="px-6 py-1 text-sm text-gray-500">{formatDate(item.calibrationDate)}</td>
+                <td className="px-6 py-1 text-sm text-gray-500">
                   {item.expirationPeriod} {item.expirationUnit === 'Days' ? 'Dias' : item.expirationUnit === 'Months' ? 'Meses' : 'Anos'}
                 </td>
-                <td className="px-6 py-4 text-sm font-bold text-[#007b63]">
+                <td className="px-6 py-1 text-sm font-bold text-[#007b63]">
                   {formatDate(item.nextCalibrationDate)}
                 </td>
-                <td className="px-6 py-4 text-sm text-gray-500">{item.responsible}</td>
+                <td className="px-6 py-1 text-sm text-gray-500">{item.responsible}</td>
                 {canEdit && (
-                  <td className="px-6 py-4 text-sm text-right flex justify-end gap-2">
+                  <td className="px-6 py-1 text-sm text-right flex justify-end gap-2">
                     <button 
                       onClick={() => openHistory(item)} 
                       className="p-2 text-gray-500 hover:text-[#007b63] hover:bg-gray-100 rounded-lg transition-all"

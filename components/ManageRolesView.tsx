@@ -39,6 +39,7 @@ const AVAILABLE_PERMISSIONS: Permission[] = [
   { id: 'create_team', name: 'Acesso à botão "+NOVO"', description: 'Permite adicionar membros à equipe.', category: 'Dados', subcategory: 'Equipe', dependsOn: 'access_team' },
   { id: 'edit_team', name: 'Acesso ao botão Editar no cadastro do estudo', description: 'Pode alterar informações dos membros da equipe.', category: 'Dados', subcategory: 'Equipe', dependsOn: 'access_team' },
   { id: 'delete_team', name: 'Apagar "PERMANENTEMENTE" um registro de membro da equipe', description: 'Permite excluir definitivamente um formulário da lista de relação de membro.', category: 'Dados', subcategory: 'Equipe', dependsOn: 'access_team' },
+  { id: 'view_platform_passwords', name: 'Acesso as SENHA na sessão Plataformas de acesso', description: 'Permite visualizar senhas de plataformas.', category: 'Dados', subcategory: 'Equipe', dependsOn: 'access_team' },
 
   { id: 'access_indices', name: 'Acesso à Índice', description: 'Permite visualizar os índices.', category: 'Dados', subcategory: 'Índice' },
 
@@ -289,7 +290,7 @@ export const ManageRolesView: React.FC<ManageRolesViewProps> = ({ onShowSuccess,
                     className="hover:bg-gray-50 transition-colors cursor-pointer"
                     onClick={() => handleRoleClick(role)}
                   >
-                    <td className="px-6 py-4 text-sm font-bold text-gray-700 flex justify-between items-center">
+                    <td className="px-6 py-2 text-sm font-bold text-gray-700 flex justify-between items-center">
                       <span>{role.name}</span>
                       {!isDefault && (
                         <button 
