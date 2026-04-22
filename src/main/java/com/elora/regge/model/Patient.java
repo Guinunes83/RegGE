@@ -20,10 +20,6 @@ public class Patient {
     private String participantNumber;
     private String screeningNumber;
     private String name;
-    
-    @Column(unique = true)
-    private String cpf;
-    
     private String email;
     private LocalDate birthDate;
     private String sex;
@@ -37,5 +33,6 @@ public class Patient {
     
     private String initials;
     private String contact;
+    private String secondaryContact;
     private LocalDate tcleDate;
 }

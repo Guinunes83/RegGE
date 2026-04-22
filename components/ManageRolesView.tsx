@@ -25,6 +25,7 @@ const AVAILABLE_PERMISSIONS: Permission[] = [
   { id: 'access_settings', name: 'Acesso à Configurações', description: 'Permite acessar as configurações do sistema.', category: 'Início', subcategory: 'Configuração' },
   
   { id: 'access_dashboard', name: 'Acesso ao Dashboard', description: 'Permite visualizar o Dashboard.', category: 'Início', subcategory: 'Dashboard' },
+  { id: 'access_notepad', name: 'Acesso ao Bloco de Notas', description: 'Permite acessar o Bloco de Notas.', category: 'Início', subcategory: 'Bloco de notas' },
   
   // Perfil de Usuário
   { id: 'access_manage_roles', name: 'Acesso ao cadastro de perfil', description: 'O perfil que tiver esta caixa de seleção marcada, terá acesso e verá o menu cadastro de perfil.', category: 'Perfil de Usuário', subcategory: 'Perfil' },

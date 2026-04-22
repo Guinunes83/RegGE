@@ -574,8 +574,8 @@ export default function App() {
                </div>
                <div className="overflow-hidden rounded-xl border bg-white shadow-sm flex-1 overflow-y-auto">
                   <table className="w-full text-left">
-                    <thead className="bg-[#007b63] text-white sticky top-0"><tr><HeaderCell label="Nome" sortKey="name" onClick={() => handleSort('name')} /><HeaderCell label="CPF" /><HeaderCell label="Estudo" /></tr></thead>
-                    <tbody className="divide-y">{getSortedData(patients).map((p: Patient) => (<tr key={p.id} onClick={() => navigate('Participants', { mode: 'view', patient: p })} className="hover:bg-gray-50 cursor-pointer"><td className="px-6 py-1 text-sm font-bold text-blue-600">{p.name}</td><td className="px-6 py-1 text-sm">{p.cpf}</td><td className="px-6 py-1 text-sm">{studies.find(s=>s.id===p.studyId)?.name}</td></tr>))}</tbody>
+                    <thead className="bg-[#007b63] text-white sticky top-0"><tr><HeaderCell label="Nome" sortKey="name" onClick={() => handleSort('name')} /><HeaderCell label="Estudo" /><HeaderCell label="Status" /></tr></thead>
+                    <tbody className="divide-y">{getSortedData(patients).map((p: Patient) => (<tr key={p.id} onClick={() => navigate('Participants', { mode: 'view', patient: p })} className="hover:bg-gray-50 cursor-pointer"><td className="px-6 py-1 text-sm font-bold text-blue-600">{p.name}</td><td className="px-6 py-1 text-sm">{studies.find(s=>s.id===p.studyId)?.name}</td><td className="px-6 py-1 text-sm">{p.status}</td></tr>))}</tbody>
                   </table>
                </div>
             </div>
