@@ -414,27 +414,31 @@ export const CreateProfileView: React.FC<CreateProfileViewProps> = ({ onCancel, 
               />
             </div>
             
-            <div className="md:col-span-1 md:col-start-3">
-              <ProfileInput 
-                label={isEditing ? "Nova Senha (Opcional)" : "Senha"}
-                type="password"
-                value={formData.password || ''} 
-                onChange={(v: string) => setFormData({...formData, password: v})} 
-                placeholder="••••••••"
-                required={!isEditing}
-              />
-            </div>
-            
-            <div className="md:col-span-2">
-              <ProfileInput 
-                label={isEditing ? "Confirmar Nova Senha" : "Confirmar Senha"}
-                type="password"
-                value={confirmPassword} 
-                onChange={(v: string) => setConfirmPassword(v)} 
-                placeholder="••••••••"
-                required={!isEditing || !!formData.password}
-              />
-            </div>
+            {!isEditing && (
+              <>
+                <div className="md:col-span-1 md:col-start-3">
+                  <ProfileInput 
+                    label="Senha"
+                    type="password"
+                    value={formData.password || ''} 
+                    onChange={(v: string) => setFormData({...formData, password: v})} 
+                    placeholder="••••••••"
+                    required
+                  />
+                </div>
+                
+                <div className="md:col-span-2">
+                  <ProfileInput 
+                    label="Confirmar Senha"
+                    type="password"
+                    value={confirmPassword} 
+                    onChange={(v: string) => setConfirmPassword(v)} 
+                    placeholder="••••••••"
+                    required
+                  />
+                </div>
+              </>
+            )}
           </div>
 
           <div className="mt-8 flex gap-4 justify-end">

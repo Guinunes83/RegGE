@@ -18,7 +18,7 @@ import { CalendarView } from './components/CalendarView';
 import { SettingsView } from './components/SettingsView';
 import { UserListView } from './components/UserListView';
 import { CreateProfileView } from './components/CreateProfileView';
-import { ChangePasswordView } from './components/ChangePasswordView';
+import { ChangePasswordModal } from './components/ChangePasswordModal';
 import { CreateNoticeView } from './components/CreateNoticeView';
 import { RegulatoryLinksView } from './components/RegulatoryLinksView';
 import { RegulatoryIndicesView } from './components/RegulatoryIndicesView';
@@ -67,6 +67,13 @@ export default function App() {
   // Modal state
   const [successModal, setSuccessModal] = useState({ isOpen: false, title: '', message: '' });
   const [deleteTeamMemberPhase, setDeleteTeamMemberPhase] = useState<{phase: number, id: string | null}>({ phase: 0, id: null });
+  const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
+
+  useEffect(() => {
+    const handleOpenPasswordModal = () => setIsChangePasswordModalOpen(true);
+    window.addEventListener('openChangePasswordModal', handleOpenPasswordModal);
+    return () => window.removeEventListener('openChangePasswordModal', handleOpenPasswordModal);
+  }, []);
 
   // Sorting state
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
@@ -346,10 +353,8 @@ export default function App() {
         return <ManageRolesView onShowSuccess={showSuccess} currentUserProfile={currentUser.profile} />;
       case 'ChangeProfile':
         return null;
-      case 'ChangePassword':
-        return <ChangePasswordView currentUser={currentUser} onCancel={() => navigate('Dashboard')} onSuccess={() => navigate('Dashboard')} />;
       case 'UserList':
-        return <UserListView onEditUser={(u) => navigate('CreateProfile', { userToEdit: u })} />;
+        return <UserListView onEditUser={(u) => navigate('CreateProfile', { userToEdit: u })} onAddUser={() => navigate('CreateProfile')} />;
       
       case 'PI': // Agora Team Member
         if (activeProps.mode === 'edit' || activeProps.mode === 'view') {
@@ -687,6 +692,16 @@ export default function App() {
           confirmText="OK"
           cancelText="CANCELAR"
         />
+        {isChangePasswordModalOpen && (
+          <ChangePasswordModal
+            currentUser={currentUser}
+            onClose={() => setIsChangePasswordModalOpen(false)}
+            onSuccess={() => {
+              setIsChangePasswordModalOpen(false);
+              showSuccess('Senha Alterada', 'Sua senha foi atualizada com sucesso.');
+            }}
+          />
+        )}
       </Layout>
     </NavigationContext.Provider>
   );

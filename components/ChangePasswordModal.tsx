@@ -3,13 +3,13 @@ import React, { useState } from 'react';
 import { User } from '../types';
 import { db } from '../database';
 
-interface ChangePasswordViewProps {
+interface ChangePasswordModalProps {
   currentUser: User;
-  onCancel: () => void;
+  onClose: () => void;
   onSuccess: () => void;
 }
 
-export const ChangePasswordView: React.FC<ChangePasswordViewProps> = ({ currentUser, onCancel, onSuccess }) => {
+export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ currentUser, onClose, onSuccess }) => {
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -19,19 +19,16 @@ export const ChangePasswordView: React.FC<ChangePasswordViewProps> = ({ currentU
   const handleSave = () => {
     setError(null);
 
-    // Validações básicas
     if (!oldPassword || !newPassword || !confirmPassword) {
       setError("Todos os campos são obrigatórios.");
       return;
     }
 
-    // Verificar senha antiga (simples comparação, em produção usaria hash)
     if (oldPassword !== currentUser.password) {
       setError("A senha antiga está incorreta.");
       return;
     }
 
-    // Verificar nova senha
     if (newPassword !== confirmPassword) {
       setError("A nova senha e a confirmação não coincidem.");
       return;
@@ -42,11 +39,9 @@ export const ChangePasswordView: React.FC<ChangePasswordViewProps> = ({ currentU
       return;
     }
 
-    // Salvar
     const updatedUser = { ...currentUser, password: newPassword };
     db.upsert('users', updatedUser);
     
-    // Limpar campos
     setOldPassword('');
     setNewPassword('');
     setConfirmPassword('');
@@ -55,29 +50,42 @@ export const ChangePasswordView: React.FC<ChangePasswordViewProps> = ({ currentU
   };
 
   return (
-    <div className="flex items-center justify-center h-full">
-      <div className="bg-white border border-gray-200 rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden">
-        <div className="bg-[#007b63] p-6 text-white text-center">
-          <h2 className="text-xl font-black uppercase tracking-tighter">Trocar Senha</h2>
-          <p className="text-xs font-medium opacity-80 mt-1">Atualize suas credenciais de acesso</p>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all scale-100">
+        <div className="bg-[#007b63] p-4 text-center text-white relative">
+          <h2 className="text-xl font-bold uppercase tracking-widest">Alterar Senha</h2>
+          <p className="text-xs opacity-80 mt-1">Atualize suas credenciais de acesso</p>
+          <button onClick={onClose} className="absolute right-4 top-4 text-white hover:text-gray-200">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
         </div>
 
-        <div className="p-8 flex flex-col gap-6">
+        <div className="p-6 flex flex-col gap-4">
           {error && (
-            <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-r text-xs font-bold shadow-sm">
-              <p>{error}</p>
+            <div className="bg-red-50 text-red-700 p-3 rounded-lg text-xs font-bold shadow-sm text-center">
+              {error}
             </div>
           )}
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] uppercase font-bold text-gray-500 ml-1">Senha Antiga</label>
+            <label className="text-[10px] uppercase font-bold text-gray-500 ml-1">Login</label>
+            <input 
+              type="text" 
+              className="border border-gray-300 bg-gray-100 text-gray-600 rounded-xl px-4 py-3 text-sm outline-none w-full cursor-not-allowed"
+              value={currentUser.login}
+              disabled
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] uppercase font-bold text-gray-500 ml-1">Senha Atual</label>
             <div className="relative">
               <input 
                 type={showPassword ? "text" : "password"} 
                 className="border border-gray-300 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#007b63] bg-white transition-all shadow-sm w-full pr-10"
                 value={oldPassword}
                 onChange={(e) => setOldPassword(e.target.value)}
-                placeholder="Digite sua senha atual..."
+                placeholder="••••••••"
               />
               <button
                 type="button"
@@ -105,7 +113,7 @@ export const ChangePasswordView: React.FC<ChangePasswordViewProps> = ({ currentU
                 className="border border-gray-300 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#007b63] bg-white transition-all shadow-sm w-full pr-10"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Digite a nova senha..."
+                placeholder="••••••••"
               />
               <button
                 type="button"
@@ -126,14 +134,14 @@ export const ChangePasswordView: React.FC<ChangePasswordViewProps> = ({ currentU
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] uppercase font-bold text-gray-500 ml-1">Repetir Nova Senha</label>
+            <label className="text-[10px] uppercase font-bold text-gray-500 ml-1">Confirmar Nova Senha</label>
             <div className="relative">
               <input 
                 type={showPassword ? "text" : "password"} 
                 className="border border-gray-300 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#007b63] bg-white transition-all shadow-sm w-full pr-10"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirme a nova senha..."
+                placeholder="••••••••"
               />
               <button
                 type="button"
@@ -152,21 +160,21 @@ export const ChangePasswordView: React.FC<ChangePasswordViewProps> = ({ currentU
               </button>
             </div>
           </div>
+        </div>
 
-          <div className="mt-4 flex gap-4 justify-end border-t border-gray-100 pt-6">
-            <button 
-              onClick={onCancel}
-              className="px-6 py-3 border border-gray-300 text-gray-600 rounded-xl text-xs font-bold uppercase hover:bg-gray-50 transition-colors"
-            >
-              Cancelar
-            </button>
-            <button 
-              onClick={handleSave}
-              className="px-8 py-3 bg-[#007b63] text-white rounded-xl text-xs font-bold uppercase shadow-lg shadow-[#007b63]/20 hover:bg-[#005a48] transition-all"
-            >
-              Salvar Alteração
-            </button>
-          </div>
+        <div className="bg-gray-50 px-6 py-4 flex justify-between gap-3 border-t border-gray-200">
+          <button 
+            onClick={handleSave}
+            className="flex-1 py-3 bg-[#007b63] text-white rounded-xl text-xs font-bold uppercase shadow-lg shadow-[#007b63]/20 hover:bg-[#005a48] transition-all"
+          >
+            OK
+          </button>
+          <button 
+            onClick={onClose}
+            className="flex-1 py-3 border border-gray-300 text-gray-600 rounded-xl text-xs font-bold uppercase hover:bg-gray-100 transition-colors"
+          >
+            Cancelar
+          </button>
         </div>
       </div>
     </div>
