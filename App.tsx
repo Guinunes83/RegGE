@@ -42,6 +42,7 @@ import { ManageRolesView } from './components/ManageRolesView';
 import { ConfirmationModal } from './components/ConfirmationModal';
 import { Associate } from './types';
 import { NavigationContext } from './contexts/NavigationContext';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 
 const HeaderCell = ({ label, sortKey, onClick }: { label: string, sortKey?: string, onClick?: () => void }) => (
   <th className="px-6 py-3 text-xs font-bold uppercase tracking-wider cursor-pointer hover:text-gray-200 transition-colors" onClick={onClick}>
@@ -649,60 +650,62 @@ export default function App() {
   };
 
   return (
-    <NavigationContext.Provider value={{ registerInterceptor }}>
-      <Layout 
-        onNavigate={navigate} 
-        onLogout={handleLogout} 
-        onSwitchProfile={handleSwitchProfile}
-        userProfile={currentUser.profile} 
-        currentUser={currentUser} 
-        currentUserPermissions={currentUserPermissions}
-        customLogo={appConfig.logo}
-        customLogoText={appConfig.text}
-      >
-        {renderContent()}
-        <SuccessModal 
-          isOpen={successModal.isOpen} 
-          title={successModal.title} 
-          message={successModal.message} 
-          onConfirm={() => setSuccessModal({ ...successModal, isOpen: false })} 
-        />
-        <ConfirmationModal
-          isOpen={deleteTeamMemberPhase.phase === 1}
-          title="Exclusão de Membro da Equipe"
-          message="Essa exclusão é permanente e irreversível. Você deseja mesmo fazer ela?"
-          onConfirm={() => setDeleteTeamMemberPhase(prev => ({ ...prev, phase: 2 }))}
-          onCancel={() => setDeleteTeamMemberPhase({ phase: 0, id: null })}
-          confirmText="SIM"
-          cancelText="NÃO"
-        />
-        <ConfirmationModal
-          isOpen={deleteTeamMemberPhase.phase === 2}
-          title="Confirmar Exclusão"
-          message="Tem certeza disso?"
-          onConfirm={async () => {
-            if (deleteTeamMemberPhase.id) {
-              await db.delete('team-members', deleteTeamMemberPhase.id);
-              showSuccess('Excluído', 'Membro da equipe foi excluído permanentemente.');
-              refreshData();
-            }
-            setDeleteTeamMemberPhase({ phase: 0, id: null });
-          }}
-          onCancel={() => setDeleteTeamMemberPhase({ phase: 0, id: null })}
-          confirmText="OK"
-          cancelText="CANCELAR"
-        />
-        {isChangePasswordModalOpen && (
-          <ChangePasswordModal
-            currentUser={currentUser}
-            onClose={() => setIsChangePasswordModalOpen(false)}
-            onSuccess={() => {
-              setIsChangePasswordModalOpen(false);
-              showSuccess('Senha Alterada', 'Sua senha foi atualizada com sucesso.');
-            }}
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || 'dummy_client_id'}>
+      <NavigationContext.Provider value={{ registerInterceptor }}>
+        <Layout 
+          onNavigate={navigate} 
+          onLogout={handleLogout} 
+          onSwitchProfile={handleSwitchProfile}
+          userProfile={currentUser.profile} 
+          currentUser={currentUser} 
+          currentUserPermissions={currentUserPermissions}
+          customLogo={appConfig.logo}
+          customLogoText={appConfig.text}
+        >
+          {renderContent()}
+          <SuccessModal 
+            isOpen={successModal.isOpen} 
+            title={successModal.title} 
+            message={successModal.message} 
+            onConfirm={() => setSuccessModal({ ...successModal, isOpen: false })} 
           />
-        )}
-      </Layout>
-    </NavigationContext.Provider>
+          <ConfirmationModal
+            isOpen={deleteTeamMemberPhase.phase === 1}
+            title="Exclusão de Membro da Equipe"
+            message="Essa exclusão é permanente e irreversível. Você deseja mesmo fazer ela?"
+            onConfirm={() => setDeleteTeamMemberPhase(prev => ({ ...prev, phase: 2 }))}
+            onCancel={() => setDeleteTeamMemberPhase({ phase: 0, id: null })}
+            confirmText="SIM"
+            cancelText="NÃO"
+          />
+          <ConfirmationModal
+            isOpen={deleteTeamMemberPhase.phase === 2}
+            title="Confirmar Exclusão"
+            message="Tem certeza disso?"
+            onConfirm={async () => {
+              if (deleteTeamMemberPhase.id) {
+                await db.delete('team-members', deleteTeamMemberPhase.id);
+                showSuccess('Excluído', 'Membro da equipe foi excluído permanentemente.');
+                refreshData();
+              }
+              setDeleteTeamMemberPhase({ phase: 0, id: null });
+            }}
+            onCancel={() => setDeleteTeamMemberPhase({ phase: 0, id: null })}
+            confirmText="OK"
+            cancelText="CANCELAR"
+          />
+          {isChangePasswordModalOpen && (
+            <ChangePasswordModal
+              currentUser={currentUser}
+              onClose={() => setIsChangePasswordModalOpen(false)}
+              onSuccess={() => {
+                setIsChangePasswordModalOpen(false);
+                showSuccess('Senha Alterada', 'Sua senha foi atualizada com sucesso.');
+              }}
+            />
+          )}
+        </Layout>
+      </NavigationContext.Provider>
+    </GoogleOAuthProvider>
   );
 }

@@ -263,7 +263,7 @@ export const CreateProfileView: React.FC<CreateProfileViewProps> = ({ onCancel, 
 
         {/* Lado Direito - Formulário */}
         <div className="p-8 md:w-3/4 bg-white">
-          <h3 className="text-[#007b63] font-black uppercase text-sm tracking-widest mb-6 border-b border-gray-100 pb-2">Dados do colaborador</h3>
+          <h3 className="text-[#007b63] font-black uppercase text-sm tracking-widest mb-6 border-b border-gray-100 pb-2">Dados do Usuario</h3>
 
           {error && (
             <div className="mb-6 bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-r text-xs font-bold shadow-sm animate-in fade-in slide-in-from-top-2">
@@ -278,7 +278,7 @@ export const CreateProfileView: React.FC<CreateProfileViewProps> = ({ onCancel, 
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-            {/* Linha 2 */}
+            {/* Linha 1 */}
             <div className="md:col-span-3">
               <ProfileInput 
                 label="Nome Completo" 
@@ -291,17 +291,15 @@ export const CreateProfileView: React.FC<CreateProfileViewProps> = ({ onCancel, 
             
             <div className="md:col-span-2">
               <ProfileInput 
-                label="Função (Cargo)" 
-                value={formData.jobTitle || ''} 
-                onChange={(v: string) => setFormData({...formData, jobTitle: v})} 
-                placeholder="Selecione a função"
-                options={[...DROPDOWN_OPTIONS.teamRoles, ...customRoles]}
-                onAddOption={() => setShowAddRoleModal(true)}
+                label="Login de Usuário" 
+                value={formData.login || ''} 
+                onChange={(v: string) => setFormData({...formData, login: v})} 
+                placeholder="usuario.sobrenome"
                 required 
               />
             </div>
 
-            {/* Linha 3 */}
+            {/* Linha 2 */}
             <div className="md:col-span-2 md:col-start-1">
               <ProfileInput 
                 label="CPF" 
@@ -315,7 +313,7 @@ export const CreateProfileView: React.FC<CreateProfileViewProps> = ({ onCancel, 
 
             <div className="md:col-span-3">
               <ProfileInput 
-                label="Contato (Celular)" 
+                label="Contato" 
                 value={formData.contact || ''} 
                 onChange={(v: string) => setFormData({...formData, contact: v})} 
                 placeholder="(00) 00000-0000"
@@ -323,9 +321,22 @@ export const CreateProfileView: React.FC<CreateProfileViewProps> = ({ onCancel, 
                 required 
               />
             </div>
+
+            {/* Linha 3 */}
+            <div className="md:col-span-2">
+              <ProfileInput 
+                label="Função (Cargo)" 
+                value={formData.jobTitle || ''} 
+                onChange={(v: string) => setFormData({...formData, jobTitle: v})} 
+                placeholder="Selecione a função"
+                options={[...DROPDOWN_OPTIONS.teamRoles, ...customRoles]}
+                onAddOption={() => setShowAddRoleModal(true)}
+                required 
+              />
+            </div>
             
             {isEditing && (
-               <div className="md:col-span-5 flex flex-col gap-1.5 w-full">
+               <div className="md:col-span-3 flex flex-col gap-1.5 w-full">
                  <label className="text-[10px] uppercase font-bold text-gray-500 ml-1">Status</label>
                  <div className="flex items-center gap-3 h-[46px]">
                     <label className="flex items-center gap-2 text-sm cursor-pointer">
@@ -341,7 +352,7 @@ export const CreateProfileView: React.FC<CreateProfileViewProps> = ({ onCancel, 
             {/* Linha 4 - Seleção de Perfis Estilo Emenda */}
             <div className="md:col-span-5 flex flex-col gap-3 w-full mt-2">
               <label className="text-[10px] uppercase font-bold text-gray-500 ml-1">
-                Perfis de Acesso <span className="text-red-500">*</span>
+                Relação de Perfis <span className="text-red-500">*</span>
               </label>
               
               <div className="grid grid-cols-2 gap-6">
@@ -398,25 +409,9 @@ export const CreateProfileView: React.FC<CreateProfileViewProps> = ({ onCancel, 
               </div>
             </div>
 
-            {/* Linha 5 */}
-            <div className="md:col-span-5 mt-4">
-              <h3 className="text-[#007b63] font-black uppercase text-sm tracking-widest mb-2 border-b border-gray-100 pb-2">Credenciais de Acesso</h3>
-            </div>
-            
-            {/* Linha 6 */}
-            <div className="md:col-span-2">
-              <ProfileInput 
-                label="Login de Usuário" 
-                value={formData.login || ''} 
-                onChange={(v: string) => setFormData({...formData, login: v})} 
-                placeholder="usuario.sobrenome"
-                required 
-              />
-            </div>
-            
             {!isEditing && (
-              <>
-                <div className="md:col-span-1 md:col-start-3">
+              <div className="md:col-span-5 grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div className="col-span-1">
                   <ProfileInput 
                     label="Senha"
                     type="password"
@@ -427,7 +422,7 @@ export const CreateProfileView: React.FC<CreateProfileViewProps> = ({ onCancel, 
                   />
                 </div>
                 
-                <div className="md:col-span-2">
+                <div className="col-span-1">
                   <ProfileInput 
                     label="Confirmar Senha"
                     type="password"
@@ -437,7 +432,7 @@ export const CreateProfileView: React.FC<CreateProfileViewProps> = ({ onCancel, 
                     required
                   />
                 </div>
-              </>
+              </div>
             )}
           </div>
 

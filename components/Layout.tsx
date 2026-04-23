@@ -78,7 +78,7 @@ export const Layout: React.FC<LayoutProps> = ({ onNavigate, onLogout, onSwitchPr
         { 
           label: 'Perfil de Usuário', 
           children: [
-            { label: 'Cadastro de Perfis', view: 'ManageRoles', permission: 'access_manage_roles' },
+            { label: 'Relação de Perfis', view: 'ManageRoles', permission: 'access_manage_roles' },
             { label: 'Relação de Usuário', view: 'UserList', permission: 'manage_users' },
             { label: 'Alterar Senha', action: 'openChangePassword' },
           ]

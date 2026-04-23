@@ -28,7 +28,7 @@ const AVAILABLE_PERMISSIONS: Permission[] = [
   { id: 'access_notepad', name: 'Acesso ao Bloco de Notas', description: 'Permite acessar o Bloco de Notas.', category: 'Início', subcategory: 'Bloco de notas' },
   
   // Perfil de Usuário
-  { id: 'access_manage_roles', name: 'Acesso ao cadastro de perfil', description: 'O perfil que tiver esta caixa de seleção marcada, terá acesso e verá o menu cadastro de perfil.', category: 'Perfil de Usuário', subcategory: 'Perfil' },
+  { id: 'access_manage_roles', name: 'Acesso à Relação de Perfis', description: 'O perfil que tiver esta caixa de seleção marcada, terá acesso e verá o menu Relação de Perfis.', category: 'Perfil de Usuário', subcategory: 'Perfil' },
   { id: 'manage_permissions', name: 'Gerenciamento de Permissões', description: 'Pode atribuir e restringir permissões os perfis.', category: 'Perfil de Usuário', subcategory: 'Perfil' },
   { id: 'manage_users', name: 'Gerenciar Usuários', description: 'Pode cadastrar novos usuarios no sistema.', category: 'Perfil de Usuário', subcategory: 'Perfil' },
 
@@ -259,7 +259,7 @@ export const ManageRolesView: React.FC<ManageRolesViewProps> = ({ onShowSuccess,
       />
 
       <div className="flex justify-between items-center border-b border-gray-200 pb-4">
-        <h2 className="text-xl font-black text-[#007b63] uppercase tracking-tighter">Cadastro de Perfis</h2>
+        <h2 className="text-xl font-black text-[#007b63] uppercase tracking-tighter">Relação de Perfis</h2>
         <button 
           onClick={() => setIsNewRoleModalOpen(true)}
           className="bg-[#007b63] text-white px-4 py-2 rounded-lg shadow-md font-bold text-xs uppercase hover:bg-[#00604d] transition-colors"
