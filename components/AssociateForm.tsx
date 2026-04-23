@@ -114,14 +114,14 @@ export const AssociateForm: React.FC<AssociateFormProps> = ({ associate, mode, o
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-2xl w-full max-w-5xl mx-auto overflow-hidden relative flex flex-col h-full">
+    <div className="bg-white border border-gray-200 rounded-xl shadow-2xl w-full max-w-5xl mx-auto flex flex-col relative max-h-[90vh]">
       <UnsavedChangesModal 
         isOpen={isModalOpen}
         onSaveAndLeave={handleSaveAndLeave}
         onDiscardAndLeave={handleDiscard}
         onCancel={handleCancel}
       />
-      <div className="bg-[#007b63] text-white py-4 px-6 flex justify-between items-center shrink-0">
+      <div className="bg-[#007b63] shrink-0 text-white py-4 px-6 flex justify-between items-center z-10 sticky top-0">
         <h2 className="text-xl font-bold tracking-tight">
           {isView ? 'Ficha Cadastral do Associado' : 'Cadastro de Associado'}
         </h2>
@@ -132,7 +132,7 @@ export const AssociateForm: React.FC<AssociateFormProps> = ({ associate, mode, o
         </button>
       </div>
 
-      <div className="p-8 flex flex-col gap-8 overflow-y-auto flex-1 bg-gray-50/50">
+      <div className="p-8 flex flex-col gap-8 overflow-y-auto bg-gray-50/50 flex-1">
         <section>
           <SectionTitle title="DADOS PESSOAIS" />
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
@@ -236,7 +236,7 @@ export const AssociateForm: React.FC<AssociateFormProps> = ({ associate, mode, o
         </section>
       </div>
 
-      <div className="p-4 bg-white border-t border-gray-200 flex justify-between items-center px-8 py-6 shrink-0 shadow-[0_-5px_15px_rgba(0,0,0,0.05)]">
+      <div className="p-4 bg-white border-t border-gray-200 flex justify-between items-center px-8 py-6 shrink-0 mt-auto shadow-[0_-5px_15px_rgba(0,0,0,0.05)]">
         <div className="flex gap-3 ml-auto">
           {isView || isReadOnly ? (
             <>

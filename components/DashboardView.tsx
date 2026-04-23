@@ -1,13 +1,24 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Study } from '../types';
+import { Study, Patient, TeamMember } from '../types';
 import { db } from '../database';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export const DashboardView: React.FC = () => {
   const [studies, setStudies] = useState<Study[]>([]);
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [team, setTeam] = useState<TeamMember[]>([]);
+  const [selectedStudyForParticipants, setSelectedStudyForParticipants] = useState<string>('all');
 
   useEffect(() => {
-    db.getAll<Study>('studies').then(setStudies);
+    Promise.all([
+      db.getAll<Study>('studies'),
+      db.getAll<Patient>('patients'),
+      db.getAll<TeamMember>('team')
+    ]).then(([studiesData, patientsData, teamData]) => {
+      setStudies(studiesData);
+      setPatients(patientsData);
+      setTeam(teamData);
+    });
   }, []);
 
   const studiesByYearData = useMemo(() => {
@@ -34,6 +45,50 @@ export const DashboardView: React.FC = () => {
     }));
   }, [studies]);
 
+  const activeParticipantsCount = useMemo(() => {
+    let filteredPatients = patients;
+    if (selectedStudyForParticipants !== 'all') {
+      filteredPatients = filteredPatients.filter(p => p.studyId === selectedStudyForParticipants);
+    }
+    return filteredPatients.filter(p => p.status === 'Ativo').length;
+  }, [patients, selectedStudyForParticipants]);
+
+  const activeStudiesCount = useMemo(() => {
+    return studies.filter(s => s.status === 'Active').length;
+  }, [studies]);
+
+  const activeOncologistsCount = useMemo(() => {
+    return team.filter(t => t.active !== false && t.role?.toLowerCase() === 'oncologista').length;
+  }, [team]);
+
+  const activeHematologistsCount = useMemo(() => {
+    return team.filter(t => t.active !== false && (t.role?.toLowerCase() === 'hematologista' || t.role?.toLowerCase() === 'hamatologista')).length;
+  }, [team]);
+
+  const kpis = [
+    { 
+      label: (
+        <div className="flex flex-col items-center gap-1 w-full px-1">
+          <span>Participantes Ativos</span>
+          <select 
+            className="text-[9px] border border-gray-200 rounded px-1 py-0.5 w-full bg-white text-gray-600 focus:outline-none focus:border-[#007b63]"
+            value={selectedStudyForParticipants}
+            onChange={e => setSelectedStudyForParticipants(e.target.value)}
+          >
+            <option value="all">Todos os Estudos</option>
+            {studies.map(s => (
+              <option key={s.id} value={s.id}>{s.name || 'Estudo Sem Nome'}</option>
+            ))}
+          </select>
+        </div>
+      ), 
+      value: String(activeParticipantsCount).padStart(2, '0'), change: '', color: 'text-gray-400' 
+    },
+    { label: 'Estudos Ativos', value: String(activeStudiesCount).padStart(2, '0'), change: '', color: 'text-gray-400' },
+    { label: 'Oncologistas Ativos', value: String(activeOncologistsCount).padStart(2, '0'), change: '', color: 'text-gray-400' },
+    { label: 'Hematologistas Ativos', value: String(activeHematologistsCount).padStart(2, '0'), change: '', color: 'text-gray-400' },
+  ];
+
   return (
     <div className="flex h-full w-full bg-gray-100 overflow-hidden font-sans">
       {/* Sidebar Filters */}
@@ -46,18 +101,10 @@ export const DashboardView: React.FC = () => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col p-4 gap-4 overflow-y-auto">
         {/* KPI Row */}
-        <div className="grid grid-cols-7 gap-2 shrink-0">
-          {[
-            { label: 'Income', value: '757,345', change: '-83% from previous 89 days', color: 'text-orange-400' },
-            { label: 'Cost Of Goods Sold', value: '157,564', change: '-79% from previous 89 days', color: 'text-orange-400' },
-            { label: 'Gross Profit', value: '599,782', change: '-84% from previous 89 days', color: 'text-orange-400' },
-            { label: 'Gross Profit', value: '79%', change: '-4% from previous 89 days', color: 'text-gray-400' },
-            { label: 'Overheads', value: '375,129', change: '-86% from previous 89 days', color: 'text-orange-400' },
-            { label: 'Net Income', value: '230,514', change: '-81% from previous 89 days', color: 'text-gray-400' },
-            { label: 'Net Income', value: '30%', change: '3% from previous 89 days', color: 'text-gray-400' },
-          ].map((kpi, i) => (
+        <div className="grid grid-cols-4 gap-4 shrink-0">
+          {kpis.map((kpi, i) => (
             <div key={i} className="bg-white p-3 rounded shadow-sm flex flex-col items-center justify-between border border-gray-200 h-24">
-              <span className="text-[10px] font-bold text-gray-800">{kpi.label}</span>
+              <span className="text-[10px] font-bold text-gray-800 text-center">{kpi.label}</span>
               <span className="text-xl font-light text-gray-700">{kpi.value}</span>
               <span className={`text-[8px] font-medium text-center ${kpi.color}`}>{kpi.change}</span>
             </div>

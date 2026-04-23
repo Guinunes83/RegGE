@@ -152,20 +152,6 @@ export const ParticipantForm: React.FC<ParticipantFormProps> = ({ patient, studi
       return false;
     }
 
-    if (!formData.cpf || formData.cpf.length < 14) {
-      setError("O CPF é obrigatório e deve estar completo.");
-      return false;
-    }
-
-    // Verificar unicidade do CPF
-    const allPatients = await db.getAll<Patient>('patients');
-    const cpfExists = allPatients.some(p => p.cpf === formData.cpf && p.id !== formData.id);
-    
-    if (cpfExists) {
-      setError("Este CPF já está cadastrado para outro participante.");
-      return false;
-    }
-
     await onSave(formData);
     return true;
   };
@@ -201,14 +187,14 @@ export const ParticipantForm: React.FC<ParticipantFormProps> = ({ patient, studi
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-2xl w-full max-w-6xl mx-auto overflow-hidden">
+    <div className="bg-white border border-gray-200 rounded-xl shadow-2xl w-full max-w-6xl mx-auto flex flex-col relative max-h-[90vh]">
       <UnsavedChangesModal 
         isOpen={isModalOpen}
         onSaveAndLeave={handleSaveAndLeave}
         onDiscardAndLeave={handleDiscard}
         onCancel={handleCancel}
       />
-      <div className="bg-[#007b63] text-white py-4 px-6 flex justify-between items-center">
+      <div className="bg-[#007b63] shrink-0 text-white py-4 px-6 flex justify-between items-center z-10 sticky top-0">
         <h2 className="text-xl font-bold tracking-tight">
           {isView ? 'Visualização de Dados Participante' : 'Cadastro de Dados Participante'}
         </h2>
@@ -230,7 +216,7 @@ export const ParticipantForm: React.FC<ParticipantFormProps> = ({ patient, studi
         </div>
       </div>
 
-      <div className="p-8 flex flex-col gap-8 overflow-y-auto max-h-[75vh] bg-gray-50/50">
+      <div className="p-8 flex flex-col gap-8 overflow-y-auto bg-gray-50/50 flex-1">
         
         {error && (
           <div className="bg-red-50 border-l-4 border-red-500 p-4 text-red-700 text-xs font-bold rounded shadow-sm">
@@ -240,7 +226,8 @@ export const ParticipantForm: React.FC<ParticipantFormProps> = ({ patient, studi
 
         {/* DADOS CADASTRAIS */}
         <section>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+             {/* Linha 1: -NOME COMPLETO x2, SEXOx1, DATA NASC.x1; */}
              <ParticipantInput 
                label="Nome Completo" 
                value={formData.name} 
@@ -255,15 +242,7 @@ export const ParticipantForm: React.FC<ParticipantFormProps> = ({ patient, studi
                onChange={(v: string) => setFormData({...formData, sex: v as 'M' | 'F'})} 
                options={['M', 'F']}
                isView={isView}
-             />
-             <ParticipantInput 
-               label="CPF" 
-               value={formData.cpf} 
-               onChange={(v: string) => setFormData({...formData, cpf: v})} 
-               isView={isView} 
-               mask="cpf"
-               placeholder="000.000.000-00"
-               required
+               span="md:col-span-1"
              />
              <ParticipantInput 
                label="Data Nasc." 
@@ -271,22 +250,27 @@ export const ParticipantForm: React.FC<ParticipantFormProps> = ({ patient, studi
                onChange={(v: string) => setFormData({...formData, birthDate: v})} 
                type="date" 
                isView={isView} 
+               span="md:col-span-1"
              />
              
-             {/* Linha 2 */}
+             {/* Linha 2: -CONTATO PRINCIPALX1, CONTATO SECUNDARIOX1, E-MAILX2; */}
              <ParticipantInput 
-               label="Nº Screening" 
-               value={formData.screeningNumber} 
-               onChange={(v: string) => setFormData({...formData, screeningNumber: v})} 
-               isView={isView} 
-             />
-             <ParticipantInput 
-               label="Contato" 
+               label="Contato Principal" 
                value={formData.contact} 
                onChange={(v: string) => setFormData({...formData, contact: v})} 
                isView={isView} 
                mask="phone"
                placeholder="(00) 00000-0000"
+               span="md:col-span-1"
+             />
+             <ParticipantInput 
+               label="Contato Secundário" 
+               value={formData.secondaryContact} 
+               onChange={(v: string) => setFormData({...formData, secondaryContact: v})} 
+               isView={isView} 
+               mask="phone"
+               placeholder="(00) 00000-0000"
+               span="md:col-span-1"
              />
              <ParticipantInput 
                label="E-mail" 
@@ -296,6 +280,8 @@ export const ParticipantForm: React.FC<ParticipantFormProps> = ({ patient, studi
                placeholder="exemplo@email.com"
                span="md:col-span-2"
              />
+
+             {/* Linha 3: -ESTUDOX1, Nº SCREENINGX1, Nº RAND.X1, Nº NO ESTUDO; */}
              <ParticipantInput 
                label="Estudo" 
                value={formData.studyId} 
@@ -303,16 +289,64 @@ export const ParticipantForm: React.FC<ParticipantFormProps> = ({ patient, studi
                options={studyOptions} 
                displayValue={currentStudyName} 
                isView={isView} 
+               span="md:col-span-1"
+             />
+             <ParticipantInput 
+               label="Nº Screening" 
+               value={formData.screeningNumber} 
+               onChange={(v: string) => setFormData({...formData, screeningNumber: v})} 
+               isView={isView} 
+               span="md:col-span-1"
+             />
+             <ParticipantInput 
+               label="Nº Rand." 
+               value={formData.randomization} 
+               onChange={(v: string) => setFormData({...formData, randomization: v})} 
+               isView={isView}
+               span="md:col-span-1"
+             />
+             <ParticipantInput 
+               label="Nº No Estudo" 
+               value={formData.participantNumber} 
+               onChange={(v: string) => setFormData({...formData, participantNumber: v})} 
+               isView={isView}
+               span="md:col-span-1"
              />
 
-             {/* Linha 3 */}
-             <ParticipantInput label="Tratamento" value={formData.treatment} onChange={(v: string) => setFormData({...formData, treatment: v})} isView={isView} />
-             <ParticipantInput label="Nº no estudo" value={formData.participantNumber} onChange={(v: string) => setFormData({...formData, participantNumber: v})} isView={isView} />
-             <ParticipantInput label="Randomização" value={formData.randomization} onChange={(v: string) => setFormData({...formData, randomization: v})} isView={isView} />
-             <ParticipantInput label="Status" value={formData.status} onChange={(v: string) => setFormData({...formData, status: v})} options={DROPDOWN_OPTIONS.participantStatus} isView={isView} span="md:col-span-2" />
-             
-             <div className="md:col-span-5">
-               <ParticipantInput label="Obs" value={formData.observations} onChange={(v: string) => setFormData({...formData, observations: v})} isView={isView} isTextArea={true} />
+             {/* Linha 4: -TRATAMENTOX2, STATUSX1, DATA ASSIN. TCLEX1; */}
+             <ParticipantInput 
+               label="Tratamento" 
+               value={formData.treatment} 
+               onChange={(v: string) => setFormData({...formData, treatment: v})} 
+               isView={isView} 
+               span="md:col-span-2"
+             />
+             <ParticipantInput 
+               label="Status" 
+               value={formData.status} 
+               onChange={(v: string) => setFormData({...formData, status: v})} 
+               options={DROPDOWN_OPTIONS.participantStatus} 
+               isView={isView} 
+               span="md:col-span-1"
+             />
+             <ParticipantInput 
+               label="Data Assin. TCLE" 
+               value={formData.tcleDate} 
+               onChange={(v: string) => setFormData({...formData, tcleDate: v})} 
+               type="date" 
+               isView={isView} 
+               span="md:col-span-1"
+             />
+
+             {/* Linha 5: -OBSERVAÇÃOX4; */}
+             <div className="md:col-span-4">
+               <ParticipantInput 
+                 label="Observação" 
+                 value={formData.observations} 
+                 onChange={(v: string) => setFormData({...formData, observations: v})} 
+                 isView={isView} 
+                 isTextArea={true} 
+               />
              </div>
           </div>
         </section>
@@ -399,7 +433,7 @@ export const ParticipantForm: React.FC<ParticipantFormProps> = ({ patient, studi
 
       </div>
 
-      <div className="p-4 bg-white border-t border-gray-200 flex justify-between items-center px-8 py-6">
+      <div className="p-4 bg-white border-t border-gray-200 flex justify-between items-center px-8 py-6 shrink-0 mt-auto">
         <div>
           {!isView && !isReadOnly && onOpenMonitor && (
             <button 

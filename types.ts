@@ -179,7 +179,6 @@ export type Patient = {
   participantNumber: string;
   screeningNumber?: string; // Novo campo
   name: string;
-  cpf: string; // Obrigatório
   email?: string; // Novo campo
   birthDate: string;
   sex?: 'M' | 'F'; // Novo campo Sexo
@@ -190,6 +189,7 @@ export type Patient = {
   observations?: string;
   initials?: string;
   contact?: string;
+  secondaryContact?: string;
   tcleDate?: string;
 };
 

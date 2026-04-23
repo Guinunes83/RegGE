@@ -141,14 +141,14 @@ export const MonitorForm: React.FC<MonitorFormProps> = ({ monitor, studies, mode
   const currentStudyName = studies.find(s => s.id === formData.studyId)?.name || formData.studyId;
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-2xl w-full max-w-5xl mx-auto overflow-hidden">
+    <div className="bg-white border border-gray-200 rounded-xl shadow-2xl w-full max-w-5xl mx-auto flex flex-col relative max-h-[90vh]">
       <UnsavedChangesModal 
         isOpen={isModalOpen}
         onSaveAndLeave={handleSaveAndLeave}
         onDiscardAndLeave={handleDiscard}
         onCancel={handleCancel}
       />
-      <div className="bg-[#007b63] text-white py-4 px-6 flex justify-between items-center">
+      <div className="bg-[#007b63] shrink-0 text-white py-4 px-6 flex justify-between items-center z-10 sticky top-0">
         <h2 className="text-xl font-bold tracking-tight">
           {isView ? 'Visualização de Dados Monitoria' : 'Cadastro de Dados Monitoria'}
         </h2>
@@ -159,7 +159,7 @@ export const MonitorForm: React.FC<MonitorFormProps> = ({ monitor, studies, mode
         </button>
       </div>
 
-      <div className="p-8 flex flex-col gap-8 overflow-y-auto max-h-[75vh] bg-gray-50/50">
+      <div className="p-8 flex flex-col gap-8 overflow-y-auto bg-gray-50/50 flex-1">
         <section>
           <SectionTitle title="GERAL" />
           <div className="flex flex-col gap-4">
@@ -308,7 +308,7 @@ export const MonitorForm: React.FC<MonitorFormProps> = ({ monitor, studies, mode
         </section>
       </div>
 
-      <div className="p-4 bg-white border-t border-gray-200 flex justify-end gap-3 px-8 py-6">
+      <div className="p-4 bg-white border-t border-gray-200 flex justify-end gap-3 px-8 py-6 shrink-0 mt-auto">
         {isView || isReadOnly ? (
           <>
              <button onClick={handleCancelClick} className="px-6 py-2 border border-gray-300 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors">

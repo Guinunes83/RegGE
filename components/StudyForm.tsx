@@ -346,14 +346,14 @@ export const StudyForm: React.FC<StudyFormProps> = ({ study, mode, onSave, onCan
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-2xl w-full max-w-5xl mx-auto overflow-hidden relative">
+    <div className="bg-white border border-gray-200 rounded-xl shadow-2xl w-full max-w-5xl mx-auto flex flex-col relative max-h-[90vh]">
       <UnsavedChangesModal 
         isOpen={isModalOpen}
         onSaveAndLeave={handleSaveAndLeave}
         onDiscardAndLeave={handleDiscard}
         onCancel={handleCancel}
       />
-      <div className="bg-[#007b63] text-white py-4 px-6 flex justify-between items-center">
+      <div className="bg-[#007b63] shrink-0 text-white py-4 px-6 flex justify-between items-center z-10 sticky top-0">
         <h2 className="text-xl font-bold tracking-tight">
           {isView ? 'Visualização de Dados do Estudo' : 'Cadastro de Dados do Estudo'}
         </h2>
@@ -364,12 +364,12 @@ export const StudyForm: React.FC<StudyFormProps> = ({ study, mode, onSave, onCan
         </button>
       </div>
 
-      <div className="p-8 flex flex-col gap-8 overflow-y-auto max-h-[75vh] bg-gray-50/50">
+      <div className="p-8 flex flex-col gap-8 overflow-y-auto bg-gray-50/50 flex-1">
         <section>
           <SectionTitle title="GERAL" />
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
             {/* Linha 1 */}
-            <StudyInput label="Nome Estudo" value={formData.name} onChange={(v: string) => handleChange('name', v)} isView={isView} span="md:col-span-2" />
+            <StudyInput label="Nome Estudo" value={formData.name} onChange={(v: string) => handleChange('name', v.toUpperCase())} isView={isView} span="md:col-span-2" />
             <StudyInput label="Protocolo" value={formData.protocol} onChange={(v: string) => handleChange('protocol', v)} isView={isView} />
             <StudyInput label="Centro Coordenador" value={formData.coordinatorCenter} onChange={(v: string) => handleChange('coordinatorCenter', v)} options={['SIM', 'NÃO']} isForcedDropdown isView={isView} />
             
@@ -547,7 +547,7 @@ export const StudyForm: React.FC<StudyFormProps> = ({ study, mode, onSave, onCan
         </section>
       </div>
 
-      <div className="p-4 bg-white border-t border-gray-200 flex justify-between items-center px-8 py-6 sticky bottom-0 z-20 shadow-[0_-5px_15px_rgba(0,0,0,0.05)]">
+      <div className="p-4 bg-white border-t border-gray-200 flex justify-between items-center px-8 py-6 shrink-0 mt-auto shadow-[0_-5px_15px_rgba(0,0,0,0.05)]">
         
         <div className="flex items-center gap-4 bg-gray-50 px-4 py-2 rounded-xl border border-gray-100">
            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Status</span>

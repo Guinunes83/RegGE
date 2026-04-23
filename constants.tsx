@@ -267,9 +267,9 @@ export const MOCK_AVAILABLE_MONITORS: MonitorEntry[] = [
 
 // 3 Participantes
 export const MOCK_PATIENTS: Patient[] = [
-  { id: 'p1', participantNumber: '001-001', screeningNumber: 'SCR-01', name: 'João Silva', birthDate: '1960-05-10', cpf: '123.123.123-12', studyId: 's1', status: 'Ativo', treatment: 'Droga A', randomization: 'RND-100', email: 'joao@email.com', contact: '(11) 90000-0001' },
-  { id: 'p2', participantNumber: '002-005', screeningNumber: 'SCR-05', name: 'Maria Souza', birthDate: '1975-11-20', cpf: '321.321.321-21', studyId: 's2', status: 'Screening', treatment: 'Placebo', randomization: '', email: 'maria@email.com', contact: '(11) 90000-0002' },
-  { id: 'p3', participantNumber: '003-010', screeningNumber: 'SCR-10', name: 'Carlos Pereira', birthDate: '1955-02-28', cpf: '456.456.456-45', studyId: 's3', status: 'Concluiu', treatment: 'Padrão', randomization: 'RND-500', email: 'carlos@email.com', contact: '(11) 90000-0003' }
+  { id: 'p1', participantNumber: '001-001', screeningNumber: 'SCR-01', name: 'João Silva', birthDate: '1960-05-10', studyId: 's1', status: 'Ativo', treatment: 'Droga A', randomization: 'RND-100', email: 'joao@email.com', contact: '(11) 90000-0001' },
+  { id: 'p2', participantNumber: '002-005', screeningNumber: 'SCR-05', name: 'Maria Souza', birthDate: '1975-11-20', studyId: 's2', status: 'Screening', treatment: 'Placebo', randomization: '', email: 'maria@email.com', contact: '(11) 90000-0002' },
+  { id: 'p3', participantNumber: '003-010', screeningNumber: 'SCR-10', name: 'Carlos Pereira', birthDate: '1955-02-28', studyId: 's3', status: 'Concluiu', treatment: 'Padrão', randomization: 'RND-500', email: 'carlos@email.com', contact: '(11) 90000-0003' }
 ];
 
 // 3 Emendas/Reuniões CEP

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sponsor, Study } from '../types';
 import { db } from '../database';
 import { ConfirmationModal } from './ConfirmationModal';
@@ -9,7 +9,7 @@ interface SponsorFormProps {
   sponsor?: Sponsor;
   studies: Study[];
   mode: 'edit' | 'view';
-  onSave: (data: Partial<Sponsor>) => void;
+  onSave: (data: Partial<Sponsor>) => Promise<void> | void;
   onCancel: () => void;
   onEdit?: () => void;
   onUpdate?: () => void; // Callback para atualizar dados globais
@@ -40,41 +40,30 @@ const SponsorInput = ({
 );
 
 export const SponsorForm: React.FC<SponsorFormProps> = ({ sponsor, studies, mode, onSave, onCancel, onEdit, onUpdate, isReadOnly = false }) => {
-  const [formData, setFormData] = useState<Partial<Sponsor>>(sponsor || {});
-  const [selectedStudyToLink, setSelectedStudyToLink] = useState<string>('');
+  const [formData, setFormData] = useState<Partial<Sponsor> & { studyIds?: string[] }>(sponsor || {});
+  const [activeStudiesFull, setActiveStudiesFull] = useState<Study[]>([]);
   
   const isView = mode === 'view';
 
-  // Filter studies related to this sponsor
-  const relatedStudies = studies.filter(s => 
-    s.sponsor && formData.name && 
-    s.sponsor.toLowerCase().trim() === formData.name.toLowerCase().trim()
-  ).sort((a,b) => a.name.localeCompare(b.name));
+  // Initialize linked studies based on Study records
+  useEffect(() => {
+    // Only active studies can generally be linked, or we can just list all
+    const active = studies.sort((a,b) => a.name.localeCompare(b.name));
+    setActiveStudiesFull(active);
 
-  // Filter available studies (not linked to this sponsor)
-  const availableStudies = studies.filter(s => 
-    !s.sponsor || (formData.name && s.sponsor.toLowerCase().trim() !== formData.name.toLowerCase().trim())
-  ).sort((a,b) => a.name.localeCompare(b.name));
+    if (sponsor?.name) {
+      const linkedStudyIds = active.filter(s => 
+        s.sponsor && s.sponsor.toLowerCase().trim() === sponsor.name.toLowerCase().trim()
+      ).map(s => s.id);
+      
+      setFormData(prev => ({ ...prev, studyIds: linkedStudyIds }));
+    } else {
+      setFormData(prev => ({ ...prev, studyIds: [] }));
+    }
+  }, [sponsor, studies]);
 
   const handleChange = (field: keyof Sponsor, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleLinkStudy = () => {
-    if (!selectedStudyToLink || !formData.name) return;
-
-    const studyToUpdate = studies.find(s => s.id === selectedStudyToLink);
-    if (studyToUpdate) {
-      // Atualiza o estudo no banco de dados com o novo patrocinador
-      const updatedStudy = { ...studyToUpdate, sponsor: formData.name };
-      db.upsert('studies', updatedStudy);
-      
-      // Limpa seleção
-      setSelectedStudyToLink('');
-      
-      // Notifica o componente pai para recarregar os dados
-      if (onUpdate) onUpdate();
-    }
   };
 
   const performValidationAndSave = async (): Promise<boolean> => {
@@ -82,7 +71,39 @@ export const SponsorForm: React.FC<SponsorFormProps> = ({ sponsor, studies, mode
       alert('O campo Nome é obrigatório.');
       return false;
     }
-    await onSave(formData);
+
+    // Bidirectional sync
+    // Iterate over all activeStudiesFull and update them if they changed state.
+    const updatesToStudies: Study[] = [];
+    const newName = formData.name.trim();
+
+    for (const study of activeStudiesFull) {
+      const isSelected = (formData.studyIds || []).includes(study.id);
+      const isCurrentlyLinked = study.sponsor && sponsor?.name && study.sponsor.toLowerCase().trim() === sponsor.name.toLowerCase().trim();
+
+      if (isSelected && study.sponsor !== newName) {
+        // Study is selected but hasn't been updated to the sponsor yet
+        updatesToStudies.push({ ...study, sponsor: newName });
+      } else if (!isSelected && isCurrentlyLinked) {
+        // Study was unselected but still points to this sponsor
+        updatesToStudies.push({ ...study, sponsor: '' });
+      } else if (isSelected && sponsor && sponsor.name !== newName) {
+         // Sponsor name changed, update the study's sponsor field to match new name
+         updatesToStudies.push({ ...study, sponsor: newName });
+      }
+    }
+
+    const { studyIds, ...sponsorDataToSave } = formData;
+    await onSave(sponsorDataToSave);
+
+    for (const study of updatesToStudies) {
+       await db.upsert('studies', study);
+    }
+    
+    if (updatesToStudies.length > 0 && onUpdate) {
+      onUpdate();
+    }
+
     return true;
   };
 
@@ -125,7 +146,7 @@ export const SponsorForm: React.FC<SponsorFormProps> = ({ sponsor, studies, mode
             DADOS GERAIS
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <SponsorInput label="Nome" value={formData.name} onChange={(v: string) => handleChange('name', v)} isView={isView} />
+            <SponsorInput label="Nome" value={formData.name} onChange={(v: string) => handleChange('name', v.toUpperCase())} isView={isView} />
             <SponsorInput label="Nome Alternativo" value={formData.alternativeName} onChange={(v: string) => handleChange('alternativeName', v)} isView={isView} />
             <SponsorInput label="Moeda" value={formData.currency} onChange={(v: string) => handleChange('currency', v)} isView={isView} />
             <SponsorInput label="CRO" value={formData.cro} onChange={(v: string) => handleChange('cro', v)} isView={isView} />
@@ -141,46 +162,71 @@ export const SponsorForm: React.FC<SponsorFormProps> = ({ sponsor, studies, mode
           <div className="bg-[#d1e7e4] text-[#007b63] font-bold text-center py-1.5 uppercase tracking-widest text-xs mb-4 border-b border-[#007b63]/20">
             ESTUDOS VINCULADOS
           </div>
-          
-          {/* Menu de Vinculação (Apenas Edição) */}
-          {!isView && !isReadOnly && (
-            <div className="mb-4 flex items-end gap-2 bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
-              <div className="flex-1 flex flex-col gap-1">
-                <label className="text-[10px] uppercase font-bold text-gray-500 ml-1">Vincular Estudo Existente</label>
-                <select 
-                  className="border border-gray-300 rounded-md px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#007b63] w-full bg-white"
-                  value={selectedStudyToLink}
-                  onChange={(e) => setSelectedStudyToLink(e.target.value)}
-                >
-                  <option value="">Selecione um estudo para adicionar...</option>
-                  {availableStudies.map(s => (
-                    <option key={s.id} value={s.id}>{s.name} ({s.protocol})</option>
+          <div className="flex flex-col gap-3 w-full">
+            <div className="grid grid-cols-2 gap-6">
+              {/* Left Column: Available Studies */}
+              <div className="border border-gray-200 bg-white rounded-xl shadow-sm overflow-hidden flex flex-col h-64">
+                <div className="bg-gray-100 px-4 py-2 border-b border-gray-200 font-bold text-xs text-gray-600 uppercase flex justify-between">
+                  <span>Estudos Disponíveis</span>
+                  <span className="text-[10px] bg-gray-200 px-1.5 rounded">{activeStudiesFull.filter(s => !(formData.studyIds || []).includes(s.id)).length}</span>
+                </div>
+                <div className="overflow-y-auto flex-1 p-2 space-y-1 bg-white">
+                  {activeStudiesFull.filter(s => !(formData.studyIds || []).includes(s.id)).length === 0 && <p className="text-center text-xs text-gray-400 mt-6 italic">Todos os estudos selecionados.</p>}
+                  {activeStudiesFull.filter(s => !(formData.studyIds || []).includes(s.id)).map(study => (
+                    <label key={study.id} className={`flex items-center gap-2 p-2 hover:bg-gray-50 rounded group transition-colors ${isView || isReadOnly ? 'cursor-default' : 'cursor-pointer'}`}>
+                      <div className="relative flex items-center justify-center">
+                        <input 
+                          type="checkbox" 
+                          disabled={isView || isReadOnly}
+                          className="peer appearance-none w-4 h-4 border-2 border-gray-300 rounded checked:bg-[#007b63] checked:border-[#007b63] transition-all disabled:opacity-50"
+                          checked={false}
+                          onChange={() => {
+                            const current = formData.studyIds || [];
+                            setFormData({ ...formData, studyIds: [...current, study.id] })
+                          }}
+                        />
+                        <svg className="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                      </div>
+                      <span className="text-xs text-gray-600 group-hover:text-gray-900">{study.name} ({study.protocol})</span>
+                    </label>
                   ))}
-                </select>
+                </div>
               </div>
-              <button 
-                onClick={handleLinkStudy}
-                disabled={!selectedStudyToLink || !formData.name}
-                className="bg-[#007b63] hover:bg-[#005a48] disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-md px-4 py-2 font-bold shadow-md transition-all h-[38px] w-12 flex items-center justify-center"
-                title="Adicionar Estudo"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" /></svg>
-              </button>
-            </div>
-          )}
 
-          <div className="bg-white p-4 rounded-xl border border-gray-200">
-            {relatedStudies.length === 0 ? (
-              <p className="text-center text-gray-400 italic text-sm py-4">Nenhum estudo vinculado a este patrocinador.</p>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-                {relatedStudies.map(study => (
-                  <div key={study.id} className="bg-gray-50 border border-gray-200 rounded p-2 text-xs font-bold text-gray-700 text-center hover:bg-gray-100 transition-colors truncate" title={study.name}>
-                    {study.name}
-                  </div>
-                ))}
+              {/* Right Column: Selected Studies */}
+              <div className="border border-gray-200 bg-white rounded-xl shadow-sm overflow-hidden flex flex-col h-64">
+                <div className="bg-[#d1e7e4] px-4 py-2 border-b border-[#007b63]/20 font-bold text-xs text-[#007b63] uppercase flex justify-between">
+                  <span>Estudos Selecionados</span>
+                  <span className="text-[10px] bg-white px-1.5 rounded text-[#007b63]">{(formData.studyIds || []).length}</span>
+                </div>
+                <div className="overflow-y-auto flex-1 p-2 space-y-1 bg-white">
+                  {(formData.studyIds || []).length === 0 && <p className="text-center text-xs text-gray-400 mt-6 italic">Nenhum estudo selecionado.</p>}
+                  {(formData.studyIds || []).map(studyId => {
+                    const study = activeStudiesFull.find(s => s.id === studyId);
+                    if (!study) return null;
+                    return (
+                      <label key={studyId} className={`flex items-center gap-2 p-2 bg-gray-50 hover:bg-red-50 border-transparent hover:border-red-100 rounded group transition-colors border ${isView || isReadOnly ? 'cursor-default' : 'cursor-pointer'}`}>
+                        <div className="relative flex items-center justify-center">
+                          <input 
+                            type="checkbox" 
+                            disabled={isView || isReadOnly}
+                            className={`peer appearance-none w-4 h-4 border-2 rounded transition-all disabled:opacity-50 border-[#007b63] bg-[#007b63] checked:bg-red-500 checked:border-red-500`}
+                            checked={true}
+                            onChange={() => {
+                              const current = formData.studyIds || [];
+                              setFormData({ ...formData, studyIds: current.filter(id => id !== studyId) })
+                            }}
+                          />
+                          <svg className="absolute w-3 h-3 text-white peer-checked:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                          <svg className={`absolute w-3 h-3 text-white pointer-events-none hidden peer-checked:block`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
+                        </div>
+                        <span className={`text-xs font-medium text-gray-700 group-hover:text-red-600`}>{study.name} ({study.protocol})</span>
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
-            )}
+            </div>
           </div>
         </section>
 
