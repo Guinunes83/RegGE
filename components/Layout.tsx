@@ -24,6 +24,7 @@ type MenuItem = {
   excludedRoles?: UserProfile[];
   icon?: React.ReactNode;
   permission?: string;
+  action?: string;
 };
 
 export const Layout: React.FC<LayoutProps> = ({ onNavigate, onLogout, onSwitchProfile, userProfile, currentUser, currentUserPermissions = [], children, customLogo, customLogoText }) => {
@@ -72,15 +73,15 @@ export const Layout: React.FC<LayoutProps> = ({ onNavigate, onLogout, onSwitchPr
         { label: 'Agenda', view: 'Calendar', permission: 'access_agenda' },
         { label: 'Configurações', view: 'Settings', permission: 'access_settings' },
         { label: 'Dashboard', view: 'Dashboard', permission: 'access_dashboard' },
+        { label: 'Links Úteis', view: 'RegulatoryLinks', permission: 'access_regulatory_links' },
         { label: 'Mural de Avisos', view: 'NoticeBoard' },
         { label: 'Notas', view: 'Notepad' },
         { 
           label: 'Perfil de Usuário', 
           children: [
-            { label: 'Cadastro de Usuários', view: 'CreateProfile', permission: 'manage_users' }, 
-            { label: 'Cadastro de Perfis', view: 'ManageRoles', permission: 'access_manage_roles' },
+            { label: 'Relação de Perfis', view: 'ManageRoles', permission: 'access_manage_roles' },
             { label: 'Relação de Usuário', view: 'UserList', permission: 'manage_users' },
-            { label: 'Trocar Senha', view: 'ChangePassword' },
+            { label: 'Alterar Senha', action: 'openChangePassword' },
           ]
         },
         { label: 'Sair', view: 'Exit' },
@@ -161,8 +162,6 @@ export const Layout: React.FC<LayoutProps> = ({ onNavigate, onLogout, onSwitchPr
         { 
           label: 'Regulatório',
           children: [
-            { label: 'Calendário Reuniões CEP', view: 'CEPCalendar', permission: 'access_cep_calendar' },
-            { label: 'Links Úteis', view: 'RegulatoryLinks', permission: 'access_regulatory_links' },
             { label: 'Relatórios Parciais', view: 'RegulatoryPartialReport', permission: 'access_regulatory_partial_report' },
             { label: 'Reunião CEP', view: 'CEPMeeting', permission: 'access_cep_meeting' },
           ] 
@@ -194,10 +193,16 @@ export const Layout: React.FC<LayoutProps> = ({ onNavigate, onLogout, onSwitchPr
     setIsNotificationMenuOpen(false);
   };
 
-  const toggleMenu = (label: string) => {
-    setExpandedMenus(prev => 
-      prev.includes(label) ? prev.filter(l => l !== label) : [...prev, label]
-    );
+  const toggleMenu = (label: string, depth: number) => {
+    if (depth === 0) {
+      setExpandedMenus(prev => 
+        prev.includes(label) ? prev.filter(l => l !== label) : [label]
+      );
+    } else {
+      setExpandedMenus(prev => 
+        prev.includes(label) ? prev.filter(l => l !== label) : [...prev, label]
+      );
+    }
   };
 
   const getProfileLabel = (p: UserProfile) => {
@@ -231,7 +236,17 @@ export const Layout: React.FC<LayoutProps> = ({ onNavigate, onLogout, onSwitchPr
     return (
       <div key={item.label} className="select-none">
         <button
-          onClick={() => hasChildren ? toggleMenu(item.label) : handleNavigation(item.view, item.label)}
+          onClick={() => {
+            if (hasChildren) {
+              toggleMenu(item.label, depth);
+            } else if (item.action === 'openChangePassword') {
+              // Custom action: handled by a callback or dispatch
+              const event = new CustomEvent('openChangePasswordModal');
+              window.dispatchEvent(event);
+            } else {
+              handleNavigation(item.view, item.label);
+            }
+          }}
           className={`
             w-full flex items-center justify-between py-3 pr-4 transition-all text-sm font-medium
             ${!hasChildren && activeViewLabel === item.label 

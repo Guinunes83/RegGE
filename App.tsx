@@ -18,7 +18,7 @@ import { CalendarView } from './components/CalendarView';
 import { SettingsView } from './components/SettingsView';
 import { UserListView } from './components/UserListView';
 import { CreateProfileView } from './components/CreateProfileView';
-import { ChangePasswordView } from './components/ChangePasswordView';
+import { ChangePasswordModal } from './components/ChangePasswordModal';
 import { CreateNoticeView } from './components/CreateNoticeView';
 import { RegulatoryLinksView } from './components/RegulatoryLinksView';
 import { RegulatoryIndicesView } from './components/RegulatoryIndicesView';
@@ -42,6 +42,7 @@ import { ManageRolesView } from './components/ManageRolesView';
 import { ConfirmationModal } from './components/ConfirmationModal';
 import { Associate } from './types';
 import { NavigationContext } from './contexts/NavigationContext';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 
 const HeaderCell = ({ label, sortKey, onClick }: { label: string, sortKey?: string, onClick?: () => void }) => (
   <th className="px-6 py-3 text-xs font-bold uppercase tracking-wider cursor-pointer hover:text-gray-200 transition-colors" onClick={onClick}>
@@ -67,6 +68,13 @@ export default function App() {
   // Modal state
   const [successModal, setSuccessModal] = useState({ isOpen: false, title: '', message: '' });
   const [deleteTeamMemberPhase, setDeleteTeamMemberPhase] = useState<{phase: number, id: string | null}>({ phase: 0, id: null });
+  const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
+
+  useEffect(() => {
+    const handleOpenPasswordModal = () => setIsChangePasswordModalOpen(true);
+    window.addEventListener('openChangePasswordModal', handleOpenPasswordModal);
+    return () => window.removeEventListener('openChangePasswordModal', handleOpenPasswordModal);
+  }, []);
 
   // Sorting state
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
@@ -346,19 +354,17 @@ export default function App() {
         return <ManageRolesView onShowSuccess={showSuccess} currentUserProfile={currentUser.profile} />;
       case 'ChangeProfile':
         return null;
-      case 'ChangePassword':
-        return <ChangePasswordView currentUser={currentUser} onCancel={() => navigate('Dashboard')} onSuccess={() => navigate('Dashboard')} />;
       case 'UserList':
-        return <UserListView onEditUser={(u) => navigate('CreateProfile', { userToEdit: u })} />;
+        return <UserListView onEditUser={(u) => navigate('CreateProfile', { userToEdit: u })} onAddUser={() => navigate('CreateProfile')} />;
       
       case 'PI': // Agora Team Member
         if (activeProps.mode === 'edit' || activeProps.mode === 'view') {
-           return <TeamForm member={activeProps.pi} mode={activeProps.mode} onSave={async (data) => { await db.upsert('team-members', data); showSuccess('Salvo', 'Membro salvo com sucesso.'); navigate('PI'); }} onCancel={() => navigate('PI')} onEdit={() => navigate('PI', { mode: 'edit', pi: activeProps.pi })} isReadOnly={!hasPermission('edit_team')} />;
+           return <TeamForm currentUser={currentUser} member={activeProps.pi} mode={activeProps.mode} onSave={async (data) => { await db.upsert('team-members', data); showSuccess('Salvo', 'Membro salvo com sucesso.'); navigate('PI'); }} onCancel={() => navigate('PI')} onEdit={() => navigate('PI', { mode: 'edit', pi: activeProps.pi })} isReadOnly={!hasPermission('edit_team')} />;
         }
         return (
           <div className="flex flex-col gap-6 p-6 h-full w-full">
             <div className="flex justify-between items-center border-b border-gray-200 pb-4">
-              <h2 className="text-xl font-black text-[#007b63] uppercase tracking-tighter">Dados Equipe</h2>
+              <h2 className="text-xl font-black text-[#007b63] uppercase tracking-tighter">Equipe</h2>
               {hasPermission('create_team') && <button onClick={() => navigate('PI', { mode: 'edit' })} className="bg-[#007b63] text-white px-4 py-2 rounded-lg shadow-md font-bold text-xs uppercase">+ Novo</button>}
             </div>
             <div className="overflow-hidden rounded-xl border bg-white shadow-sm flex-1 overflow-y-auto">
@@ -461,7 +467,7 @@ export default function App() {
         return (
           <div className="flex flex-col gap-6 p-6 h-full w-full">
             <div className="flex justify-between items-center border-b border-gray-200 pb-4">
-              <h2 className="text-xl font-black text-[#007b63] uppercase tracking-tighter">Estudos Clínicos</h2>
+              <h2 className="text-xl font-black text-[#007b63] uppercase tracking-tighter">Estudos</h2>
               {hasPermission('create_studies') && <button onClick={() => navigate('Studies', { mode: 'edit' })} className="bg-[#007b63] text-white px-4 py-2 rounded-lg shadow-md font-bold text-xs uppercase">+ Novo</button>}
             </div>
             <div className="overflow-hidden rounded-xl border bg-white shadow-sm flex-1 overflow-y-auto">
@@ -644,50 +650,62 @@ export default function App() {
   };
 
   return (
-    <NavigationContext.Provider value={{ registerInterceptor }}>
-      <Layout 
-        onNavigate={navigate} 
-        onLogout={handleLogout} 
-        onSwitchProfile={handleSwitchProfile}
-        userProfile={currentUser.profile} 
-        currentUser={currentUser} 
-        currentUserPermissions={currentUserPermissions}
-        customLogo={appConfig.logo}
-        customLogoText={appConfig.text}
-      >
-        {renderContent()}
-        <SuccessModal 
-          isOpen={successModal.isOpen} 
-          title={successModal.title} 
-          message={successModal.message} 
-          onConfirm={() => setSuccessModal({ ...successModal, isOpen: false })} 
-        />
-        <ConfirmationModal
-          isOpen={deleteTeamMemberPhase.phase === 1}
-          title="Exclusão de Membro da Equipe"
-          message="Essa exclusão é permanente e irreversível. Você deseja mesmo fazer ela?"
-          onConfirm={() => setDeleteTeamMemberPhase(prev => ({ ...prev, phase: 2 }))}
-          onCancel={() => setDeleteTeamMemberPhase({ phase: 0, id: null })}
-          confirmText="SIM"
-          cancelText="NÃO"
-        />
-        <ConfirmationModal
-          isOpen={deleteTeamMemberPhase.phase === 2}
-          title="Confirmar Exclusão"
-          message="Tem certeza disso?"
-          onConfirm={async () => {
-            if (deleteTeamMemberPhase.id) {
-              await db.delete('team-members', deleteTeamMemberPhase.id);
-              showSuccess('Excluído', 'Membro da equipe foi excluído permanentemente.');
-              refreshData();
-            }
-            setDeleteTeamMemberPhase({ phase: 0, id: null });
-          }}
-          onCancel={() => setDeleteTeamMemberPhase({ phase: 0, id: null })}
-          confirmText="OK"
-          cancelText="CANCELAR"
-        />
-      </Layout>
-    </NavigationContext.Provider>
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || 'dummy_client_id'}>
+      <NavigationContext.Provider value={{ registerInterceptor }}>
+        <Layout 
+          onNavigate={navigate} 
+          onLogout={handleLogout} 
+          onSwitchProfile={handleSwitchProfile}
+          userProfile={currentUser.profile} 
+          currentUser={currentUser} 
+          currentUserPermissions={currentUserPermissions}
+          customLogo={appConfig.logo}
+          customLogoText={appConfig.text}
+        >
+          {renderContent()}
+          <SuccessModal 
+            isOpen={successModal.isOpen} 
+            title={successModal.title} 
+            message={successModal.message} 
+            onConfirm={() => setSuccessModal({ ...successModal, isOpen: false })} 
+          />
+          <ConfirmationModal
+            isOpen={deleteTeamMemberPhase.phase === 1}
+            title="Exclusão de Membro da Equipe"
+            message="Essa exclusão é permanente e irreversível. Você deseja mesmo fazer ela?"
+            onConfirm={() => setDeleteTeamMemberPhase(prev => ({ ...prev, phase: 2 }))}
+            onCancel={() => setDeleteTeamMemberPhase({ phase: 0, id: null })}
+            confirmText="SIM"
+            cancelText="NÃO"
+          />
+          <ConfirmationModal
+            isOpen={deleteTeamMemberPhase.phase === 2}
+            title="Confirmar Exclusão"
+            message="Tem certeza disso?"
+            onConfirm={async () => {
+              if (deleteTeamMemberPhase.id) {
+                await db.delete('team-members', deleteTeamMemberPhase.id);
+                showSuccess('Excluído', 'Membro da equipe foi excluído permanentemente.');
+                refreshData();
+              }
+              setDeleteTeamMemberPhase({ phase: 0, id: null });
+            }}
+            onCancel={() => setDeleteTeamMemberPhase({ phase: 0, id: null })}
+            confirmText="OK"
+            cancelText="CANCELAR"
+          />
+          {isChangePasswordModalOpen && (
+            <ChangePasswordModal
+              currentUser={currentUser}
+              onClose={() => setIsChangePasswordModalOpen(false)}
+              onSuccess={() => {
+                setIsChangePasswordModalOpen(false);
+                showSuccess('Senha Alterada', 'Sua senha foi atualizada com sucesso.');
+              }}
+            />
+          )}
+        </Layout>
+      </NavigationContext.Provider>
+    </GoogleOAuthProvider>
   );
 }

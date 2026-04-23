@@ -6,9 +6,10 @@ import { ConfirmationModal } from './ConfirmationModal';
 
 interface UserListViewProps {
   onEditUser?: (user: User) => void;
+  onAddUser?: () => void;
 }
 
-export const UserListView: React.FC<UserListViewProps> = ({ onEditUser }) => {
+export const UserListView: React.FC<UserListViewProps> = ({ onEditUser, onAddUser }) => {
   const [users, setUsers] = useState<User[]>([]);
   const [modalConfig, setModalConfig] = useState<{
     isOpen: boolean;
@@ -56,8 +57,18 @@ export const UserListView: React.FC<UserListViewProps> = ({ onEditUser }) => {
           <h2 className="text-xl font-black uppercase tracking-tighter">Relação de Usuários</h2>
           <p className="text-xs font-medium opacity-80 mt-1">Gerenciamento de credenciais do sistema</p>
         </div>
-        <div className="bg-white/20 px-3 py-1 rounded text-xs font-bold">
-          {users.length} Registros
+        <div className="flex items-center gap-4">
+          <div className="bg-white/20 px-3 py-1 rounded text-xs font-bold">
+            {users.length} Registros
+          </div>
+          {onAddUser && (
+            <button 
+              onClick={onAddUser}
+              className="bg-white text-[#007b63] px-4 py-2 rounded-lg font-bold text-xs uppercase shadow hover:bg-gray-100 transition-colors"
+            >
+              + Novo
+            </button>
+          )}
         </div>
       </div>
 

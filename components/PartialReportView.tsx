@@ -151,8 +151,8 @@ export const PartialReportView: React.FC<PartialReportViewProps> = ({ studies, i
     <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto">
       <div className="bg-white p-6 rounded-3xl shadow-xl border border-gray-100">
         <div className="border-b border-[#007b63]/20 pb-4 mb-6">
-          <h2 className="text-2xl font-black text-[#007b63] uppercase tracking-tighter">Gestão de Relatórios</h2>
-          <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest">Estudos Ativos e Submissões</p>
+          <h2 className="text-2xl font-black text-[#007b63] uppercase tracking-tighter">Relatórios Parciais</h2>
+          <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest">Relatórios submetidos anualmente com base na data de aprovação do dossiê Inicial pelo CEP</p>
         </div>
 
         <div className="overflow-hidden border rounded-2xl bg-white shadow-sm">

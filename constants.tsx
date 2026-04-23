@@ -17,6 +17,13 @@ export const POST_IT_COLORS = [
   'bg-orange-100 border-orange-200 text-orange-900',
 ];
 
+export const formatDatePTBR = (dateString?: string) => {
+  if (!dateString) return '';
+  if (dateString.includes('/')) return dateString; // Already formatted
+  const [year, month, day] = dateString.split('-');
+  return `${day}/${month}/${year}`;
+};
+
 export const CEP_DOCUMENT_OPTIONS = [
   'Brochura do Investigador',
   'Material Participante',
@@ -174,7 +181,7 @@ export const DROPDOWN_OPTIONS = {
     'Urologista'
   ],
   teamHonorifics: ['Sr.', 'Sra.'],
-  teamRoles: ['Administrativo', 'Assistente de Pesquisa', 'Cardiologista', 'Coordenador de estudos', 'Enfermeira', 'Farmacêutico', 'Oftalmologista'].sort(),
+  teamRoles: [],
   participantStatus: [
     'Ativo', 
     'Concluiu', 

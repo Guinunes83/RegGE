@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Study, PIEntry, Patient, ProtocolDeviation, TeamMember } from '../types';
-import { LOGO_SVG } from '../constants';
+import { LOGO_SVG, formatDatePTBR } from '../constants';
 import { db } from '../database';
 import { ConfirmationModal } from './ConfirmationModal';
 
@@ -232,8 +232,8 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
                     <td className="border border-black p-2">{d.piName}</td>
                     <td className="border border-black p-2">{d.centerNumber}</td>
                     <td className="border border-black p-2">{d.patientNumber}</td>
-                    <td className="border border-black p-2 text-center">{d.occurrenceDate}</td>
-                    <td className="border border-black p-2 text-center">{d.deviationDate}</td>
+                    <td className="border border-black p-2 text-center">{formatDatePTBR(d.occurrenceDate)}</td>
+                    <td className="border border-black p-2 text-center">{formatDatePTBR(d.deviationDate)}</td>
                     <td className="border border-black p-2 italic">{d.description}</td>
                   </tr>
                 ))}
@@ -345,7 +345,7 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
                     <td className="px-3 py-3 font-bold text-gray-800">{studies.find(s => s.id === d.studyId)?.name}</td>
                     <td className="px-3 py-3">{d.piName}</td>
                     <td className="px-3 py-3">{d.patientNumber}</td>
-                    <td className="px-3 py-3">{d.occurrenceDate}</td>
+                    <td className="px-3 py-3">{formatDatePTBR(d.occurrenceDate)}</td>
                     <td className="px-3 py-3 truncate max-w-[150px]">{d.description}</td>
                     <td className="px-3 py-3"><span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${d.status === 'Gerado' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{d.status}</span></td>
                     <td className="px-3 py-3 text-right flex justify-end gap-2">

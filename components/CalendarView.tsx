@@ -3,6 +3,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { CalendarEvent, Study, Patient, Consultation, EventType } from '../types';
 import { db } from '../database';
 import { ConfirmationModal } from './ConfirmationModal';
+import { useGoogleLogin } from '@react-oauth/google';
 
 interface CalendarViewProps {
   studies: Study[];
@@ -18,6 +19,81 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ studies, patients, c
   const [viewMode, setViewMode] = useState<ViewMode>('Month');
   const [allEvents, setAllEvents] = useState<CalendarEvent[]>([]);
   const [consultations, setConsultations] = useState<Consultation[]>([]);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  // Funcionalidade de Sincronização Google Agenda
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setIsSyncing(true);
+      try {
+        const accessToken = tokenResponse.access_token;
+        
+        // 1. Puxar eventos do Google e salvar no nosso banco
+        const timeMin = new Date();
+        timeMin.setMonth(timeMin.getMonth() - 2); // puxar de 2 meses atrás
+        const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${timeMin.toISOString()}&maxResults=100`, {
+          headers: { Authorization: `Bearer ${accessToken}` }
+        });
+        const data = await res.json();
+        
+        if (data.items) {
+          for (const item of data.items) {
+            // Ignorar eventos que começam com o nosso prefixo (foram enviados por nós)
+            if (item.id && item.id.startsWith('regge')) continue;
+            
+            const eventDate = item.start?.dateTime?.split('T')[0] || item.start?.date || new Date().toISOString().split('T')[0];
+            const gEventToSave: CalendarEvent = {
+              id: item.id || Math.random().toString(36).substr(2, 9),
+              title: item.summary || 'Evento Sem Título',
+              description: (item.description || '') + '\n(Importado do Google)',
+              date: eventDate,
+              type: 'External Event' as EventType
+            };
+            await db.upsert('calendarEvents', gEventToSave);
+          }
+        }
+
+        // 2. Enviar nossos eventos Internos/Consultas para o Google Agenda
+        const ourEvents = await db.getAll<CalendarEvent>('calendarEvents');
+        const eventsToPush = ourEvents.filter(e => e.type !== 'External Event' && !e.googleSyncId);
+        
+        for (const e of eventsToPush) {
+           const gcalEvent = {
+              summary: e.title,
+              description: e.description || 'Criado através do REGGE',
+              start: { date: e.date, timeZone: 'America/Sao_Paulo' },
+              end: { date: e.date, timeZone: 'America/Sao_Paulo' },
+              id: 'regge' + e.id?.toLowerCase().replace(/[^a-v0-9]/g, '').padEnd(11, 'v') // id requirements: base32hex
+           };
+
+           try {
+             await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events`, {
+               method: 'POST',
+               headers: {
+                 Authorization: `Bearer ${accessToken}`,
+                 'Content-Type': 'application/json'
+               },
+               body: JSON.stringify(gcalEvent)
+             });
+             // Marcar como sincronizado
+             e.googleSyncId = gcalEvent.id;
+             await db.upsert('calendarEvents', e);
+           } catch (pushErr) {
+             console.error("Falha ao exportar evento", pushErr);
+           }
+        }
+        
+        await fetchData();
+        alert('Sincronização com Google Agenda concluída!');
+      } catch (err) {
+        console.error(err);
+        alert('Erro ao sincronizar com Google Calendar');
+      } finally {
+        setIsSyncing(false);
+      }
+    },
+    scope: 'https://www.googleapis.com/auth/calendar.events',
+  });
 
   // Modal de Evento / Consulta
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -546,6 +622,19 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ studies, patients, c
               Novo Evento
           </button>
         )}
+        
+        <button 
+            onClick={() => googleLogin()}
+            disabled={isSyncing}
+            className={`border bg-white text-gray-700 py-2.5 rounded-xl font-bold uppercase text-[10px] shadow-sm tracking-widest transition-all flex items-center justify-center gap-2 ${isSyncing ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
+        >
+            {isSyncing ? (
+               <svg className="w-4 h-4 text-orange-500 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            ) : (
+               <svg className="w-4 h-4 text-orange-500" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.5 15.5l-5.5-3.5V6.5H13v6.5l4.5 2.5z"/></svg>
+            )}
+            {isSyncing ? 'Sincronizando...' : 'Sincronizar Google Agenda'}
+        </button>
 
         <div className="flex-1 flex flex-col gap-4">
           <h4 className="text-[10px] font-bold text-[#007b63] uppercase tracking-tighter border-b border-[#007b63]/20 pb-1">Eventos Agendados</h4>

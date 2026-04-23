@@ -381,6 +381,7 @@ export type CalendarEvent = {
   patientId?: string;
   studyId?: string;
   consultationId?: string; // Vínculo com os dados clínicos da consulta
+  googleSyncId?: string; // ID of the event when synced to Google Calendar
 };
 
 export type RegulatoryLinkEntry = {
