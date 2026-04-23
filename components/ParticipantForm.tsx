@@ -85,7 +85,11 @@ const ParticipantInput = ({
           disabled={disabled}
         >
           <option value="">Selecione...</option>
-          {options.map((o: any) => (
+          {[...options].sort((a: any, b: any) => {
+            const valA = (a?.name || a || '').toString();
+            const valB = (b?.name || b || '').toString();
+            return valA.localeCompare(valB);
+          }).map((o: any) => (
              <option key={o.id || o} value={o.id || o}>{o.name || o}</option>
           ))}
         </select>

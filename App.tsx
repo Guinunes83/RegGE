@@ -359,12 +359,12 @@ export default function App() {
       
       case 'PI': // Agora Team Member
         if (activeProps.mode === 'edit' || activeProps.mode === 'view') {
-           return <TeamForm member={activeProps.pi} mode={activeProps.mode} onSave={async (data) => { await db.upsert('team-members', data); showSuccess('Salvo', 'Membro salvo com sucesso.'); navigate('PI'); }} onCancel={() => navigate('PI')} onEdit={() => navigate('PI', { mode: 'edit', pi: activeProps.pi })} isReadOnly={!hasPermission('edit_team')} />;
+           return <TeamForm currentUser={currentUser} member={activeProps.pi} mode={activeProps.mode} onSave={async (data) => { await db.upsert('team-members', data); showSuccess('Salvo', 'Membro salvo com sucesso.'); navigate('PI'); }} onCancel={() => navigate('PI')} onEdit={() => navigate('PI', { mode: 'edit', pi: activeProps.pi })} isReadOnly={!hasPermission('edit_team')} />;
         }
         return (
           <div className="flex flex-col gap-6 p-6 h-full w-full">
             <div className="flex justify-between items-center border-b border-gray-200 pb-4">
-              <h2 className="text-xl font-black text-[#007b63] uppercase tracking-tighter">Dados Equipe</h2>
+              <h2 className="text-xl font-black text-[#007b63] uppercase tracking-tighter">Equipe</h2>
               {hasPermission('create_team') && <button onClick={() => navigate('PI', { mode: 'edit' })} className="bg-[#007b63] text-white px-4 py-2 rounded-lg shadow-md font-bold text-xs uppercase">+ Novo</button>}
             </div>
             <div className="overflow-hidden rounded-xl border bg-white shadow-sm flex-1 overflow-y-auto">
@@ -467,7 +467,7 @@ export default function App() {
         return (
           <div className="flex flex-col gap-6 p-6 h-full w-full">
             <div className="flex justify-between items-center border-b border-gray-200 pb-4">
-              <h2 className="text-xl font-black text-[#007b63] uppercase tracking-tighter">Estudos Clínicos</h2>
+              <h2 className="text-xl font-black text-[#007b63] uppercase tracking-tighter">Estudos</h2>
               {hasPermission('create_studies') && <button onClick={() => navigate('Studies', { mode: 'edit' })} className="bg-[#007b63] text-white px-4 py-2 rounded-lg shadow-md font-bold text-xs uppercase">+ Novo</button>}
             </div>
             <div className="overflow-hidden rounded-xl border bg-white shadow-sm flex-1 overflow-y-auto">

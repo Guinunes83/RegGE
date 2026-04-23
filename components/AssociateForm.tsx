@@ -39,7 +39,7 @@ const FormInput = ({
         onChange={(e) => onChange(e.target.value)}
       >
         <option value="">Selecione...</option>
-        {options.map((o: string) => <option key={o} value={o}>{o}</option>)}
+        {[...(options || [])].sort((a: string, b: string) => a.localeCompare(b)).map((o: string) => <option key={o} value={o}>{o}</option>)}
       </select>
     ) : (
       <input 

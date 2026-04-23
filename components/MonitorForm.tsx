@@ -43,7 +43,7 @@ const MonitorInput = ({
         onChange={(e) => onChange(e.target.value)}
       >
         <option value="">Selecione...</option>
-        {options.map((o: any) => <option key={o.value} value={o.value}>{o.label}</option>)}
+        {[...(options || [])].sort((a: any, b: any) => a.label.localeCompare(b.label)).map((o: any) => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
     ) : (
       <div>

@@ -60,7 +60,7 @@ const StudyInput = ({
             onChange={(e) => onChange(e.target.value)}
           >
             <option value="">Selecione...</option>
-            {options?.sort((a: string, b: string) => a.localeCompare(b)).map((o: string) => <option key={o} value={o}>{o}</option>)}
+            {[...(options || [])].sort((a: string, b: string) => a.localeCompare(b)).map((o: string) => <option key={o} value={o}>{o}</option>)}
           </select>
         ) : (
           <input 
@@ -458,7 +458,7 @@ export const StudyForm: React.FC<StudyFormProps> = ({ study, mode, onSave, onCan
             <div className="mb-4 flex gap-2">
               <select className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white text-sm outline-none focus:ring-2 focus:ring-[#007b63]" onChange={(e) => addMonitor(e.target.value)} value="">
                 <option value="">Vincular Monitor...</option>
-                {monitorList.sort((a,b) => a.name.localeCompare(b.name)).map(m => <option key={m.id} value={m.id}>{m.name} ({m.role})</option>)}
+                {[...monitorList].sort((a,b) => a.name.localeCompare(b.name)).map(m => <option key={m.id} value={m.id}>{m.name} ({m.role})</option>)}
               </select>
               <button 
                 onClick={() => setActiveModal('monitor')}
@@ -499,7 +499,7 @@ export const StudyForm: React.FC<StudyFormProps> = ({ study, mode, onSave, onCan
             <div className="mb-4 flex gap-2">
               <select className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white text-sm outline-none focus:ring-2 focus:ring-[#007b63]" onChange={(e) => toggleParticipant(e.target.value)} value="">
                 <option value="">Vincular Participante...</option>
-                {participantList.sort((a,b) => a.name.localeCompare(b.name)).map(p => (
+                {[...participantList].sort((a,b) => a.name.localeCompare(b.name)).map(p => (
                   <option key={p.id} value={p.id}>{p.name} ({p.participantNumber})</option>
                 ))}
               </select>

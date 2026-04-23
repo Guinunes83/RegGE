@@ -174,7 +174,7 @@ export const DROPDOWN_OPTIONS = {
     'Urologista'
   ],
   teamHonorifics: ['Sr.', 'Sra.'],
-  teamRoles: ['Administrativo', 'Assistente de Pesquisa', 'Cardiologista', 'Coordenador de estudos', 'Enfermeira', 'Farmacêutico', 'Oftalmologista'].sort(),
+  teamRoles: [],
   participantStatus: [
     'Ativo', 
     'Concluiu', 

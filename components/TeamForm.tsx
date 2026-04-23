@@ -47,7 +47,7 @@ const TeamInput = ({
           onChange={(e) => onChange(e.target.value)}
         >
           <option value="">Selecione...</option>
-          {options.map((o: string) => <option key={o} value={o}>{o}</option>)}
+          {[...options].sort((a, b) => a.localeCompare(b)).map((o: string) => <option key={o} value={o}>{o}</option>)}
         </select>
         {onAddOption && (
           <button
@@ -565,7 +565,7 @@ export const TeamForm: React.FC<TeamFormProps> = ({ member, mode, onSave, onCanc
                   onChange={e => setNewPlatform({...newPlatform, name: e.target.value})}
                 >
                   <option value="">Selecione Plataforma...</option>
-                  {customPlatforms.map((p) => <option key={p} value={p}>{p}</option>)}
+                  {[...customPlatforms].sort((a,b) => a.localeCompare(b)).map((p) => <option key={p} value={p}>{p}</option>)}
                 </select>
                 <button
                   type="button"
@@ -659,9 +659,6 @@ export const TeamForm: React.FC<TeamFormProps> = ({ member, mode, onSave, onCanc
             <TeamInput label="RQE" value={formData.rqe} onChange={(v: string) => handleFieldChange('rqe', v)} isView={isView} />
             <TeamInput label="MATRÍCULA" value={formData.matricula} onChange={(v: string) => handleFieldChange('matricula', v)} isView={isView} />
             
-            <TeamInput label="DATA ADMISSÃO" value={isView ? formatDateView(formData.admissionDate) : formData.admissionDate} onChange={(v: string) => handleFieldChange('admissionDate', v)} type="date" isView={isView} />
-            <TeamInput label="DATA DESLIGAMENTO" value={isView ? formatDateView(formData.terminationDate) : formData.terminationDate} onChange={(v: string) => handleFieldChange('terminationDate', v)} type="date" isView={isView} />
-            
             <TeamInput 
               label="REGIME" 
               value={formData.contractType} 
@@ -671,6 +668,12 @@ export const TeamForm: React.FC<TeamFormProps> = ({ member, mode, onSave, onCanc
             />
             {formData.contractType === 'PJ' && (
                 <TeamInput label="CNPJ" value={formData.cnpj} onChange={(v: string) => handleFieldChange('cnpj', v)} isView={isView} placeholder="00.000.000/0000-00" />
+            )}
+            {formData.contractType === 'CLT' && (
+              <>
+                <TeamInput label="DATA ADMISSÃO" value={isView ? formatDateView(formData.admissionDate) : formData.admissionDate} onChange={(v: string) => handleFieldChange('admissionDate', v)} type="date" isView={isView} />
+                <TeamInput label="DATA DESLIGAMENTO" value={isView ? formatDateView(formData.terminationDate) : formData.terminationDate} onChange={(v: string) => handleFieldChange('terminationDate', v)} type="date" isView={isView} />
+              </>
             )}
           </div>
         </section>
