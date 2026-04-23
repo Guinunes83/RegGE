@@ -73,6 +73,7 @@ export const Layout: React.FC<LayoutProps> = ({ onNavigate, onLogout, onSwitchPr
         { label: 'Agenda', view: 'Calendar', permission: 'access_agenda' },
         { label: 'Configurações', view: 'Settings', permission: 'access_settings' },
         { label: 'Dashboard', view: 'Dashboard', permission: 'access_dashboard' },
+        { label: 'Links Úteis', view: 'RegulatoryLinks', permission: 'access_regulatory_links' },
         { label: 'Mural de Avisos', view: 'NoticeBoard' },
         { label: 'Notas', view: 'Notepad' },
         { 
@@ -161,8 +162,6 @@ export const Layout: React.FC<LayoutProps> = ({ onNavigate, onLogout, onSwitchPr
         { 
           label: 'Regulatório',
           children: [
-            { label: 'Calendário Reuniões CEP', view: 'CEPCalendar', permission: 'access_cep_calendar' },
-            { label: 'Links Úteis', view: 'RegulatoryLinks', permission: 'access_regulatory_links' },
             { label: 'Relatórios Parciais', view: 'RegulatoryPartialReport', permission: 'access_regulatory_partial_report' },
             { label: 'Reunião CEP', view: 'CEPMeeting', permission: 'access_cep_meeting' },
           ] 

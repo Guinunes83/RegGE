@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Study, CEPMeeting, AppNotification, UserProfile } from '../types';
-import { DROPDOWN_OPTIONS, CEP_DOCUMENT_OPTIONS } from '../constants';
+import { DROPDOWN_OPTIONS, CEP_DOCUMENT_OPTIONS, formatDatePTBR } from '../constants';
 import { db } from '../database';
 import { ConfirmationModal } from './ConfirmationModal';
 
@@ -9,20 +9,26 @@ interface CEPMeetingViewProps {
   studies: Study[];
   isReadOnly?: boolean;
   onShowSuccess: (title: string, message: string) => void;
+  onNavigate: (view: any) => void;
 }
 
-const InputField = ({ label, value, onChange, type = "text", readOnly = false }: any) => (
-  <div className="flex flex-col gap-1 w-full">
-    <label className="text-[10px] uppercase font-bold text-gray-500 ml-1">{label}</label>
-    <input 
-      type={type} 
-      className={`border border-gray-300 rounded px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-[#007b63] ${readOnly ? 'bg-gray-100 text-gray-500' : 'bg-white'}`}
-      value={value || ''}
-      onChange={e => onChange && onChange(e.target.value)}
-      readOnly={readOnly}
-    />
-  </div>
-);
+const InputField = ({ label, value, onChange, type = "text", readOnly = false }: any) => {
+  const displayValue = readOnly && type === 'date' ? formatDatePTBR(value) : value;
+  const inputType = readOnly && type === 'date' ? 'text' : type;
+
+  return (
+    <div className="flex flex-col gap-1 w-full">
+      <label className="text-[10px] uppercase font-bold text-gray-500 ml-1">{label}</label>
+      <input 
+        type={inputType} 
+        className={`border border-gray-300 rounded px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-[#007b63] ${readOnly ? 'bg-gray-100 text-gray-500' : 'bg-white'}`}
+        value={displayValue || ''}
+        onChange={e => onChange && onChange(e.target.value)}
+        readOnly={readOnly}
+      />
+    </div>
+  );
+};
 
 const SelectField = ({ label, value, onChange, options, disabled = false }: any) => (
   <div className="flex flex-col gap-1 w-full">
@@ -43,8 +49,12 @@ const SelectField = ({ label, value, onChange, options, disabled = false }: any)
   </div>
 );
 
-export const CEPMeetingView: React.FC<CEPMeetingViewProps> = ({ studies, isReadOnly = false, onShowSuccess }) => {
+export const CEPMeetingView: React.FC<CEPMeetingViewProps> = ({ studies, isReadOnly = false, onShowSuccess, onNavigate }) => {
   const [meetings, setMeetings] = useState<CEPMeeting[]>([]);
+  const [calendarDates, setCalendarDates] = useState<string[]>([]);
+  const [docOptions, setDocOptions] = useState<string[]>([]);
+  const [isDocModalOpen, setIsDocModalOpen] = useState(false);
+  const [newDocName, setNewDocName] = useState('');
   const [formData, setFormData] = useState<Partial<CEPMeeting>>({});
   
   // Controle de expansão da linha
@@ -61,11 +71,28 @@ export const CEPMeetingView: React.FC<CEPMeetingViewProps> = ({ studies, isReadO
   // Load data
   useEffect(() => {
     fetchMeetings();
+    fetchCalendarDates();
+    fetchDocOptions();
   }, []);
+
+  const fetchDocOptions = async () => {
+    const docs = await db.getAll<{id: string, name: string}>('cepDocuments');
+    // Combine hardcoded defaults with dynamic, or just rely completely on dynamic. Let's merge both just in case, but prioritize dynamic.
+    const dynamicNames = docs.map(d => d.name);
+    const combined = Array.from(new Set([...CEP_DOCUMENT_OPTIONS, ...dynamicNames])).sort((a,b) => a.localeCompare(b));
+    setDocOptions(combined);
+  };
 
   const fetchMeetings = async () => {
     const data = await db.getAll<CEPMeeting>('cepMeetings');
     setMeetings(data);
+  };
+
+  const fetchCalendarDates = async () => {
+    const data = await db.getAll<any>('cepCalendar');
+    // Extract unique dates properly sorting them
+    const dates = Array.from(new Set(data.map(d => d.meetingDate).filter(Boolean))).sort((a,b) => a.localeCompare(b));
+    setCalendarDates(dates);
   };
 
   // Auto-fill CAAE based on Study
@@ -103,32 +130,19 @@ export const CEPMeetingView: React.FC<CEPMeetingViewProps> = ({ studies, isReadO
 
     const studyName = studies.find(s => s.id === meeting.studyId)?.name || 'Estudo desconhecido';
     const amendmentName = meeting.amendment || 'Emenda';
-    const targetProfiles = new Set<UserProfile>();
+    const targetProfiles = new Set<string>();
 
-    // Adiciona ADMINISTRATIVO em todos os alertas gerados
-    targetProfiles.add(UserProfile.ADMIN);
-    targetProfiles.add(UserProfile.DEVELOPER);
+    const allProfiles = await db.getAll<{ id: string, name: string, permissions?: string[] }>('userProfiles');
 
-    // REGRAS DE NOTIFICAÇÃO
-    if (selectedDocs.includes('Material Participante')) {
-      targetProfiles.add(UserProfile.NURSE);
-      targetProfiles.add(UserProfile.COORDINATOR);
-    }
-    if (selectedDocs.includes('Brochura do Investigador')) {
-      targetProfiles.add(UserProfile.PHARMACY);
-      targetProfiles.add(UserProfile.COORDINATOR);
-      targetProfiles.add(UserProfile.AUDIT);
-    }
-    if (selectedDocs.includes('Protocolo Clinico')) {
-      targetProfiles.add(UserProfile.PHARMACY);
-      targetProfiles.add(UserProfile.NURSE);
-      targetProfiles.add(UserProfile.COORDINATOR);
-      targetProfiles.add(UserProfile.AUDIT);
-    }
-    if (selectedDocs.includes("TCLE's")) {
-      targetProfiles.add(UserProfile.COORDINATOR);
-      targetProfiles.add(UserProfile.AUDIT);
-    }
+    // Add Admin and Developer explicitly if we want to default to them, or we can just rely on profiles.
+    allProfiles.forEach(profile => {
+      const perms = profile.permissions || [];
+      selectedDocs.forEach(doc => {
+        if (perms.includes(`doc_notify_${doc}`)) {
+          targetProfiles.add(profile.name);
+        }
+      });
+    });
 
     if (targetProfiles.size > 0) {
       const notification: AppNotification = {
@@ -137,7 +151,7 @@ export const CEPMeetingView: React.FC<CEPMeetingViewProps> = ({ studies, isReadO
         message: `A emenda "${amendmentName}" do estudo "${studyName}" foi APROVADA. Documentos relevantes disponíveis.`,
         date: new Date().toLocaleDateString('pt-BR'),
         read: false,
-        targetProfiles: Array.from(targetProfiles)
+        targetProfiles: Array.from(targetProfiles) as UserProfile[]
       };
       
       await db.upsert('notifications', notification);
@@ -236,13 +250,21 @@ export const CEPMeetingView: React.FC<CEPMeetingViewProps> = ({ studies, isReadO
 
       {/* FORM */}
       <div className={`p-6 bg-[#d1e7e4]/20 rounded-2xl border border-[#007b63]/10 flex-shrink-0 ${isReadOnly ? 'opacity-60 pointer-events-none' : ''}`}>
-        <h3 className="text-[#007b63] font-black uppercase text-xs tracking-widest mb-6 border-b border-[#007b63]/20 pb-2">Registro de Reunião CEP</h3>
+        <div className="flex justify-between items-center mb-6 border-b border-[#007b63]/20 pb-2">
+           <h3 className="text-[#007b63] font-black uppercase text-xs tracking-widest">Registro de Reunião CEP</h3>
+           <button 
+             onClick={() => onNavigate('CEPCalendar')}
+             className="bg-[#007b63] text-white px-4 py-2 rounded-lg shadow-md font-bold text-xs uppercase hover:bg-[#00604d] transition-colors"
+           >
+             Calendário de reuniões do CEP
+           </button>
+        </div>
         
         {/* SEÇÃO EMENDA */}
         <div className="mb-4">
           <h4 className="text-[10px] font-bold text-[#007b63] uppercase mb-2">Emenda</h4>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <InputField label="Data da Reunião CEP" type="date" value={formData.date} onChange={(v: string) => setFormData({...formData, date: v})} readOnly={isReadOnly} />
+            <SelectField label="Data da Reunião CEP" value={formData.date} options={calendarDates.map(d => ({id: d, name: formatDatePTBR(d)}))} onChange={(v: string) => setFormData({...formData, date: v})} disabled={isReadOnly} />
             <SelectField label="Categoria" value={formData.category} options={DROPDOWN_OPTIONS.cepCategories} onChange={(v: string) => setFormData({...formData, category: v})} disabled={isReadOnly} />
             <SelectField label="Estudo" value={formData.studyId} options={activeStudies.map(s => ({id: s.id, name: s.name}))} onChange={(v: string) => setFormData({...formData, studyId: v})} disabled={isReadOnly} />
             <InputField label="C.A.A.E" value={formData.caae} readOnly />
@@ -305,7 +327,7 @@ export const CEPMeetingView: React.FC<CEPMeetingViewProps> = ({ studies, isReadO
                 meetings.map(m => {
                   const isExpanded = expandedRowId === m.id;
                   const selectedDocs = m.selectedDocuments || [];
-                  const availableDocs = CEP_DOCUMENT_OPTIONS.filter(doc => !selectedDocs.includes(doc));
+                  const availableDocs = docOptions.filter(doc => !selectedDocs.includes(doc));
 
                   return (
                     <React.Fragment key={m.id}>
@@ -318,7 +340,7 @@ export const CEPMeetingView: React.FC<CEPMeetingViewProps> = ({ studies, isReadO
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                           </svg>
                         </td>
-                        <td className="px-3 py-3 font-medium">{m.date}</td>
+                        <td className="px-3 py-3 font-medium">{formatDatePTBR(m.date)}</td>
                         <td className="px-3 py-3">{m.category}</td>
                         <td className="px-3 py-3 font-bold text-gray-800">{studies.find(s => s.id === m.studyId)?.name || 'N/A'}</td>
                         <td className="px-3 py-3">{m.caae}</td>
@@ -327,8 +349,8 @@ export const CEPMeetingView: React.FC<CEPMeetingViewProps> = ({ studies, isReadO
                         <td className="px-3 py-3"><span className="px-2 py-0.5 bg-gray-100 rounded text-xs">{m.cepApproval || '-'}</span></td>
                         <td className="px-3 py-3 text-center">{m.businessDays}</td>
                         <td className="px-3 py-3">{m.training}</td>
-                        <td className="px-3 py-3">{m.lastVerificationDate || '-'}</td>
-                        <td className="px-3 py-3 text-right flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                        <td className="px-3 py-3">{m.lastVerificationDate ? formatDatePTBR(m.lastVerificationDate) : '-'}</td>
+                        <td className="px-3 py-3 flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
                           {!isReadOnly && (
                             <>
                               <button onClick={() => handleEdit(m)} title="Editar" className="text-blue-500 font-bold hover:underline uppercase text-[10px]">
@@ -341,13 +363,30 @@ export const CEPMeetingView: React.FC<CEPMeetingViewProps> = ({ studies, isReadO
                           )}
                         </td>
                       </tr>
+                      {!isExpanded && (
+                        <tr onClick={() => toggleRowExpansion(m.id)} className="cursor-pointer hover:bg-gray-50 border-b-0">
+                          <td colSpan={12} className="px-3 py-1 text-center bg-gray-50/50">
+                            <span className="text-[9px] text-gray-400 italic">Clique na linha para visualizar ou adicionar os documentos da emenda</span>
+                          </td>
+                        </tr>
+                      )}
                       
                       {/* DETAIL ROW */}
                       {isExpanded && (
                         <tr className="bg-gray-50 animate-in fade-in slide-in-from-top-2 duration-300">
                           <td colSpan={12} className="px-8 py-6 border-b border-gray-200">
                             <div className="flex flex-col gap-3">
-                              <h5 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Documentos da Emenda</h5>
+                              <div className="flex justify-between items-center">
+                                <h5 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Documentos da Emenda</h5>
+                                {!isReadOnly && (
+                                  <button
+                                    onClick={() => setIsDocModalOpen(true)}
+                                    className="bg-[#007b63] text-white px-3 py-1.5 rounded-lg shadow-sm font-bold text-[10px] uppercase hover:bg-[#00604d] transition-colors"
+                                  >
+                                    + Documentos
+                                  </button>
+                                )}
+                              </div>
                               
                               <div className="grid grid-cols-2 gap-8">
                                 {/* Left Column: Available Documents */}
@@ -415,6 +454,84 @@ export const CEPMeetingView: React.FC<CEPMeetingViewProps> = ({ studies, isReadO
           </table>
         </div>
       </div>
+
+      {/* MODAL CONFIG DE DOCUMENTOS */}
+      {isDocModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setIsDocModalOpen(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="bg-[#007b63] p-6 text-white shrink-0 flex justify-between items-center">
+              <h2 className="text-xl font-black uppercase tracking-tighter">Gerenciar Documentos</h2>
+              <button onClick={() => setIsDocModalOpen(false)} className="text-white/80 hover:text-white">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="p-6">
+              <div className="flex gap-4 items-end mb-6">
+                <div className="flex-1">
+                  <label className="text-[10px] uppercase font-bold text-gray-500 ml-1 mb-1 block">Nome do Documento</label>
+                  <input 
+                    type="text" 
+                    className="border border-gray-300 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#007b63] w-full"
+                    placeholder="Ex: Brochura do Investigador"
+                    value={newDocName}
+                    onChange={(e) => setNewDocName(e.target.value)}
+                    onKeyDown={async (e) => {
+                      if (e.key === 'Enter' && newDocName.trim()) {
+                        e.preventDefault();
+                        const docObj = { id: newDocName.trim(), name: newDocName.trim() };
+                        await db.upsert('cepDocuments', docObj);
+                        setNewDocName('');
+                        fetchDocOptions();
+                      }
+                    }}
+                  />
+                </div>
+                <button 
+                  onClick={async () => {
+                    if (newDocName.trim()) {
+                      const docObj = { id: newDocName.trim(), name: newDocName.trim() };
+                      await db.upsert('cepDocuments', docObj);
+                      setNewDocName('');
+                      fetchDocOptions();
+                    }
+                  }}
+                  className="bg-[#007b63] text-white px-6 py-3 rounded-xl font-bold uppercase text-xs shadow-md hover:bg-[#005a48] transition-colors h-[46px]"
+                >
+                  Adicionar
+                </button>
+              </div>
+
+              <div className="border border-gray-200 rounded-xl overflow-hidden max-h-60 overflow-y-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-gray-50 text-gray-600 sticky top-0">
+                    <tr><th className="px-4 py-2 text-xs font-bold uppercase">Documentos Cadastrados</th><th className="px-4 py-2 w-10"></th></tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {docOptions.map(doc => (
+                      <tr key={doc} className="hover:bg-gray-50">
+                        <td className="px-4 py-2 text-gray-700">{doc}</td>
+                        <td className="px-4 py-2 text-right">
+                          <button 
+                            onClick={async () => {
+                              if (window.confirm(`Excluir o documento ${doc}?`)) {
+                                await db.delete('cepDocuments', doc);
+                                fetchDocOptions();
+                              }
+                            }}
+                            className="text-red-500 hover:bg-red-50 p-1.5 rounded"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

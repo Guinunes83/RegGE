@@ -26,6 +26,7 @@ const AVAILABLE_PERMISSIONS: Permission[] = [
   
   { id: 'access_dashboard', name: 'Acesso ao Dashboard', description: 'Permite visualizar o Dashboard.', category: 'Início', subcategory: 'Dashboard' },
   { id: 'access_notepad', name: 'Acesso ao Bloco de Notas', description: 'Permite acessar o Bloco de Notas.', category: 'Início', subcategory: 'Bloco de notas' },
+  { id: 'access_regulatory_links', name: 'Acesso à Links Úteis', description: 'Permite acessar Links Úteis.', category: 'Início', subcategory: 'Links Úteis' },
   
   // Perfil de Usuário
   { id: 'access_manage_roles', name: 'Acesso à Relação de Perfis', description: 'O perfil que tiver esta caixa de seleção marcada, terá acesso e verá o menu Relação de Perfis.', category: 'Perfil de Usuário', subcategory: 'Perfil' },
@@ -85,14 +86,13 @@ const AVAILABLE_PERMISSIONS: Permission[] = [
 
   { id: 'access_reception', name: 'Acesso à Recepção', description: 'Permite acessar Recepção.', category: 'Setor', subcategory: 'Recepção' },
 
-  { id: 'access_cep_calendar', name: 'Acesso à Calendário Reunião CEP', description: 'Permite acessar Calendário Reunião CEP.', category: 'Setor', subcategory: 'Regulatório' },
-  { id: 'access_regulatory_links', name: 'Acesso à Links Úteis', description: 'Permite acessar Links Úteis.', category: 'Setor', subcategory: 'Regulatório' },
   { id: 'access_regulatory_partial_report', name: 'Acesso à Relatório Parcial', description: 'Permite acessar Relatório Parcial.', category: 'Setor', subcategory: 'Regulatório' },
   { id: 'access_cep_meeting', name: 'Acesso à Reunião do CEP', description: 'Permite acessar Reunião do CEP.', category: 'Setor', subcategory: 'Regulatório' },
 ];
 
 export const ManageRolesView: React.FC<ManageRolesViewProps> = ({ onShowSuccess, currentUserProfile }) => {
   const [roles, setRoles] = useState<{ id: string, name: string, permissions?: string[] }[]>([]);
+  const [dynamicPermissions, setDynamicPermissions] = useState<Permission[]>([]);
   const [newRole, setNewRole] = useState('');
   const [error, setError] = useState('');
   const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean, id: string | null }>({ isOpen: false, id: null });
@@ -103,7 +103,20 @@ export const ManageRolesView: React.FC<ManageRolesViewProps> = ({ onShowSuccess,
 
   useEffect(() => {
     loadRoles();
+    loadDynamicPermissions();
   }, []);
+
+  const loadDynamicPermissions = async () => {
+    const docs = await db.getAll<{id: string, name: string}>('cepDocuments');
+    const dynamicPerms: Permission[] = docs.map(d => ({
+      id: `doc_notify_${d.name}`,
+      name: d.name,
+      description: `Notifica ao aprovar o documento ${d.name} na Reunião CEP.`,
+      category: 'Vínculos de Documento',
+      subcategory: 'Documentos do CEP'
+    }));
+    setDynamicPermissions(dynamicPerms);
+  };
 
   const loadRoles = async () => {
     // Load default roles
@@ -181,7 +194,8 @@ export const ManageRolesView: React.FC<ManageRolesViewProps> = ({ onShowSuccess,
       return;
     }
 
-    const subcategoryPerms = AVAILABLE_PERMISSIONS.filter(p => p.subcategory === subcategory && p.category === category);
+    const ALL_PERMS = [...AVAILABLE_PERMISSIONS, ...dynamicPermissions];
+    const subcategoryPerms = ALL_PERMS.filter(p => p.subcategory === subcategory && p.category === category);
     const currentPerms = selectedRole.permissions || [];
     
     // Check if all permissions in subcategory are currently checked
@@ -218,13 +232,14 @@ export const ManageRolesView: React.FC<ManageRolesViewProps> = ({ onShowSuccess,
       return;
     }
 
+    const ALL_PERMS = [...AVAILABLE_PERMISSIONS, ...dynamicPermissions];
     const currentPerms = selectedRole.permissions || [];
     let newPerms: string[];
 
     if (currentPerms.includes(permId)) {
       // Unchecking: remove this permission AND any permissions that depend on it
       const permsToRemove = [permId];
-      AVAILABLE_PERMISSIONS.forEach(p => {
+      ALL_PERMS.forEach(p => {
         if (p.dependsOn === permId) {
           permsToRemove.push(p.id);
         }
@@ -232,7 +247,7 @@ export const ManageRolesView: React.FC<ManageRolesViewProps> = ({ onShowSuccess,
       newPerms = currentPerms.filter(p => !permsToRemove.includes(p));
     } else {
       // Checking: add this permission
-      const permDef = AVAILABLE_PERMISSIONS.find(p => p.id === permId);
+      const permDef = ALL_PERMS.find(p => p.id === permId);
       if (permDef?.dependsOn && !currentPerms.includes(permDef.dependsOn)) {
         // Parent is not checked, so we can't check this one
         return;
@@ -358,9 +373,10 @@ export const ManageRolesView: React.FC<ManageRolesViewProps> = ({ onShowSuccess,
             </div>
             
             <div className="p-4 overflow-y-auto flex-1 bg-gray-50 flex flex-col gap-3">
-              {Array.from(new Set(AVAILABLE_PERMISSIONS.map(p => p.category))).map(category => {
+              {Array.from(new Set([...AVAILABLE_PERMISSIONS, ...dynamicPermissions].map(p => p.category))).map(category => {
+                const ALL_PERMS = [...AVAILABLE_PERMISSIONS, ...dynamicPermissions];
                 const isExpanded = expandedCategories.includes(category);
-                const categoryPerms = AVAILABLE_PERMISSIONS.filter(p => p.category === category);
+                const categoryPerms = ALL_PERMS.filter(p => p.category === category);
                 
                 return (
                   <div key={category} className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm shrink-0">

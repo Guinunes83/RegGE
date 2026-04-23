@@ -64,9 +64,9 @@ const StudyInput = ({
           </select>
         ) : (
           <input 
-            type={type === 'password' && isView ? 'text' : type}
+            type={isView ? (type === 'password' || type === 'date' ? 'text' : type) : type}
             readOnly={isView}
-            className={`border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-[#007b63] outline-none transition-all flex-1 w-full ${isView ? 'bg-gray-100 cursor-text' : 'bg-white'}`}
+            className={`border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-[#007b63] outline-none transition-all flex-1 w-full ${isView ? 'bg-gray-100 cursor-text text-gray-800 font-medium' : 'bg-white'}`}
             value={displayValue || ''}
             onChange={(e) => onChange(e.target.value)}
             placeholder={isView ? '' : `Digite ${label.toLowerCase()}...`}
