@@ -73,36 +73,28 @@ export const DashboardView: React.FC = () => {
         if (member.active === false) return false; // Ignora inativos
 
         let month = -1;
-        // Lida com formato YYYY-MM-DD
+        // Lida com formato yyyy-mm-dd do input date ou dd/mm/yyyy
+        let parsedDate: Date | null = null;
         if (member.birthDate.match(/^\d{4}-\d{2}-\d{2}/)) {
-           month = parseInt(member.birthDate.substring(5, 7), 10);
-        } 
-        // Lida com formato DD/MM/YYYY
-        else if (member.birthDate.match(/^\d{2}\/\d{2}\/\d{4}/)) {
-           month = parseInt(member.birthDate.substring(3, 5), 10);
-        } 
-        // Fallback genérico
-        else {
+           const [y, m, d] = member.birthDate.split('T')[0].split('-');
+           parsedDate = new Date(parseInt(y), parseInt(m)-1, parseInt(d));
+           month = parseInt(m, 10);
+        } else if (member.birthDate.match(/^\d{2}\/\d{2}\/\d{4}/)) {
+           const [d, m, y] = member.birthDate.split(' ')[0].split('/');
+           parsedDate = new Date(parseInt(y), parseInt(m)-1, parseInt(d));
+           month = parseInt(m, 10);
+        } else {
            const d = new Date(member.birthDate);
            if (!isNaN(d.getTime())) {
              month = d.getMonth() + 1;
+             parsedDate = d;
            }
         }
+        member.parsedBirthDate = parsedDate;
         return month === selectedMonth;
       })
       .map(member => {
-        let day = 0;
-        if (member.birthDate?.match(/^\d{4}-\d{2}-\d{2}/)) {
-           day = parseInt(member.birthDate.substring(8, 10), 10);
-        } else if (member.birthDate?.match(/^\d{2}\/\d{2}\/\d{4}/)) {
-           day = parseInt(member.birthDate.substring(0, 2), 10);
-        } else {
-           const d = new Date(member.birthDate!);
-           if (!isNaN(d.getTime())) {
-             day = d.getDate();
-           }
-        }
-        return { ...member, birthDay: day };
+        return { ...member, birthDay: member.parsedBirthDate ? member.parsedBirthDate.getDate() : 0 };
       })
       .sort((a, b) => a.birthDay - b.birthDay);
   }, [team, selectedMonth]);

@@ -130,9 +130,7 @@ export const Layout: React.FC<LayoutProps> = ({ onNavigate, onLogout, onSwitchPr
           label: 'Coordenação', 
           children: [
             { label: 'Controle de Visitas', view: 'VisitControl', permission: 'access_visit_control' },
-            { label: 'Desvio de GCP', view: 'GCPDeviation', permission: 'access_gcp_deviation' },
-            { label: 'Desvio de Protocolo', view: 'ProtocolDeviation', permission: 'access_protocol_deviation' },
-            { label: 'Desvio de SAE', view: 'SAEDeviation', permission: 'access_sae_deviation' },
+            { label: 'Desvios', view: 'ProtocolDeviation', permission: 'access_protocol_deviation' },
             { label: 'Estoque de Kits', view: 'KitStock', permission: 'access_kit_stock' },
             { label: 'Solicitação de Exames', view: 'ExamRequest', permission: 'access_exam_request' },
           ]

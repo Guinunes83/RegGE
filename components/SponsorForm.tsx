@@ -4,6 +4,7 @@ import { Sponsor, Study } from '../types';
 import { db } from '../database';
 import { ConfirmationModal } from './ConfirmationModal';
 import { UnsavedChangesModal, useUnsavedChanges } from './UnsavedChangesModal';
+import { showValidation } from './ValidationModal';
 
 interface SponsorFormProps {
   sponsor?: Sponsor;
@@ -68,7 +69,7 @@ export const SponsorForm: React.FC<SponsorFormProps> = ({ sponsor, studies, mode
 
   const performValidationAndSave = async (): Promise<boolean> => {
     if (!formData.name) {
-      alert('O campo Nome é obrigatório.');
+      showValidation('O campo Nome é obrigatório e precisa ser preenchido antes de salvar.');
       return false;
     }
 

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Associate, PaymentEntry } from '../types';
 import { UnsavedChangesModal, useUnsavedChanges } from './UnsavedChangesModal';
+import { showValidation } from './ValidationModal';
 
 interface AssociateFormProps {
   associate?: Associate;
@@ -26,8 +27,24 @@ const FormInput = ({
   options, 
   required = false,
   placeholder,
-  span
-}: any) => (
+  span,
+  mask
+}: any) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    let val = e.target.value;
+    
+    if (!isView && mask) {
+      if (mask === 'phone') {
+        val = val.replace(/\D/g, '');
+        if (val.length <= 10) val = val.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+        else val = val.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+        val = val.substring(0, 15);
+      }
+    }
+    onChange(val);
+  };
+
+  return (
   <div className={`flex flex-col gap-1 w-full ${span || ''}`}>
     <label className="text-[10px] uppercase font-bold text-gray-500 ml-1">
       {label} {required && !isView && <span className="text-red-500">*</span>}
@@ -36,7 +53,7 @@ const FormInput = ({
       <select 
         className="border border-gray-300 rounded-md px-3 py-2 bg-white text-sm focus:ring-2 focus:ring-[#007b63] outline-none"
         value={value || ''}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={handleChange}
       >
         <option value="">Selecione...</option>
         {[...(options || [])].sort((a: string, b: string) => a.localeCompare(b)).map((o: string) => <option key={o} value={o}>{o}</option>)}
@@ -48,11 +65,11 @@ const FormInput = ({
         placeholder={isView ? '' : placeholder}
         className={`border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-[#007b63] outline-none transition-all ${isView ? 'bg-gray-100' : 'bg-white'}`}
         value={value || ''}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={handleChange}
       />
     )}
   </div>
-);
+)};
 
 export const AssociateForm: React.FC<AssociateFormProps> = ({ associate, mode, onSave, onCancel, onEdit, isReadOnly = false }) => {
   const [formData, setFormData] = useState<Partial<Associate>>(associate || {
@@ -61,8 +78,63 @@ export const AssociateForm: React.FC<AssociateFormProps> = ({ associate, mode, o
     paymentsJson: '[]'
   });
 
-  const [payments, setPayments] = useState<PaymentEntry[]>(JSON.parse(formData.paymentsJson || '[]'));
-  const [newPayment, setNewPayment] = useState({ method: '', value: '', date: '' });
+  const generateExpectedPayments = (memberSince: string | undefined, dueDay: number | undefined, existing: PaymentEntry[], monthlyFee: string | undefined) => {
+    if (!memberSince || !dueDay) return existing;
+    
+    const start = new Date(memberSince);
+    if (isNaN(start.getTime())) return existing;
+    
+    // Check if start is future
+    const now = new Date();
+    
+    let currentMonth = new Date(start.getFullYear(), start.getMonth(), 1);
+    const newPayments = [...existing];
+    
+    while (currentMonth <= now) {
+      const id = `${currentMonth.getFullYear()}-${(currentMonth.getMonth() + 1).toString().padStart(2, '0')}`;
+      if (!newPayments.some(p => p.id === id)) {
+        newPayments.push({
+          id,
+          monthYear: `${dueDay.toString().padStart(2, '0')}/${(currentMonth.getMonth() + 1).toString().padStart(2, '0')}/${currentMonth.getFullYear()}`,
+          method: '',
+          value: monthlyFee || '',
+          status: 'Pendente'
+        });
+      }
+      currentMonth.setMonth(currentMonth.getMonth() + 1);
+    }
+    
+    if (newPayments.length > existing.length) {
+      return newPayments.sort((a, b) => b.id.localeCompare(a.id));
+    }
+    
+    return existing;
+  };
+
+  const [payments, setPayments] = useState<PaymentEntry[]>(() => {
+    const existing = JSON.parse(formData.paymentsJson || '[]');
+    return generateExpectedPayments(formData.memberSince, formData.dueDay, existing, formData.monthlyFee);
+  });
+  
+  useEffect(() => {
+    const updated = generateExpectedPayments(formData.memberSince, formData.dueDay, payments, formData.monthlyFee);
+    if (updated !== payments) {
+      setPayments(updated);
+      handleFieldChange('paymentsJson', JSON.stringify(updated));
+    }
+  }, [formData.memberSince, formData.dueDay, formData.monthlyFee]);
+
+  const handleUpdatePayment = (id: string, field: keyof PaymentEntry, value: string) => {
+    const updated = payments.map(p => {
+      if (p.id === id) {
+        return { ...p, [field]: value };
+      }
+      return p;
+    });
+    setPayments(updated);
+    handleFieldChange('paymentsJson', JSON.stringify(updated));
+  };
+
 
   const isView = mode === 'view';
 
@@ -78,23 +150,9 @@ export const AssociateForm: React.FC<AssociateFormProps> = ({ associate, mode, o
     return `${day}/${month}/${year}`;
   };
 
-  const handleAddPayment = () => {
-    if (!newPayment.method || !newPayment.value || !newPayment.date) return;
-    const updated = [...payments, { id: crypto.randomUUID(), ...newPayment }];
-    setPayments(updated);
-    handleFieldChange('paymentsJson', JSON.stringify(updated));
-    setNewPayment({ method: '', value: '', date: '' });
-  };
-
-  const handleRemovePayment = (id: string) => {
-    const updated = payments.filter(p => p.id !== id);
-    setPayments(updated);
-    handleFieldChange('paymentsJson', JSON.stringify(updated));
-  };
-
   const performValidationAndSave = async (): Promise<boolean> => {
     if (!formData.name) {
-      alert('O campo Nome é obrigatório.');
+      showValidation('O campo Nome é obrigatório e precisa ser preenchido antes de salvar.');
       return false;
     }
     await onSave(formData);
@@ -149,8 +207,8 @@ export const AssociateForm: React.FC<AssociateFormProps> = ({ associate, mode, o
           <SectionTitle title="CONTATO E ENDEREÇO" />
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
             <FormInput label="E-mail" value={formData.email} onChange={(v: string) => handleFieldChange('email', v)} type="email" isView={isView} span="md:col-span-2" />
-            <FormInput label="Telefone 1" value={formData.phone1} onChange={(v: string) => handleFieldChange('phone1', v)} isView={isView} />
-            <FormInput label="Telefone 2" value={formData.phone2} onChange={(v: string) => handleFieldChange('phone2', v)} isView={isView} />
+            <FormInput label="Telefone 1" value={formData.phone1} onChange={(v: string) => handleFieldChange('phone1', v)} isView={isView} mask="phone" />
+            <FormInput label="Telefone 2" value={formData.phone2} onChange={(v: string) => handleFieldChange('phone2', v)} isView={isView} mask="phone" />
             
             <FormInput label="Endereço Res." value={formData.address} onChange={(v: string) => handleFieldChange('address', v)} isView={isView} span="md:col-span-2" />
             <FormInput label="Complemento" value={formData.addressComplement} onChange={(v: string) => handleFieldChange('addressComplement', v)} isView={isView} />
@@ -178,54 +236,68 @@ export const AssociateForm: React.FC<AssociateFormProps> = ({ associate, mode, o
           <SectionTitle title="PAGAMENTOS E RECADASTRO" />
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6">
             <FormInput label="Dia Vencimento Padrão" value={formData.dueDay} onChange={(v: string) => handleFieldChange('dueDay', v)} type="number" isView={isView} />
+            <FormInput label="Valor da Mensalidade (R$)" value={formData.monthlyFee} onChange={(v: string) => handleFieldChange('monthlyFee', v)} type="number" isView={isView} />
           </div>
 
           <div className="flex flex-col gap-3">
             <label className="text-[10px] uppercase font-bold text-gray-500 ml-1">Histórico de Pagamentos</label>
             
-            {!isView && (
-              <div className="flex items-end gap-3 bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                <FormInput label="Método de Pagamento" value={newPayment.method} onChange={(v: string) => setNewPayment(prev => ({...prev, method: v}))} options={['IN LOCO', 'BOLETO', 'TRANSFERÊNCIA']} />
-                <FormInput label="Valor (R$)" value={newPayment.value} onChange={(v: string) => setNewPayment(prev => ({...prev, value: v}))} type="number" />
-                <FormInput label="Data do Pagamento" value={newPayment.date} onChange={(v: string) => setNewPayment(prev => ({...prev, date: v}))} type="date" />
-                <button 
-                  onClick={handleAddPayment} 
-                  className="bg-[#007b63] text-white px-6 py-2 rounded-md text-sm font-bold h-[38px] hover:bg-[#005a48] transition-colors whitespace-nowrap"
-                >
-                  Adicionar
-                </button>
-              </div>
-            )}
-            
             <div className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
               <table className="w-full text-left text-sm">
                 <thead className="bg-gray-100 text-gray-600">
                   <tr>
-                    <th className="px-4 py-3 font-bold uppercase text-[10px] tracking-wider">Data</th>
-                    <th className="px-4 py-3 font-bold uppercase text-[10px] tracking-wider">Método</th>
-                    <th className="px-4 py-3 font-bold uppercase text-[10px] tracking-wider">Valor</th>
-                    {!isView && <th className="px-4 py-3 font-bold uppercase text-[10px] tracking-wider w-10">Ações</th>}
+                    <th className="px-4 py-3 font-bold uppercase text-[10px] tracking-wider">Data Mensalidade</th>
+                    <th className="px-4 py-3 font-bold uppercase text-[10px] tracking-wider">Forma de Pagamento</th>
+                    <th className="px-4 py-3 font-bold uppercase text-[10px] tracking-wider">Valor (R$)</th>
+                    <th className="px-4 py-3 font-bold uppercase text-[10px] tracking-wider">Situação</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {payments.map(p => (
                     <tr key={p.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3">{formatDateView(p.date)}</td>
-                      <td className="px-4 py-3">{p.method}</td>
-                      <td className="px-4 py-3 font-medium text-green-700">R$ {p.value}</td>
-                      {!isView && (
-                        <td className="px-4 py-3">
-                          <button onClick={() => handleRemovePayment(p.id)} className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50 transition-colors">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                          </button>
-                        </td>
-                      )}
+                      <td className="px-4 py-3 font-medium text-gray-700">{p.monthYear}</td>
+                      <td className="px-4 py-2">
+                        <select 
+                          className="border border-gray-300 rounded px-2 py-1 text-sm bg-white focus:ring-[#007b63] focus:border-[#007b63] w-full max-w-[200px]"
+                          value={p.method || ''}
+                          onChange={e => handleUpdatePayment(p.id, 'method', e.target.value)}
+                          disabled={isView}
+                        >
+                          <option value="">Selecione...</option>
+                          <option value="IN LOCO">IN LOCO</option>
+                          <option value="BOLETO">BOLETO</option>
+                          <option value="TRANSFERÊNCIA">TRANSFERÊNCIA</option>
+                        </select>
+                      </td>
+                      <td className="px-4 py-2">
+                        <input 
+                          type="number"
+                          className="border border-gray-300 rounded px-2 py-1 text-sm bg-white focus:ring-[#007b63] focus:border-[#007b63] w-24"
+                          value={p.value || ''}
+                          onChange={e => handleUpdatePayment(p.id, 'value', e.target.value)}
+                          disabled={isView}
+                          placeholder="0.00"
+                        />
+                      </td>
+                      <td className="px-4 py-2">
+                        <select 
+                          className={`border border-gray-300 rounded px-2 py-1 text-sm w-full max-w-[120px] font-bold ${
+                            p.status === 'Pago' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-orange-100 text-orange-700 border-orange-200'
+                          }`}
+                          value={p.status || 'Pendente'}
+                          onChange={e => handleUpdatePayment(p.id, 'status', e.target.value)}
+                          disabled={isView}
+                        >
+                          <option value="Pendente">Pendente</option>
+                          <option value="Pago">Pago</option>
+                        </select>
+                      </td>
                     </tr>
                   ))}
                   {payments.length === 0 && (
                     <tr>
-                      <td colSpan={isView ? 3 : 4} className="px-4 py-8 text-center text-gray-400 italic text-xs">
-                        Nenhum pagamento registrado.
+                      <td colSpan={4} className="px-4 py-8 text-center text-gray-400 italic text-xs">
+                        {formData.memberSince && formData.dueDay ? 'As mensalidades serão geradas automaticamente ao preencher "Sócio Desde" e "Dia de Vencimento".' : 'Preencha "Sócio Desde" e "Dia de Vencimento" para gerar mensalidades.'}
                       </td>
                     </tr>
                   )}

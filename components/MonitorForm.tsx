@@ -1,9 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MonitorEntry, MonitorLogin, Study } from '../types';
 import { DROPDOWN_OPTIONS } from '../constants';
 import { ConfirmationModal } from './ConfirmationModal';
 import { UnsavedChangesModal, useUnsavedChanges } from './UnsavedChangesModal';
+import { showValidation } from './ValidationModal';
+import { ManageOptionsModal } from './ManageOptionsModal';
+import { db } from '../database';
 
 interface MonitorFormProps {
   monitor?: MonitorEntry;
@@ -30,21 +33,49 @@ const MonitorInput = ({
   options,
   placeholder,
   error,
-  displayValue // For ID lookups like Study
-}: any) => (
+  displayValue,
+  onAddOption,
+  mask
+}: any) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    let val = e.target.value;
+    
+    if (!isView && mask) {
+      if (mask === 'phone') {
+        val = val.replace(/\D/g, '');
+        if (val.length <= 10) val = val.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+        else val = val.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+        val = val.substring(0, 15);
+      }
+    }
+    onChange(val);
+  };
+
+  return (
   <div className="flex flex-col gap-1 w-full">
     <label className="text-[10px] uppercase font-bold text-gray-500 ml-1">
       {label}
     </label>
     {options && !isView ? (
-      <select 
-        className="border border-gray-300 rounded-md px-3 py-2 bg-white text-sm focus:ring-2 focus:ring-[#007b63] outline-none"
-        value={value || ''}
-        onChange={(e) => onChange(e.target.value)}
-      >
-        <option value="">Selecione...</option>
-        {[...(options || [])].sort((a: any, b: any) => a.label.localeCompare(b.label)).map((o: any) => <option key={o.value} value={o.value}>{o.label}</option>)}
-      </select>
+      <div className="flex w-full">
+        <select 
+          className={`border border-gray-300 px-3 py-2 bg-white text-sm focus:ring-2 focus:ring-[#007b63] outline-none flex-grow ${onAddOption ? 'rounded-l-md border-r-0' : 'rounded-md'}`}
+          value={value || ''}
+          onChange={handleChange}
+        >
+          <option value="">Selecione...</option>
+          {[...(options || [])].sort((a: any, b: any) => a.label.localeCompare(b.label)).map((o: any) => <option key={o.value} value={o.value}>{o.label}</option>)}
+        </select>
+        {onAddOption && (
+          <button 
+            onClick={onAddOption} 
+            className="bg-[#007b63] border border-[#007b63] text-white px-3 py-2 rounded-r-md hover:bg-[#005a48] transition-colors flex items-center justify-center font-bold text-lg leading-none"
+            title="Gerenciar Opções"
+          >
+            +
+          </button>
+        )}
+      </div>
     ) : (
       <div>
         <input 
@@ -53,13 +84,13 @@ const MonitorInput = ({
           placeholder={isView ? '' : placeholder}
           className={`w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-[#007b63] outline-none transition-all ${isView ? 'bg-gray-100' : 'bg-white'}`}
           value={isView && displayValue ? displayValue : (value || '')}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={handleChange}
         />
         {error && !isView && <span className="text-red-500 text-[10px] ml-1">{error}</span>}
       </div>
     )}
   </div>
-);
+)};
 
 export const MonitorForm: React.FC<MonitorFormProps> = ({ monitor, studies, mode, onSave, onCancel, onEdit, isReadOnly = false }) => {
   const [formData, setFormData] = React.useState<Partial<MonitorEntry>>(monitor || {
@@ -69,6 +100,22 @@ export const MonitorForm: React.FC<MonitorFormProps> = ({ monitor, studies, mode
   const [newLogin, setNewLogin] = React.useState<Partial<MonitorLogin>>({});
   const [emailError, setEmailError] = React.useState('');
   const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; id: string }>({ isOpen: false, id: '' });
+  
+  const [customRoles, setCustomRoles] = useState<{id: string, name: string}[]>([]);
+  const [customCros, setCustomCros] = useState<{id: string, name: string}[]>([]);
+  const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
+  const [isCroModalOpen, setIsCroModalOpen] = useState(false);
+
+  const loadOptions = async () => {
+    const roles = await db.getAll<{id: string, name: string}>('monitorCustomRoles');
+    const cros = await db.getAll<{id: string, name: string}>('monitorCustomCros');
+    setCustomRoles(roles);
+    setCustomCros(cros);
+  };
+
+  useEffect(() => {
+    loadOptions();
+  }, []);
 
   const isView = mode === 'view';
 
@@ -106,11 +153,11 @@ export const MonitorForm: React.FC<MonitorFormProps> = ({ monitor, studies, mode
 
   const performValidationAndSave = async (): Promise<boolean> => {
     if (!formData.name) {
-       alert('O campo Nome é obrigatório.');
+       showValidation('O campo Nome é obrigatório e precisa ser preenchido antes de salvar.');
        return false;
     }
     if (formData.email && !validateEmail(formData.email)) {
-       alert('Por favor, corrija o e-mail antes de salvar.');
+       showValidation('Por favor, corrija o e-mail antes de salvar.');
        return false;
     }
     await onSave(formData);
@@ -134,8 +181,9 @@ export const MonitorForm: React.FC<MonitorFormProps> = ({ monitor, studies, mode
     .filter(s => s.status === 'Active')
     .map(s => ({ label: s.name, value: s.id }));
     
-  const roleOptions = DROPDOWN_OPTIONS.monitorRoles.map(r => ({ label: r, value: r }));
-  const croOptions = DROPDOWN_OPTIONS.cros.map(c => ({ label: c, value: c }));
+  // Using custom options from db instead of DROPDOWN_OPTIONS
+  const roleOptions = customRoles.map(r => ({ label: r.name, value: r.name }));
+  const croOptions = customCros.map(c => ({ label: c.name, value: c.name }));
 
   // Helper to get study name for view mode
   const currentStudyName = studies.find(s => s.id === formData.studyId)?.name || formData.studyId;
@@ -148,9 +196,25 @@ export const MonitorForm: React.FC<MonitorFormProps> = ({ monitor, studies, mode
         onDiscardAndLeave={handleDiscard}
         onCancel={handleCancel}
       />
+      <ManageOptionsModal 
+        isOpen={isRoleModalOpen}
+        onClose={() => setIsRoleModalOpen(false)}
+        title="Função"
+        collection="monitorCustomRoles"
+        options={customRoles}
+        onUpdate={loadOptions}
+      />
+      <ManageOptionsModal 
+        isOpen={isCroModalOpen}
+        onClose={() => setIsCroModalOpen(false)}
+        title="CRO"
+        collection="monitorCustomCros"
+        options={customCros}
+        onUpdate={loadOptions}
+      />
       <div className="bg-[#007b63] shrink-0 text-white py-4 px-6 flex justify-between items-center z-10 sticky top-0">
         <h2 className="text-xl font-bold tracking-tight">
-          {isView ? 'Visualização de Dados Monitoria' : 'Cadastro de Dados Monitoria'}
+          {isView ? 'Visualização de Dados do Monitor' : 'Cadastro de Dados do Monitor'}
         </h2>
         <button onClick={handleCancelClick} className="text-white/80 hover:text-white hover:bg-white/10 p-2 rounded-full transition-colors">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -165,12 +229,12 @@ export const MonitorForm: React.FC<MonitorFormProps> = ({ monitor, studies, mode
           <div className="flex flex-col gap-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <MonitorInput label="Nome" value={formData.name} onChange={(v: string) => setFormData({...formData, name: v})} placeholder="Nome Completo" isView={isView} />
-              <MonitorInput label="Função" value={formData.role} onChange={(v: string) => setFormData({...formData, role: v})} options={roleOptions} isView={isView} />
-              <MonitorInput label="CRO" value={formData.cro} onChange={(v: string) => setFormData({...formData, cro: v})} options={croOptions} isView={isView} />
+              <MonitorInput label="Função" value={formData.role} onChange={(v: string) => setFormData({...formData, role: v})} options={roleOptions} isView={isView} onAddOption={() => setIsRoleModalOpen(true)} />
+              <MonitorInput label="CRO" value={formData.cro} onChange={(v: string) => setFormData({...formData, cro: v})} options={croOptions} isView={isView} onAddOption={() => setIsCroModalOpen(true)} />
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <MonitorInput label="Contato" value={formData.contact} onChange={(v: string) => setFormData({...formData, contact: v})} placeholder="(00) 00000-0000" isView={isView} />
+              <MonitorInput label="Contato" value={formData.contact} onChange={(v: string) => setFormData({...formData, contact: v})} placeholder="(00) 00000-0000" isView={isView} mask="phone" />
               <MonitorInput label="E-mail" value={formData.email} onChange={handleEmailChange} placeholder="email@exemplo.com" error={emailError} isView={isView} />
             </div>
             

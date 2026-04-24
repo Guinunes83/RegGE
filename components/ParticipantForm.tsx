@@ -4,6 +4,7 @@ import { Patient, Study, Consultation } from '../types';
 import { DROPDOWN_OPTIONS } from '../constants';
 import { db } from '../database';
 import { UnsavedChangesModal, useUnsavedChanges } from './UnsavedChangesModal';
+import { showValidation } from './ValidationModal';
 
 interface ParticipantFormProps {
   patient?: Patient;
@@ -152,7 +153,7 @@ export const ParticipantForm: React.FC<ParticipantFormProps> = ({ patient, studi
     setError(null);
 
     if (!formData.name) {
-      setError("O Nome é obrigatório.");
+      showValidation("O campo Nome é obrigatório e precisa ser preenchido antes de salvar.");
       return false;
     }
 

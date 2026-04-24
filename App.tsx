@@ -39,6 +39,7 @@ import { AssociateForm } from './components/AssociateForm';
 import { FinanceDashboardView } from './components/FinanceDashboardView';
 import { FinanceReportView } from './components/FinanceReportView';
 import { ManageRolesView } from './components/ManageRolesView';
+import { ValidationModal } from './components/ValidationModal';
 import { ConfirmationModal } from './components/ConfirmationModal';
 import { Associate } from './types';
 import { NavigationContext } from './contexts/NavigationContext';
@@ -458,8 +459,26 @@ export default function App() {
                      }
                    }
                }
+               
+               // --- Handle Monitor Sync ---
+               const allMonitors = await db.getAll<MonitorEntry>('monitors');
+               for (const m of allMonitors) {
+                   const isLinkedToStudy = actualStudy.monitors?.some(sm => sm.id === m.id);
+                   const hasStudyId = m.studyIds?.includes(actualStudy.id);
+                   
+                   let shouldUpdateMonitor = false;
+                   if (isLinkedToStudy && !hasStudyId) {
+                       m.studyIds = [...(m.studyIds || []), actualStudy.id];
+                       shouldUpdateMonitor = true;
+                   } else if (!isLinkedToStudy && hasStudyId) {
+                       m.studyIds = m.studyIds!.filter(id => id !== actualStudy.id);
+                       shouldUpdateMonitor = true;
+                   }
+                   if (shouldUpdateMonitor) await db.upsert('monitors', m);
+               }
              }
 
+             refreshData();
              showSuccess('Salvo', 'Estudo salvo.'); 
              navigate('Studies'); 
             }} onCancel={() => navigate('Studies')} onEdit={() => navigate('Studies', { mode: 'edit', study: activeProps.study })} isReadOnly={!hasPermission('edit_studies')} />;
@@ -589,7 +608,45 @@ export default function App() {
       
       case 'MonitoriaData':
          if (activeProps.mode === 'edit' || activeProps.mode === 'view') {
-             return <MonitorForm monitor={activeProps.monitor} studies={studies} mode={activeProps.mode} onSave={async (data) => { await db.upsert('monitors', data); showSuccess('Salvo', 'Monitor salvo.'); navigate('MonitoriaData'); }} onCancel={() => navigate('MonitoriaData')} onEdit={() => navigate('MonitoriaData', { mode: 'edit', monitor: activeProps.monitor })} isReadOnly={!hasPermission('edit_monitoria')} />;
+             return (
+               <MonitorForm 
+                 monitor={activeProps.monitor} 
+                 studies={studies} 
+                 mode={activeProps.mode} 
+                 onSave={async (data) => { 
+                   const savedMonitor = (await db.upsert('monitors', data)) as MonitorEntry; 
+                   const actualMonitor = typeof savedMonitor === 'string' ? data as MonitorEntry : savedMonitor;
+
+                   if (actualMonitor.id) {
+                     const allStudies = await db.getAll<Study>('studies');
+                     for (const s of allStudies) {
+                         const monitorIndex = s.monitors?.findIndex(m => m.id === actualMonitor.id) ?? -1;
+                         const includedInMonitor = actualMonitor.studyIds?.includes(s.id);
+                         
+                         let shouldUpdate = false;
+                         if (includedInMonitor && monitorIndex === -1) {
+                             s.monitors = [...(s.monitors || []), actualMonitor];
+                             shouldUpdate = true;
+                         } else if (!includedInMonitor && monitorIndex !== -1) {
+                             s.monitors = s.monitors!.filter(m => m.id !== actualMonitor.id);
+                             shouldUpdate = true;
+                         } else if (includedInMonitor && monitorIndex !== -1) {
+                             s.monitors![monitorIndex] = actualMonitor; // keep it fresh
+                             shouldUpdate = true;
+                         }
+                         if (shouldUpdate) await db.upsert('studies', s);
+                     }
+                   }
+
+                   refreshData();
+                   showSuccess('Salvo', 'Monitor salvo.'); 
+                   navigate('MonitoriaData'); 
+                 }} 
+                 onCancel={() => navigate('MonitoriaData')} 
+                 onEdit={() => navigate('MonitoriaData', { mode: 'edit', monitor: activeProps.monitor })} 
+                 isReadOnly={!hasPermission('edit_monitoria')} 
+               />
+             );
          }
          return (
              <div className="flex flex-col gap-6 p-6 h-full w-full">
@@ -617,9 +674,7 @@ export default function App() {
       case 'CEPMeeting': return <CEPMeetingView studies={studies} isReadOnly={isReadOnly} onShowSuccess={showSuccess} />;
       case 'CEPCalendar': return <CEPCalendarView />;
       case 'KitStock': return <KitStockView studies={studies} isReadOnly={isReadOnly} onShowSuccess={showSuccess} />;
-      case 'ProtocolDeviation': return <ProtocolDeviationView studies={studies} pis={team} patients={patients} team={team} collectionKey="deviations" title="Desvio de Protocolo" pdfTitle="Desvio de Protocolo" isReadOnly={isReadOnly} onShowSuccess={showSuccess} />;
-      case 'SAEDeviation': return <ProtocolDeviationView studies={studies} pis={team} patients={patients} team={team} collectionKey="saeDeviations" title="Desvio de SAE" pdfTitle="Relatório de Evento Adverso Grave (SAE)" isReadOnly={isReadOnly} onShowSuccess={showSuccess} />;
-      case 'GCPDeviation': return <ProtocolDeviationView studies={studies} pis={team} patients={patients} team={team} collectionKey="gcpDeviations" title="Desvio de GCP" pdfTitle="Desvio de Boas Práticas Clínicas (GCP)" isReadOnly={isReadOnly} onShowSuccess={showSuccess} />;
+      case 'ProtocolDeviation': return <ProtocolDeviationView studies={studies} pis={team} patients={patients} team={team} isReadOnly={isReadOnly} onShowSuccess={showSuccess} />;
       case 'VisitControl': return <VisitControlView />;
       case 'InfusionControl': return <InfusionControlView />; 
       case 'Reception': return <ReceptionView />; // Nova View de Recepção
@@ -704,6 +759,7 @@ export default function App() {
               }}
             />
           )}
+          <ValidationModal />
         </Layout>
       </NavigationContext.Provider>
     </GoogleOAuthProvider>
