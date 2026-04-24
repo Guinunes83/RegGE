@@ -46,11 +46,8 @@
     </dependency>
   </dependencies>
 
-  <properties>
-    <java.version>25</java.version>
-  </properties>
-
   <build>
+<<<<<<< HEAD
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -72,5 +69,20 @@
         </executions>
       </plugin>
     </plugins>
+=======
+      <plugins>
+        <plugin>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-maven-plugin</artifactId>
+          <executions>
+            <execution>
+              <goals>
+                <goal>repackage</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+      </plugins>
+>>>>>>> 7c030ff0b6a0b9a2977999415a5e03ec1957fafc
   </build>
 </project>
