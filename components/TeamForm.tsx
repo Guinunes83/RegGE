@@ -4,6 +4,7 @@ import { TeamMember, PlatformAccess, User, UserProfile } from '../types';
 import { DROPDOWN_OPTIONS } from '../constants';
 import { ConfirmationModal } from './ConfirmationModal';
 import { UnsavedChangesModal, useUnsavedChanges } from './UnsavedChangesModal';
+import { showValidation } from './ValidationModal';
 
 import { db } from '../database';
 
@@ -335,11 +336,11 @@ export const TeamForm: React.FC<TeamFormProps> = ({ member, mode, onSave, onCanc
 
   const performValidationAndSave = async (): Promise<boolean> => {
     if (!formData.name) {
-      alert('O campo Nome é obrigatório.');
+      showValidation('O campo Nome é obrigatório e precisa ser preenchido antes de salvar.');
       return false;
     }
     if (!formData.cpf) {
-      alert('O campo CPF é obrigatório.');
+      showValidation('O campo CPF é obrigatório e precisa ser preenchido antes de salvar.');
       return false;
     }
     

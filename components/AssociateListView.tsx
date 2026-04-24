@@ -28,18 +28,54 @@ export const AssociateListView: React.FC<AssociateListViewProps> = ({ onNavigate
     setSortConfig({ key, direction });
   };
 
+  const getDynamicStatus = (a: Associate) => {
+    if (a.status === 'Inativo' || a.status === 'Recadastro') return a.status;
+    
+    if (!a.paymentsJson) return 'ATIVO';
+    try {
+      const payments = JSON.parse(a.paymentsJson);
+      const now = new Date();
+      // Drop time to just compare date accurately
+      now.setHours(0,0,0,0);
+      
+      const hasOverdue = payments.some((p: any) => {
+        if (p.status !== 'Pendente') return false;
+        if (!p.monthYear) return false;
+        const parts = p.monthYear.split('/');
+        if (parts.length === 3) {
+          const dueDate = new Date(parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0]));
+          return dueDate < now;
+        }
+        return false;
+      });
+      return hasOverdue ? 'Pendente' : 'ATIVO';
+    } catch (e) {
+      return a.status || 'ATIVO';
+    }
+  };
+
+  const dynamicAssociates = associates.map(a => ({ ...a, computedStatus: getDynamicStatus(a) }));
+
   const getSortedData = () => {
-    if (!sortConfig) return associates;
-    return [...associates].sort((a: any, b: any) => {
-      if (a[sortConfig.key] < b[sortConfig.key]) return sortConfig.direction === 'asc' ? -1 : 1;
-      if (a[sortConfig.key] > b[sortConfig.key]) return sortConfig.direction === 'asc' ? 1 : -1;
+    let data = dynamicAssociates;
+    if (!sortConfig) return data;
+    return [...data].sort((a: any, b: any) => {
+      let valA = a[sortConfig.key] || '';
+      let valB = b[sortConfig.key] || '';
+      if (sortConfig.key === 'status') {
+         valA = a.computedStatus;
+         valB = b.computedStatus;
+      }
+      if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
       return 0;
     });
   };
 
-  const ativos = associates.filter(a => a.status === 'Ativo').length;
-  const inativos = associates.filter(a => a.status === 'Inativo').length;
-  const recadastros = associates.filter(a => a.status === 'Recadastro').length;
+  const ativos = dynamicAssociates.filter(a => a.computedStatus === 'ATIVO').length;
+  const inativos = dynamicAssociates.filter(a => a.computedStatus === 'Inativo').length;
+  const recadastros = dynamicAssociates.filter(a => a.computedStatus === 'Recadastro').length;
+  const pendentes = dynamicAssociates.filter(a => a.computedStatus === 'Pendente').length;
 
   const HeaderCell = ({ label, sortKey }: { label: string, sortKey?: string }) => (
     <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider cursor-pointer hover:text-gray-200 transition-colors" onClick={() => sortKey && handleSort(sortKey)}>
@@ -64,10 +100,14 @@ export const AssociateListView: React.FC<AssociateListViewProps> = ({ onNavigate
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-[#007b63] text-white p-4 rounded-xl shadow-md flex justify-between items-center">
           <span className="font-bold uppercase tracking-wider">Ativos</span>
           <span className="text-3xl font-black">{ativos}</span>
+        </div>
+        <div className="bg-red-500 text-white p-4 rounded-xl shadow-md flex justify-between items-center">
+          <span className="font-bold uppercase tracking-wider">Pendentes</span>
+          <span className="text-3xl font-black">{pendentes}</span>
         </div>
         <div className="bg-gray-600 text-white p-4 rounded-xl shadow-md flex justify-between items-center">
           <span className="font-bold uppercase tracking-wider">Inativos</span>
@@ -95,7 +135,7 @@ export const AssociateListView: React.FC<AssociateListViewProps> = ({ onNavigate
             </tr>
           </thead>
           <tbody className="divide-y">
-            {getSortedData().map((a: Associate) => (
+            {getSortedData().map((a: any) => (
               <tr 
                 key={a.id} 
                 onClick={() => onNavigate('Associates', { mode: 'view', associate: a })} 
@@ -109,11 +149,12 @@ export const AssociateListView: React.FC<AssociateListViewProps> = ({ onNavigate
                 <td className="px-4 py-3 text-sm">{a.email}</td>
                 <td className="px-4 py-3 text-sm">
                   <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${
-                    a.status === 'Ativo' ? 'bg-green-100 text-green-700' : 
-                    a.status === 'Inativo' ? 'bg-gray-200 text-gray-700' : 
+                    a.computedStatus === 'ATIVO' ? 'bg-green-100 text-green-700' : 
+                    a.computedStatus === 'Pendente' ? 'bg-red-100 text-red-700' : 
+                    a.computedStatus === 'Inativo' ? 'bg-gray-200 text-gray-700' : 
                     'bg-orange-100 text-orange-700'
                   }`}>
-                    {a.status}
+                    {a.computedStatus}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-sm">{a.memberSince ? a.memberSince.split('-').reverse().join('/') : ''}</td>

@@ -9,6 +9,7 @@ import { TeamForm } from './TeamForm';
 import { MonitorForm } from './MonitorForm';
 import { ParticipantForm } from './ParticipantForm';
 import { UnsavedChangesModal, useUnsavedChanges } from './UnsavedChangesModal';
+import { showValidation } from './ValidationModal';
 
 interface StudyFormProps {
   study?: Study;
@@ -191,7 +192,7 @@ export const StudyForm: React.FC<StudyFormProps> = ({ study, mode, onSave, onCan
     // Evitar duplicatas
     const exists = formData.delegation?.some(d => d.memberId === selectedMemberId && d.role === selectedRole);
     if (exists) {
-        alert("Este membro já está delegado para esta função neste estudo.");
+        showValidation("Este membro já está delegado para esta função neste estudo.");
         return;
     }
 
@@ -322,11 +323,11 @@ export const StudyForm: React.FC<StudyFormProps> = ({ study, mode, onSave, onCan
 
   const performValidationAndSave = async (): Promise<boolean> => {
     if (!formData.name) {
-      alert('O campo Nome é obrigatório.');
+      showValidation('O campo Nome é obrigatório e precisa ser preenchido antes de salvar.');
       return false;
     }
     if (!formData.protocol) {
-      alert('O campo Protocolo é obrigatório.');
+      showValidation('O campo Protocolo é obrigatório e precisa ser preenchido antes de salvar.');
       return false;
     }
     await onSave(formData);

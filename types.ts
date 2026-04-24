@@ -451,15 +451,16 @@ export type CalibrationHistoryEntry = {
 };
 
 export type PaymentEntry = {
-  id: string;
-  method: string;
-  value: string;
-  date: string;
+  id: string; // format like "YYYY-MM" or similar unique key
+  monthYear: string; // e.g. "15/05/2024" representing the due date
+  method?: string;
+  value?: string;
+  status?: string; // 'Pendente' | 'Pago'
 };
 
 export type Associate = {
   id: string;
-  status: string; // 'Ativo' | 'Inativo' | 'Recadastro'
+  status?: string; // dynamically calculated but let's keep it here
   memberSince?: string;
   exitRequestDate?: string;
   name: string;
@@ -481,6 +482,7 @@ export type Associate = {
   phone2?: string;
   role?: string;
   dueDay?: number;
+  monthlyFee?: string; // added field
   reRegistrationsJson?: string;
   paymentsJson?: string;
 };

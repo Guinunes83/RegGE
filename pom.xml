@@ -14,6 +14,10 @@
   <name>Regge Backend</name>
   <description>API REST para Gestão de Pesquisa Clínica - Grupo Elora</description>
 
+  <properties>
+    <java.version>21</java.version>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>org.springframework.boot</groupId>

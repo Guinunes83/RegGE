@@ -7,35 +7,38 @@ import { ConfirmationModal } from './ConfirmationModal';
 
 interface ProtocolDeviationViewProps {
   studies: Study[];
-  pis: TeamMember[]; // Mudado de PIEntry[] para TeamMember[]
+  pis: TeamMember[];
   patients: Patient[];
   team: TeamMember[];
-  collectionKey?: 'deviations' | 'saeDeviations' | 'gcpDeviations';
-  title?: string;
-  pdfTitle?: string;
   isReadOnly?: boolean;
   onShowSuccess: (title: string, message: string) => void;
 }
+
+type DevType = 'Protocolo' | 'GCP' | 'SAE';
+const DEVIATION_TYPES: { type: DevType; collection: string; label: string; pdfTitle: string }[] = [
+  { type: 'Protocolo', collection: 'deviations', label: 'Desvio de Protocolo', pdfTitle: 'Desvio de Protocolo' },
+  { type: 'GCP', collection: 'gcpDeviations', label: 'GCP', pdfTitle: 'Desvio de Boas Práticas Clínicas (GCP)' },
+  { type: 'SAE', collection: 'saeDeviations', label: 'SAE', pdfTitle: 'Relatório de Evento Adverso Grave (SAE)' }
+];
 
 export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({ 
   studies, 
   pis, 
   patients, 
   team, 
-  collectionKey = 'deviations', 
-  title = "Desvio de Protocolo",
-  pdfTitle = "Desvio de Protocolo",
   isReadOnly = false,
   onShowSuccess
 }) => {
-  const [deviations, setDeviations] = useState<ProtocolDeviation[]>([]);
+  const [selectedType, setSelectedType] = useState<DevType>('Protocolo');
+  const [activeTab, setActiveTab] = useState<DevType>('Protocolo');
+
+  const [deviations, setDeviations] = useState<Record<DevType, ProtocolDeviation[]>>({ Protocolo: [], GCP: [], SAE: [] });
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   
   const [formData, setFormData] = useState<Partial<ProtocolDeviation>>({});
   const [piSelectionType, setPiSelectionType] = useState<'IP' | 'Sub'>('IP');
   
   const [bottomPiId, setBottomPiId] = useState<string>('');
-  
   const [bottomCoordId, setBottomCoordId] = useState<string>('');
   
   const [isPrinting, setIsPrinting] = useState(false);
@@ -47,13 +50,16 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
     onConfirm: () => void;
   }>({ isOpen: false, title: '', message: '', onConfirm: () => {} });
 
+  const fetchDeviations = async () => {
+    const protoDevs = await db.getAll<ProtocolDeviation>('deviations');
+    const gcpDevs = await db.getAll<ProtocolDeviation>('gcpDeviations');
+    const saeDevs = await db.getAll<ProtocolDeviation>('saeDeviations');
+    setDeviations({ Protocolo: protoDevs, GCP: gcpDevs, SAE: saeDevs });
+  };
+
   useEffect(() => {
-    const fetchDeviations = async () => {
-      const data = await db.getAll<ProtocolDeviation>(collectionKey as any);
-      setDeviations(data);
-    };
     fetchDeviations();
-  }, [collectionKey]);
+  }, []);
 
   useEffect(() => {
     if (formData.studyId) {
@@ -83,28 +89,32 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
       id: formData.id || Math.random().toString(36).substr(2, 9),
       status: 'Pendente'
     };
-    await db.upsert(collectionKey as any, newDev);
-    const data = await db.getAll<ProtocolDeviation>(collectionKey as any);
-    setDeviations(data);
+    
+    const config = DEVIATION_TYPES.find(t => t.type === selectedType)!;
+    await db.upsert(config.collection as any, newDev);
+    
+    await fetchDeviations();
     setFormData({});
-    onShowSuccess(isNew ? 'Cadastrado com Sucesso!' : 'Salvo com Sucesso!', `Registro de ${title} processado.`);
+    onShowSuccess(isNew ? 'Cadastrado com Sucesso!' : 'Salvo com Sucesso!', `Registro de ${config.label} processado.`);
   };
 
-  const handleEdit = (dev: ProtocolDeviation) => {
+  const handleEdit = (dev: ProtocolDeviation, type: DevType) => {
     if (isReadOnly) return;
+    setSelectedType(type);
     setFormData(dev);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = (id: string, type: DevType) => {
     if (isReadOnly) return;
+    const config = DEVIATION_TYPES.find(t => t.type === type)!;
+    
     setModalConfig({
       isOpen: true,
-      title: `Excluir ${title}`,
-      message: `Tem certeza que deseja excluir este ${title.toLowerCase()}?`,
+      title: `Excluir Registro`,
+      message: `Tem certeza que deseja excluir este registro?`,
       onConfirm: async () => {
-        await db.delete(collectionKey as any, id);
-        const data = await db.getAll<ProtocolDeviation>(collectionKey as any);
-        setDeviations(data);
+        await db.delete(config.collection as any, id);
+        await fetchDeviations();
         const newSelected = new Set(selectedIds);
         newSelected.delete(id);
         setSelectedIds(newSelected);
@@ -115,59 +125,61 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
     });
   };
 
-  const toggleSelect = (id: string) => {
-    const next = new Set(selectedIds);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
-    setSelectedIds(next);
+  const toggleSelect = (id: string, type: DevType) => {
+    if (activeTab !== type) {
+      setActiveTab(type);
+      setSelectedIds(new Set([id]));
+    } else {
+      const next = new Set(selectedIds);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      setSelectedIds(next);
+    }
   };
 
   const handleGeneratePDF = async () => {
+    const config = DEVIATION_TYPES.find(t => t.type === activeTab)!;
+    const activeDevs = deviations[activeTab];
+    
     for (const id of selectedIds) {
-      const dev = deviations.find(d => d.id === id);
+      const dev = activeDevs.find(d => d.id === id);
       if (dev) {
-        await db.upsert(collectionKey as any, { ...dev, status: 'Gerado' });
+        await db.upsert(config.collection as any, { ...dev, status: 'Gerado' });
       }
     }
-    const data = await db.getAll<ProtocolDeviation>(collectionKey as any);
-    setDeviations(data);
+    await fetchDeviations();
     setIsPrinting(true);
   };
 
   const currentFormStudy = studies.find(s => s.id === formData.studyId);
   const filteredPatients = patients.filter(p => currentFormStudy?.participantsIds.includes(p.id)).sort((a,b) => a.name.localeCompare(b.name));
   
-  // Lógica para determinar o Estudo com base na seleção da tabela (para o PDF e Signatários)
   const selectedTableStudy = useMemo(() => {
     if (selectedIds.size === 0) return null;
     const firstSelectedId = Array.from(selectedIds)[0];
-    const dev = deviations.find(d => d.id === firstSelectedId);
+    const dev = deviations[activeTab].find(d => d.id === firstSelectedId);
     return dev ? studies.find(s => s.id === dev.studyId) : null;
-  }, [selectedIds, deviations, studies]);
+  }, [selectedIds, deviations, activeTab, studies]);
 
   const bottomPiOptions = useMemo(() => {
-    // Agora usa o estudo selecionado na tabela, não o do formulário de cadastro
     if (!selectedTableStudy) return [];
     
     if (piSelectionType === 'IP') {
-        // Retorna apenas o PI que corresponde ao nome vinculado no estudo
         return pis.filter(p => {
             const piName = p.name.trim();
             const studyPiName = (selectedTableStudy.pi || '').replace(/Dr(a)?\.\s*/, '').trim();
             return piName.includes(studyPiName) || p.name === selectedTableStudy.pi;
         });
     } else {
-        // Sub-investigadores (qualquer um que não seja o PI principal do estudo)
         return pis.filter(p => p.name !== selectedTableStudy.pi && !p.name.includes(selectedTableStudy.pi));
     }
   }, [selectedTableStudy, pis, piSelectionType]);
 
-  // Efeito para auto-selecionar o PI quando só houver uma opção (comum no caso de IP)
   useEffect(() => {
     if (piSelectionType === 'IP' && bottomPiOptions.length > 0) {
       setBottomPiId(bottomPiOptions[0].id);
     } else if (piSelectionType === 'Sub') {
-      setBottomPiId(''); // Limpa para seleção manual
+      setBottomPiId(''); 
     } else {
       setBottomPiId('');
     }
@@ -176,8 +188,11 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
   const coords = team.filter(t => t.role === 'Coordenador de estudos').sort((a,b) => a.name.localeCompare(b.name));
   const activeStudies = studies.filter(s => s.status === 'Active').sort((a,b) => a.name.localeCompare(b.name));
 
+  const activeTabConfig = DEVIATION_TYPES.find(t => t.type === activeTab)!;
+  const currentDeviations = deviations[activeTab];
+
   if (isPrinting) {
-    const selectedDeviations = deviations.filter(d => selectedIds.has(d.id));
+    const selectedDeviations = currentDeviations.filter(d => selectedIds.has(d.id));
     const pi = pis.find(p => p.id === bottomPiId);
     const coord = team.find(t => t.id === bottomCoordId);
 
@@ -211,7 +226,7 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
               </p>
             </div>
 
-            <h2 className="text-center font-bold text-xl uppercase mb-6 border-b-2 border-black inline-block pb-1">{pdfTitle}</h2>
+            <h2 className="text-center font-bold text-xl uppercase mb-6 border-b-2 border-black inline-block pb-1">{activeTabConfig.pdfTitle}</h2>
 
             <table className="w-full border-collapse border border-black mb-12 text-[11px]">
               <thead>
@@ -271,39 +286,53 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
       
       {/* CADASTRO DE DESVIO - DESABILITADO SE READONLY */}
       <div className={`p-6 bg-[#d1e7e4]/20 rounded-2xl border border-[#007b63]/10 flex-shrink-0 transition-opacity ${isReadOnly ? 'opacity-50 pointer-events-none' : ''}`}>
-        <h3 className="text-[#007b63] font-black uppercase text-xs tracking-widest mb-6 border-b border-[#007b63]/20 pb-2">Registro de {title}</h3>
+        <h3 className="text-[#007b63] font-black uppercase text-xs tracking-widest mb-6 border-b border-[#007b63]/20 pb-2">Registro de Desvios</h3>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 md:col-span-1">
+            <label className="text-[10px] uppercase font-bold text-gray-500">Desvio de...</label>
+            <select 
+              disabled={isReadOnly} 
+              className="border border-gray-300 rounded px-2 py-1.5 text-sm bg-white outline-none focus:ring-2 focus:ring-[#007b63]" 
+              value={selectedType} 
+              onChange={e => {
+                if (!formData.id) setSelectedType(e.target.value as DevType)
+              }}
+            >
+              {DEVIATION_TYPES.map(t => <option key={t.type} value={t.type}>{t.label}</option>)}
+            </select>
+          </div>
+          <div className="flex flex-col gap-1 md:col-span-1">
             <label className="text-[10px] uppercase font-bold text-gray-500">Estudo</label>
             <select disabled={isReadOnly} className="border border-gray-300 rounded px-2 py-1.5 text-sm bg-white outline-none focus:ring-2 focus:ring-[#007b63]" value={formData.studyId || ''} onChange={e => setFormData({...formData, studyId: e.target.value})}>
               <option value="">Selecione...</option>
               {activeStudies.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
           </div>
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 md:col-span-1">
             <label className="text-[10px] uppercase font-bold text-gray-500">PI</label>
             <input className="border border-gray-300 rounded px-2 py-1.5 text-sm bg-white outline-none" value={formData.piName || ''} readOnly />
           </div>
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 md:col-span-1">
             <label className="text-[10px] uppercase font-bold text-gray-500">Nº do Centro</label>
             <input className="border border-gray-300 rounded px-2 py-1.5 text-sm bg-white outline-none" value={formData.centerNumber || ''} readOnly />
           </div>
-          <div className="flex flex-col gap-1">
+          
+          <div className="flex flex-col gap-1 md:col-span-1">
             <label className="text-[10px] uppercase font-bold text-gray-500">Participante</label>
             <select disabled={isReadOnly} className="border border-gray-300 rounded px-2 py-1.5 text-sm bg-white outline-none focus:ring-2 focus:ring-[#007b63]" value={formData.patientId || ''} onChange={e => setFormData({...formData, patientId: e.target.value})}>
               <option value="">Selecione...</option>
               {filteredPatients.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </div>
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 md:col-span-1">
             <label className="text-[10px] uppercase font-bold text-gray-500">Nº Participante</label>
             <input className="border border-gray-300 rounded px-2 py-1.5 text-sm bg-white outline-none" value={formData.patientNumber || ''} readOnly />
           </div>
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 md:col-span-1">
             <label className="text-[10px] uppercase font-bold text-gray-500">Data Ocorrência</label>
             <input disabled={isReadOnly} type="date" className="border border-gray-300 rounded px-2 py-1.5 text-sm bg-white outline-none focus:ring-2 focus:ring-[#007b63]" value={formData.occurrenceDate || ''} onChange={e => setFormData({...formData, occurrenceDate: e.target.value})} />
           </div>
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 md:col-span-1">
             <label className="text-[10px] uppercase font-bold text-gray-500">Data Desvio</label>
             <input disabled={isReadOnly} type="date" className="border border-gray-300 rounded px-2 py-1.5 text-sm bg-white outline-none focus:ring-2 focus:ring-[#007b63]" value={formData.deviationDate || ''} onChange={e => setFormData({...formData, deviationDate: e.target.value})} />
           </div>
@@ -314,53 +343,82 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
         </div>
         {!isReadOnly && (
           <div className="mt-4 flex justify-end">
-            <button onClick={handleRegister} className="bg-[#007b63] text-white px-8 py-2 rounded-xl font-bold uppercase text-xs shadow-lg hover:bg-[#005a48] transition-colors">Cadastrar</button>
+            <button onClick={handleRegister} className="bg-[#007b63] text-white px-8 py-2 rounded-xl font-bold uppercase text-xs shadow-lg hover:bg-[#005a48] transition-colors">
+              {formData.id ? 'Salvar Alterações' : 'Cadastrar'}
+            </button>
+            {formData.id && (
+              <button 
+                onClick={() => {
+                  setFormData({});
+                }} 
+                className="ml-4 bg-gray-400 text-white px-8 py-2 rounded-xl font-bold uppercase text-xs shadow-lg hover:bg-gray-500 transition-colors"
+              >
+                Cancelar
+              </button>
+            )}
           </div>
         )}
       </div>
 
-      {/* TABELA CENTRAL */}
-      <div className="overflow-hidden border rounded-2xl bg-white shadow-sm flex-shrink-0">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-[#007b63] text-white uppercase tracking-tighter sticky top-0 z-10">
-              <tr>
-                <th className="px-3 py-3 w-8">Sel.</th>
-                <th className="px-3 py-3">Estudo</th>
-                <th className="px-3 py-3">PI</th>
-                <th className="px-3 py-3">Part. No</th>
-                <th className="px-3 py-3">Data Ocorrência</th>
-                <th className="px-3 py-3">Descrição</th>
-                <th className="px-3 py-3">Situação</th>
-                <th className="px-3 py-3 text-right">Ações</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y text-gray-600">
-              {deviations.length === 0 ? (
-                <tr><td colSpan={8} className="px-3 py-8 text-center italic text-gray-400">Nenhum registro cadastrado.</td></tr>
-              ) : (
-                deviations.map(d => (
-                  <tr key={d.id} className={`${selectedIds.has(d.id) ? 'bg-[#d1e7e4]/30' : 'hover:bg-gray-50'} transition-colors`}>
-                    <td className="px-3 py-3"><input type="checkbox" className="cursor-pointer" checked={selectedIds.has(d.id)} onChange={() => toggleSelect(d.id)} /></td>
-                    <td className="px-3 py-3 font-bold text-gray-800">{studies.find(s => s.id === d.studyId)?.name}</td>
-                    <td className="px-3 py-3">{d.piName}</td>
-                    <td className="px-3 py-3">{d.patientNumber}</td>
-                    <td className="px-3 py-3">{formatDatePTBR(d.occurrenceDate)}</td>
-                    <td className="px-3 py-3 truncate max-w-[150px]">{d.description}</td>
-                    <td className="px-3 py-3"><span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${d.status === 'Gerado' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{d.status}</span></td>
-                    <td className="px-3 py-3 text-right flex justify-end gap-2">
-                      {!isReadOnly && (
-                        <>
-                          <button onClick={() => handleEdit(d)} className="p-1 hover:bg-blue-50 text-blue-500 rounded"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg></button>
-                          <button onClick={() => handleDelete(d.id)} className="p-1 hover:bg-red-50 text-red-500 rounded"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
-                        </>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+      {/* TABS E TABELA CENTRAL */}
+      <div className="flex flex-col flex-shrink-0">
+        <div className="flex gap-2 mb-4 border-b border-gray-200">
+          {DEVIATION_TYPES.map(t => (
+            <button
+              key={t.type}
+              onClick={() => {
+                setActiveTab(t.type);
+                setSelectedIds(new Set());
+              }}
+              className={`px-6 py-2 uppercase font-bold text-xs rounded-t-lg transition-colors ${activeTab === t.type ? 'bg-[#007b63] text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+        
+        <div className="overflow-hidden border rounded-2xl bg-white shadow-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-[#007b63] text-white uppercase tracking-tighter sticky top-0 z-10">
+                <tr>
+                  <th className="px-3 py-3 w-8">Sel.</th>
+                  <th className="px-3 py-3">Estudo</th>
+                  <th className="px-3 py-3">PI</th>
+                  <th className="px-3 py-3">Part. No</th>
+                  <th className="px-3 py-3">Data Ocorrência</th>
+                  <th className="px-3 py-3">Descrição</th>
+                  <th className="px-3 py-3">Situação</th>
+                  <th className="px-3 py-3 text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y text-gray-600">
+                {currentDeviations.length === 0 ? (
+                  <tr><td colSpan={8} className="px-3 py-8 text-center italic text-gray-400">Nenhum registro cadastrado nesta aba.</td></tr>
+                ) : (
+                  currentDeviations.map(d => (
+                    <tr key={d.id} className={`${selectedIds.has(d.id) ? 'bg-[#d1e7e4]/30' : 'hover:bg-gray-50'} transition-colors`}>
+                      <td className="px-3 py-3"><input type="checkbox" className="cursor-pointer" checked={selectedIds.has(d.id)} onChange={() => toggleSelect(d.id, activeTab)} /></td>
+                      <td className="px-3 py-3 font-bold text-gray-800">{studies.find(s => s.id === d.studyId)?.name}</td>
+                      <td className="px-3 py-3">{d.piName}</td>
+                      <td className="px-3 py-3">{d.patientNumber}</td>
+                      <td className="px-3 py-3">{formatDatePTBR(d.occurrenceDate)}</td>
+                      <td className="px-3 py-3 truncate max-w-[150px]">{d.description}</td>
+                      <td className="px-3 py-3"><span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${d.status === 'Gerado' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{d.status}</span></td>
+                      <td className="px-3 py-3 text-right flex justify-end gap-2">
+                        {!isReadOnly && (
+                          <>
+                            <button onClick={() => handleEdit(d, activeTab)} className="p-1 hover:bg-blue-50 text-blue-500 rounded"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg></button>
+                            <button onClick={() => handleDelete(d.id, activeTab)} className="p-1 hover:bg-red-50 text-red-500 rounded"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
+                          </>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
