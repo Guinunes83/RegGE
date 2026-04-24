@@ -55,6 +55,8 @@ export const CEPMeetingView: React.FC<CEPMeetingViewProps> = ({ studies, isReadO
   const [docOptions, setDocOptions] = useState<string[]>([]);
   const [isDocModalOpen, setIsDocModalOpen] = useState(false);
   const [newDocName, setNewDocName] = useState('');
+  const [editingDoc, setEditingDoc] = useState<string | null>(null);
+  const [editDocName, setEditDocName] = useState('');
   const [formData, setFormData] = useState<Partial<CEPMeeting>>({});
   
   // Controle de expansão da linha
@@ -81,6 +83,40 @@ export const CEPMeetingView: React.FC<CEPMeetingViewProps> = ({ studies, isReadO
     const dynamicNames = docs.map(d => d.name);
     const combined = Array.from(new Set([...CEP_DOCUMENT_OPTIONS, ...dynamicNames])).sort((a,b) => a.localeCompare(b));
     setDocOptions(combined);
+  };
+
+  const handleEditDocName = async (oldName: string, newName: string) => {
+    if (oldName === newName || !newName.trim()) {
+      setEditingDoc(null);
+      return;
+    }
+    const cleanNewName = newName.trim();
+    
+    // 1. Update in cepDocuments
+    await db.delete('cepDocuments', oldName);
+    await db.upsert('cepDocuments', { id: cleanNewName, name: cleanNewName });
+
+    // 2. Cascade in Meetings
+    const allMeetings = await db.getAll<CEPMeeting>('cepMeetings');
+    for (const m of allMeetings) {
+      if (m.selectedDocuments?.includes(oldName)) {
+        m.selectedDocuments = m.selectedDocuments.map(d => d === oldName ? cleanNewName : d);
+        await db.upsert('cepMeetings', m);
+      }
+    }
+
+    // 3. Cascade in user profiles perms
+    const profiles = await db.getAll<{ id: string, name: string, permissions?: string[] }>('userProfiles');
+    for (const p of profiles) {
+      if (p.permissions?.includes(`doc_notify_${oldName}`)) {
+        p.permissions = p.permissions.map(perm => perm === `doc_notify_${oldName}` ? `doc_notify_${cleanNewName}` : perm);
+        await db.upsert('userProfiles', p);
+      }
+    }
+
+    setEditingDoc(null);
+    fetchDocOptions();
+    fetchMeetings();
   };
 
   const fetchMeetings = async () => {
@@ -504,24 +540,66 @@ export const CEPMeetingView: React.FC<CEPMeetingViewProps> = ({ studies, isReadO
               <div className="border border-gray-200 rounded-xl overflow-hidden max-h-60 overflow-y-auto">
                 <table className="w-full text-left text-sm">
                   <thead className="bg-gray-50 text-gray-600 sticky top-0">
-                    <tr><th className="px-4 py-2 text-xs font-bold uppercase">Documentos Cadastrados</th><th className="px-4 py-2 w-10"></th></tr>
+                    <tr><th className="px-4 py-2 text-xs font-bold uppercase">Documentos Cadastrados</th><th className="px-4 py-2 w-20 text-right">Ações</th></tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {docOptions.map(doc => (
                       <tr key={doc} className="hover:bg-gray-50">
-                        <td className="px-4 py-2 text-gray-700">{doc}</td>
+                        {editingDoc === doc ? (
+                          <td className="px-4 py-2">
+                            <input 
+                              type="text" 
+                              className="border border-gray-300 rounded px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-[#007b63] w-full"
+                              value={editDocName}
+                              onChange={(e) => setEditDocName(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleEditDocName(doc, editDocName);
+                                if (e.key === 'Escape') setEditingDoc(null);
+                              }}
+                              autoFocus
+                            />
+                          </td>
+                        ) : (
+                          <td className="px-4 py-2 text-gray-700">{doc}</td>
+                        )}
                         <td className="px-4 py-2 text-right">
-                          <button 
-                            onClick={async () => {
-                              if (window.confirm(`Excluir o documento ${doc}?`)) {
-                                await db.delete('cepDocuments', doc);
-                                fetchDocOptions();
-                              }
-                            }}
-                            className="text-red-500 hover:bg-red-50 p-1.5 rounded"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                          </button>
+                          <div className="flex justify-end gap-1">
+                            {editingDoc === doc ? (
+                              <>
+                                <button className="text-green-600 hover:bg-green-50 p-1.5 rounded" onClick={() => handleEditDocName(doc, editDocName)} title="Salvar">
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                                </button>
+                                <button className="text-red-500 hover:bg-red-50 p-1.5 rounded" onClick={() => setEditingDoc(null)} title="Cancelar">
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <button 
+                                  onClick={() => {
+                                    setEditingDoc(doc);
+                                    setEditDocName(doc);
+                                  }}
+                                  className="text-blue-500 hover:bg-blue-50 p-1.5 rounded"
+                                  title="Editar"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                </button>
+                                <button 
+                                  onClick={async () => {
+                                    if (window.confirm(`Excluir o documento ${doc}?`)) {
+                                      await db.delete('cepDocuments', doc);
+                                      fetchDocOptions();
+                                    }
+                                  }}
+                                  className="text-red-500 hover:bg-red-50 p-1.5 rounded"
+                                  title="Excluir"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                </button>
+                              </>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
