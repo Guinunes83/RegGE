@@ -78,10 +78,22 @@ export const CEPMeetingView: React.FC<CEPMeetingViewProps> = ({ studies, isReadO
   }, []);
 
   const fetchDocOptions = async () => {
-    const docs = await db.getAll<{id: string, name: string}>('cepDocuments');
-    // Combine hardcoded defaults with dynamic, or just rely completely on dynamic. Let's merge both just in case, but prioritize dynamic.
+    let docs = await db.getAll<{id: string, name: string}>('cepDocuments');
+    
+    // Se a coleção estiver completamente vazia, inicializar com os padrões (apenas uma vez)
+    if (docs.length === 0) {
+      const initializedFlag = localStorage.getItem('cep_docs_initialized');
+      if (!initializedFlag) {
+        for (const docName of CEP_DOCUMENT_OPTIONS) {
+          await db.upsert('cepDocuments', { id: docName, name: docName });
+        }
+        localStorage.setItem('cep_docs_initialized', 'true');
+        docs = await db.getAll<{id: string, name: string}>('cepDocuments');
+      }
+    }
+    
     const dynamicNames = docs.map(d => d.name);
-    const combined = Array.from(new Set([...CEP_DOCUMENT_OPTIONS, ...dynamicNames])).sort((a,b) => a.localeCompare(b));
+    const combined = Array.from(new Set(dynamicNames)).sort((a,b) => a.localeCompare(b));
     setDocOptions(combined);
   };
 
@@ -118,6 +130,35 @@ export const CEPMeetingView: React.FC<CEPMeetingViewProps> = ({ studies, isReadO
     fetchDocOptions();
     fetchMeetings();
   };
+
+  const handleDeleteDocName = async (docName: string) => {
+    console.log("handleDeleteDocName called for:", docName);
+    // 1. Remove from cepDocuments
+    await db.delete('cepDocuments', docName);
+
+    // 2. Cascade remove in Meetings
+    const allMeetings = await db.getAll<CEPMeeting>('cepMeetings');
+    for (const m of allMeetings) {
+      if (m.selectedDocuments?.includes(docName)) {
+        m.selectedDocuments = m.selectedDocuments.filter(d => d !== docName);
+        await db.upsert('cepMeetings', m);
+      }
+    }
+
+    // 3. Cascade remove in user profiles perms
+    const profiles = await db.getAll<{ id: string, name: string, permissions?: string[] }>('userProfiles');
+    for (const p of profiles) {
+      if (p.permissions?.includes(`doc_notify_${docName}`)) {
+        p.permissions = p.permissions.filter(perm => perm !== `doc_notify_${docName}`);
+        await db.upsert('userProfiles', p);
+      }
+    }
+
+    console.log("Finished deleting, now fetching doc options...");
+    await fetchDocOptions();
+    await fetchMeetings();
+  };
+
 
   const fetchMeetings = async () => {
     const data = await db.getAll<CEPMeeting>('cepMeetings');
@@ -586,11 +627,16 @@ export const CEPMeetingView: React.FC<CEPMeetingViewProps> = ({ studies, isReadO
                                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                                 </button>
                                 <button 
-                                  onClick={async () => {
-                                    if (window.confirm(`Excluir o documento ${doc}?`)) {
-                                      await db.delete('cepDocuments', doc);
-                                      fetchDocOptions();
-                                    }
+                                  onClick={() => {
+                                    setModalConfig({
+                                      isOpen: true,
+                                      title: 'Excluir Documento',
+                                      message: `Tem certeza que deseja excluir o documento ${doc}?`,
+                                      onConfirm: async () => {
+                                        await handleDeleteDocName(doc);
+                                        setModalConfig(prev => ({ ...prev, isOpen: false }));
+                                      }
+                                    });
                                   }}
                                   className="text-red-500 hover:bg-red-50 p-1.5 rounded"
                                   title="Excluir"

@@ -112,7 +112,7 @@ export const ManageRolesView: React.FC<ManageRolesViewProps> = ({ onShowSuccess,
       id: `doc_notify_${d.name}`,
       name: d.name,
       description: `Notifica ao aprovar o documento ${d.name} na Reunião CEP.`,
-      category: 'Documentos emenda',
+      category: 'Documentos Emenda',
       subcategory: 'Documentos'
     }));
     setDynamicPermissions(dynamicPerms);
@@ -373,7 +373,7 @@ export const ManageRolesView: React.FC<ManageRolesViewProps> = ({ onShowSuccess,
             </div>
             
             <div className="p-4 overflow-y-auto flex-1 bg-gray-50 flex flex-col gap-3">
-              {Array.from(new Set([...dynamicPermissions, ...AVAILABLE_PERMISSIONS].map(p => p.category))).map(category => {
+              {Array.from(new Set(['Documentos Emenda', ...[...dynamicPermissions, ...AVAILABLE_PERMISSIONS].map(p => p.category)])).map(category => {
                 const ALL_PERMS = [...AVAILABLE_PERMISSIONS, ...dynamicPermissions];
                 const isExpanded = expandedCategories.includes(category);
                 const categoryPerms = ALL_PERMS.filter(p => p.category === category);
@@ -395,57 +395,61 @@ export const ManageRolesView: React.FC<ManageRolesViewProps> = ({ onShowSuccess,
                     
                     {isExpanded && (
                       <div className="divide-y divide-gray-100 border-t border-gray-200">
-                        {Array.from(new Set(categoryPerms.map(p => p.subcategory))).map(subcategory => {
-                          const subcategoryPerms = categoryPerms.filter(p => p.subcategory === subcategory);
-                          const allChecked = subcategoryPerms.every(p => (selectedRole.permissions || []).includes(p.id));
-                          const canEdit = currentUserProfile === UserProfile.DEVELOPER || currentUserProfile === UserProfile.ADMIN;
-                          
-                          return (
-                            <div key={subcategory} className="flex flex-col">
-                              <div 
-                                className={`flex items-center gap-3 p-3 bg-gray-50 border-b border-gray-100 ${canEdit ? 'cursor-pointer hover:bg-gray-100' : 'opacity-80'}`}
-                                onClick={() => handleToggleSubcategory(subcategory, category)}
-                              >
-                                <div className="shrink-0">
-                                  <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${allChecked ? 'bg-[#007b63] border-[#007b63]' : 'border-gray-400 bg-white'}`}>
-                                    {allChecked && <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                        {categoryPerms.length === 0 ? (
+                          <div className="p-4 text-xs text-gray-500 text-center italic">Nenhum documento cadastrado na Reunião CEP.</div>
+                        ) : (
+                          Array.from(new Set(categoryPerms.map(p => p.subcategory))).map(subcategory => {
+                            const subcategoryPerms = categoryPerms.filter(p => p.subcategory === subcategory);
+                            const allChecked = subcategoryPerms.every(p => (selectedRole.permissions || []).includes(p.id));
+                            const canEdit = currentUserProfile === UserProfile.DEVELOPER || currentUserProfile === UserProfile.ADMIN;
+                            
+                            return (
+                              <div key={subcategory} className="flex flex-col">
+                                <div 
+                                  className={`flex items-center gap-3 p-3 bg-gray-50 border-b border-gray-100 ${canEdit ? 'cursor-pointer hover:bg-gray-100' : 'opacity-80'}`}
+                                  onClick={() => handleToggleSubcategory(subcategory, category)}
+                                >
+                                  <div className="shrink-0">
+                                    <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${allChecked ? 'bg-[#007b63] border-[#007b63]' : 'border-gray-400 bg-white'}`}>
+                                      {allChecked && <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                                    </div>
                                   </div>
+                                  <h4 className="text-xs font-bold text-gray-800 uppercase tracking-wider">{subcategory}</h4>
                                 </div>
-                                <h4 className="text-xs font-bold text-gray-800 uppercase tracking-wider">{subcategory}</h4>
-                              </div>
-                              
-                              <div className="flex flex-col divide-y divide-gray-50 pl-4">
-                                {subcategoryPerms.map(perm => {
-                                  const hasPerm = (selectedRole.permissions || []).includes(perm.id);
-                                  const isParentChecked = !perm.dependsOn || (selectedRole.permissions || []).includes(perm.dependsOn);
-                                  const isDisabled = !canEdit || !isParentChecked;
-                                  
-                                  return (
-                                    <div 
-                                      key={perm.id} 
-                                      className={`flex items-start gap-4 p-3 transition-all ${hasPerm ? 'bg-[#007b63]/5' : 'bg-white'} ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-50'}`}
-                                      onClick={() => {
-                                        if (!isDisabled) {
-                                          handleTogglePermission(perm.id);
-                                        }
-                                      }}
-                                    >
-                                      <div className="pt-0.5 shrink-0">
-                                        <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${hasPerm ? 'bg-[#007b63] border-[#007b63]' : 'border-gray-300 bg-white'} ${isDisabled ? 'bg-gray-100 border-gray-200' : ''}`}>
-                                          {hasPerm && <svg className={`w-3.5 h-3.5 ${isDisabled ? 'text-gray-400' : 'text-white'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                                
+                                <div className="flex flex-col divide-y divide-gray-50 pl-4">
+                                  {subcategoryPerms.map(perm => {
+                                    const hasPerm = (selectedRole.permissions || []).includes(perm.id);
+                                    const isParentChecked = !perm.dependsOn || (selectedRole.permissions || []).includes(perm.dependsOn);
+                                    const isDisabled = !canEdit || !isParentChecked;
+                                    
+                                    return (
+                                      <div 
+                                        key={perm.id} 
+                                        className={`flex items-start gap-4 p-3 transition-all ${hasPerm ? 'bg-[#007b63]/5' : 'bg-white'} ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-50'}`}
+                                        onClick={() => {
+                                          if (!isDisabled) {
+                                            handleTogglePermission(perm.id);
+                                          }
+                                        }}
+                                      >
+                                        <div className="pt-0.5 shrink-0">
+                                          <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${hasPerm ? 'bg-[#007b63] border-[#007b63]' : 'border-gray-300 bg-white'} ${isDisabled ? 'bg-gray-100 border-gray-200' : ''}`}>
+                                            {hasPerm && <svg className={`w-3.5 h-3.5 ${isDisabled ? 'text-gray-400' : 'text-white'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                                          </div>
+                                        </div>
+                                        <div>
+                                          <h4 className={`text-sm font-bold ${hasPerm ? 'text-[#007b63]' : 'text-gray-700'} ${isDisabled ? 'text-gray-400' : ''}`}>{perm.name}</h4>
+                                          <p className={`text-xs mt-1 leading-relaxed ${isDisabled ? 'text-gray-400' : 'text-gray-500'}`}>{perm.description}</p>
                                         </div>
                                       </div>
-                                      <div>
-                                        <h4 className={`text-sm font-bold ${hasPerm ? 'text-[#007b63]' : 'text-gray-700'} ${isDisabled ? 'text-gray-400' : ''}`}>{perm.name}</h4>
-                                        <p className={`text-xs mt-1 leading-relaxed ${isDisabled ? 'text-gray-400' : 'text-gray-500'}`}>{perm.description}</p>
-                                      </div>
-                                    </div>
-                                  );
-                                })}
+                                    );
+                                  })}
+                                </div>
                               </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })
+                        )}
                       </div>
                     )}
                   </div>

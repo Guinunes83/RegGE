@@ -8,12 +8,13 @@ export const DashboardView: React.FC = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [team, setTeam] = useState<TeamMember[]>([]);
   const [selectedStudyForParticipants, setSelectedStudyForParticipants] = useState<string>('all');
+  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
 
   useEffect(() => {
     Promise.all([
       db.getAll<Study>('studies'),
       db.getAll<Patient>('patients'),
-      db.getAll<TeamMember>('team')
+      db.getAll<TeamMember>('team-members')
     ]).then(([studiesData, patientsData, teamData]) => {
       setStudies(studiesData);
       setPatients(patientsData);
@@ -64,6 +65,47 @@ export const DashboardView: React.FC = () => {
   const activeHematologistsCount = useMemo(() => {
     return team.filter(t => t.active !== false && (t.role?.toLowerCase() === 'hematologista' || t.role?.toLowerCase() === 'hamatologista')).length;
   }, [team]);
+
+  const birthdaysThisMonth = useMemo(() => {
+    return team
+      .filter(member => {
+        if (!member.birthDate) return false;
+        if (member.active === false) return false; // Ignora inativos
+
+        let month = -1;
+        // Lida com formato YYYY-MM-DD
+        if (member.birthDate.match(/^\d{4}-\d{2}-\d{2}/)) {
+           month = parseInt(member.birthDate.substring(5, 7), 10);
+        } 
+        // Lida com formato DD/MM/YYYY
+        else if (member.birthDate.match(/^\d{2}\/\d{2}\/\d{4}/)) {
+           month = parseInt(member.birthDate.substring(3, 5), 10);
+        } 
+        // Fallback genérico
+        else {
+           const d = new Date(member.birthDate);
+           if (!isNaN(d.getTime())) {
+             month = d.getMonth() + 1;
+           }
+        }
+        return month === selectedMonth;
+      })
+      .map(member => {
+        let day = 0;
+        if (member.birthDate?.match(/^\d{4}-\d{2}-\d{2}/)) {
+           day = parseInt(member.birthDate.substring(8, 10), 10);
+        } else if (member.birthDate?.match(/^\d{2}\/\d{2}\/\d{4}/)) {
+           day = parseInt(member.birthDate.substring(0, 2), 10);
+        } else {
+           const d = new Date(member.birthDate!);
+           if (!isNaN(d.getTime())) {
+             day = d.getDate();
+           }
+        }
+        return { ...member, birthDay: day };
+      })
+      .sort((a, b) => a.birthDay - b.birthDay);
+  }, [team, selectedMonth]);
 
   const kpis = [
     { 
@@ -169,24 +211,90 @@ export const DashboardView: React.FC = () => {
 
           {/* Right Column (Tables/Bars) */}
           <div className="col-span-5 flex flex-col gap-4">
-            {/* Income by Group */}
-            <div className="flex-1 bg-white rounded shadow-sm border border-gray-200 p-4 flex flex-col">
-              <div className="flex justify-between items-center mb-4 px-8">
-                <h3 className="text-xs font-bold text-gray-800">Income by Group</h3>
-                <h3 className="text-xs font-bold text-gray-800">Income by Transaction</h3>
+            {/* Aniversariantes do Mês */}
+            <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-200 p-6 flex flex-col relative overflow-hidden">
+              {/* Decorative Background Elements */}
+              <div className="absolute top-0 right-0 -mr-8 -mt-8 opacity-10 pointer-events-none">
+                <svg width="120" height="120" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2Z" fill="#007b63"/>
+                  <path d="M12 12L12 22" stroke="#007b63" strokeWidth="2" strokeLinecap="round"/>
+                  <path d="M12 2C8.68629 2 6 4.68629 6 8C6 11.3137 8.68629 14 12 14C15.3137 14 18 11.3137 18 8C18 4.68629 15.3137 2 12 2Z" stroke="#005a48" strokeWidth="2"/>
+                </svg>
               </div>
-              <div className="flex-1 border border-dashed border-gray-200 rounded flex items-center justify-center text-gray-400 text-xs bg-gray-50/50">
-                [ Tabela/Barras Horizontais: Income ]
+              <div className="absolute bottom-4 left-4 opacity-[0.05] pointer-events-none transform -rotate-12">
+                <svg width="60" height="60" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M7 11V7" stroke="#005a48" strokeWidth="2" strokeLinecap="round"/>
+                  <path d="M12 11V7" stroke="#005a48" strokeWidth="2" strokeLinecap="round"/>
+                  <path d="M17 11V7" stroke="#005a48" strokeWidth="2" strokeLinecap="round"/>
+                  <path d="M4 11H20V21C20 21.5523 19.5523 22 19 22H5C4.44772 22 4 21.5523 4 21V11Z" fill="#007b63" stroke="#007b63" strokeWidth="2"/>
+                  <path d="M4 15H20" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <div className="absolute top-1/2 right-12 opacity-[0.04] pointer-events-none transform rotate-12">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#007b63" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                </svg>
+              </div>
+
+              <div className="flex justify-between items-center mb-6 z-10">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">🎂</span>
+                  <h3 className="text-sm font-black text-[#005a48] uppercase tracking-wider">Aniversariantes</h3>
+                </div>
+                <select 
+                  className="text-xs font-bold border-none bg-gray-50 text-[#007b63] rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-[#007b63] outline-none cursor-pointer"
+                  value={selectedMonth}
+                  onChange={e => setSelectedMonth(Number(e.target.value))}
+                >
+                  <option value={1}>Janeiro</option>
+                  <option value={2}>Fevereiro</option>
+                  <option value={3}>Março</option>
+                  <option value={4}>Abril</option>
+                  <option value={5}>Maio</option>
+                  <option value={6}>Junho</option>
+                  <option value={7}>Julho</option>
+                  <option value={8}>Agosto</option>
+                  <option value={9}>Setembro</option>
+                  <option value={10}>Outubro</option>
+                  <option value={11}>Novembro</option>
+                  <option value={12}>Dezembro</option>
+                </select>
+              </div>
+              
+              <div className="flex-1 w-full overflow-y-auto pr-2 z-10 custom-scrollbar">
+                {birthdaysThisMonth.length > 0 ? (
+                  <div className="flex flex-col gap-3">
+                    {birthdaysThisMonth.map((member, idx) => (
+                      <div key={idx} className="flex items-center justify-between p-3 bg-gray-50/80 rounded-xl hover:bg-gray-100 transition-colors border border-transparent hover:border-gray-200">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-[#007b63]/10 text-[#007b63] flex items-center justify-center font-black text-sm uppercase">
+                            {member.name.charAt(0)}
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-sm font-bold text-gray-800">{member.name}</span>
+                            <span className="text-[10px] uppercase font-bold text-gray-400">{member.role || 'Membro'}</span>
+                          </div>
+                        </div>
+                        <div className="text-right flex flex-col">
+                          <span className="text-sm font-black text-[#007b63]">Dia {member.birthDay}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="h-full w-full flex flex-col items-center justify-center text-gray-400 text-xs text-center opacity-70">
+                    <span className="text-3xl mb-2 grayscale opacity-50">🎈</span>
+                    <p className="font-medium">Nenhum aniversariante<br/>neste mês.</p>
+                  </div>
+                )}
               </div>
             </div>
-            {/* Overheads by Group */}
+            
+            {/* Bottom Right Empty Space (Kept as placeholder or generic box) */}
             <div className="flex-1 bg-white rounded shadow-sm border border-gray-200 p-4 flex flex-col">
-              <div className="flex justify-between items-center mb-4 px-8">
-                <h3 className="text-xs font-bold text-gray-800">Overheads by Group</h3>
-                <h3 className="text-xs font-bold text-gray-800">Overheads by Transaction</h3>
-              </div>
+              <h3 className="text-xs font-bold text-gray-800 mb-4">Outros Indicadores</h3>
               <div className="flex-1 border border-dashed border-gray-200 rounded flex items-center justify-center text-gray-400 text-xs bg-gray-50/50">
-                [ Tabela/Barras Horizontais: Overheads ]
+                [ Espaço Livre ]
               </div>
             </div>
           </div>
