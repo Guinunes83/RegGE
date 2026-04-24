@@ -98,7 +98,7 @@ export const ManageRolesView: React.FC<ManageRolesViewProps> = ({ onShowSuccess,
   const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean, id: string | null }>({ isOpen: false, id: null });
   
   const [selectedRole, setSelectedRole] = useState<{ id: string, name: string, permissions?: string[] } | null>(null);
-  const [expandedCategories, setExpandedCategories] = useState<string[]>(['Perfil de Usuário', 'Dados']);
+  const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
   const [isNewRoleModalOpen, setIsNewRoleModalOpen] = useState(false);
 
   useEffect(() => {
@@ -112,8 +112,8 @@ export const ManageRolesView: React.FC<ManageRolesViewProps> = ({ onShowSuccess,
       id: `doc_notify_${d.name}`,
       name: d.name,
       description: `Notifica ao aprovar o documento ${d.name} na Reunião CEP.`,
-      category: 'Vínculos de Documento',
-      subcategory: 'Documentos do CEP'
+      category: 'Documentos emenda',
+      subcategory: 'Documentos'
     }));
     setDynamicPermissions(dynamicPerms);
   };
@@ -373,7 +373,7 @@ export const ManageRolesView: React.FC<ManageRolesViewProps> = ({ onShowSuccess,
             </div>
             
             <div className="p-4 overflow-y-auto flex-1 bg-gray-50 flex flex-col gap-3">
-              {Array.from(new Set([...AVAILABLE_PERMISSIONS, ...dynamicPermissions].map(p => p.category))).map(category => {
+              {Array.from(new Set([...dynamicPermissions, ...AVAILABLE_PERMISSIONS].map(p => p.category))).map(category => {
                 const ALL_PERMS = [...AVAILABLE_PERMISSIONS, ...dynamicPermissions];
                 const isExpanded = expandedCategories.includes(category);
                 const categoryPerms = ALL_PERMS.filter(p => p.category === category);
