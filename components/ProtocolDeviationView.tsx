@@ -152,7 +152,7 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
   };
 
   const currentFormStudy = studies.find(s => s.id === formData.studyId);
-  const filteredPatients = patients.filter(p => currentFormStudy?.participantsIds.includes(p.id)).sort((a,b) => a.name.localeCompare(b.name));
+  const filteredPatients = patients.filter(p => p.studyId === formData.studyId).sort((a,b) => a.name.localeCompare(b.name));
   
   const selectedTableStudy = useMemo(() => {
     if (selectedIds.size === 0) return null;

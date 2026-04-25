@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Associate, PaymentEntry } from '../types';
 import { UnsavedChangesModal, useUnsavedChanges } from './UnsavedChangesModal';
 import { showValidation } from './ValidationModal';
