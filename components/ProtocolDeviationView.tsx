@@ -58,7 +58,18 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
   };
 
   useEffect(() => {
-    fetchDeviations();
+    const wipeMocks = async () => {
+      const mockIds = ['d1', 'd2', 'd3', 'sae1', 'sae2', 'sae3', 'gcp1', 'gcp2', 'gcp3'];
+      const p1 = await db.getAll<ProtocolDeviation>('deviations');
+      const p2 = await db.getAll<ProtocolDeviation>('gcpDeviations');
+      const p3 = await db.getAll<ProtocolDeviation>('saeDeviations');
+      for (const d of p1) if (mockIds.includes(d.id)) await db.delete('deviations', d.id);
+      for (const d of p2) if (mockIds.includes(d.id)) await db.delete('gcpDeviations', d.id);
+      for (const d of p3) if (mockIds.includes(d.id)) await db.delete('saeDeviations', d.id);
+      
+      fetchDeviations();
+    };
+    wipeMocks();
   }, []);
 
   useEffect(() => {
@@ -200,15 +211,15 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
       <div className="bg-white p-0 m-0 min-h-screen font-serif text-black flex justify-center">
         <style>{`
           @media print {
-            @page { size: A4 landscape; margin: 10mm; }
+            @page { size: A4 portrait; margin: 15mm; }
             body { background: white; margin: 0; padding: 0; }
             .no-print { display: none !important; }
-            .print-container { width: 297mm !important; height: 210mm !important; box-shadow: none !important; border: none !important; margin: 0 !important; }
+            .print-container { width: 210mm !important; min-height: 297mm !important; box-shadow: none !important; border: none !important; margin: 0 !important; }
           }
-          .printable-landscape { width: 297mm; min-height: 210mm; padding: 10mm; margin: 0 auto; background: white; box-sizing: border-box; }
+          .printable-a4 { width: 210mm; min-height: 297mm; padding: 15mm; margin: 0 auto; background: white; box-sizing: border-box; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
         `}</style>
         
-        <div className="printable-landscape relative">
+        <div className="printable-a4 relative">
             <div className="relative mb-8">
                <div className="flex justify-center w-full">
                   <div className="w-48">{LOGO_SVG}</div>
@@ -460,7 +471,7 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
              onClick={handleGeneratePDF}
              className="bg-[#007b63] disabled:opacity-50 disabled:cursor-not-allowed text-white px-12 py-3 rounded-2xl font-black uppercase text-xs shadow-xl tracking-widest hover:scale-105 transition-all"
            >
-             Gerar (PDF Paisagem)
+             Gerar (PDF A4)
            </button>
         </div>
       </div>

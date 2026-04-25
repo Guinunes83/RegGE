@@ -74,15 +74,6 @@ class AppDatabase {
     if (this.getCollection('cepMeetings').length === 0) {
       this.saveCollection('cepMeetings', MOCK_CEP_MEETINGS);
     }
-    if (this.getCollection('deviations').length === 0) {
-      this.saveCollection('deviations', MOCK_DEVIATIONS);
-    }
-    if (this.getCollection('saeDeviations').length === 0) {
-      this.saveCollection('saeDeviations', MOCK_SAE_DEVIATIONS);
-    }
-    if (this.getCollection('gcpDeviations').length === 0) {
-      this.saveCollection('gcpDeviations', MOCK_GCP_DEVIATIONS);
-    }
     if (this.getCollection('kitStock').length === 0) {
       this.saveCollection('kitStock', MOCK_KIT_STOCK);
     }
