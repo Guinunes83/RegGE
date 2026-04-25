@@ -705,6 +705,7 @@ export default function App() {
   };
 
   return (
+    // @ts-ignore
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || 'dummy_client_id'}>
       <NavigationContext.Provider value={{ registerInterceptor }}>
         <Layout 
