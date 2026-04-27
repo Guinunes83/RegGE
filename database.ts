@@ -28,7 +28,7 @@ class AppDatabase {
   private API_URL = 'http://localhost:8080/api';
 
   // Coleções que estão implementadas no backend
-  private API_COLLECTIONS = ['studies', 'team-members', 'sponsors', 'patients', 'notes', 'deviations', 'calibrations', 'monitors', 'kit-stock', 'consultations', 'associates', 'transactions', 'assets', 'vacations'];
+  private API_COLLECTIONS = ['studies', 'team-members', 'sponsors', 'patients', 'notes', 'deviations', 'gcpDeviations', 'saeDeviations', 'calibrations', 'monitors', 'kit-stock', 'consultations', 'associates', 'transactions', 'assets', 'vacations'];
 
   private getCollection<T>(key: string): T[] {
     const data = localStorage.getItem(`${this.PREFIX}${key}`);

@@ -10,4 +10,5 @@ import java.util.List;
 public interface DeviationRepository extends JpaRepository<ProtocolDeviation, String> {
     List<ProtocolDeviation> findByStudyId(String studyId);
     List<ProtocolDeviation> findByStatus(String status);
+    List<ProtocolDeviation> findByType(String type);
 }
