@@ -23,9 +23,9 @@ public class ProtocolDeviation {
     
     private String patientNumber;
     
-    private LocalDate occurrenceDate;
-    private LocalDate deviationDate;
-    
+    private String occurrenceDate;
+    private String deviationDate;
+
     @Column(length = 500)
     private String description;
     
@@ -50,11 +50,11 @@ public class ProtocolDeviation {
     public String getPatientNumber() { return patientNumber; }
     public void setPatientNumber(String patientNumber) { this.patientNumber = patientNumber; }
 
-    public LocalDate getOccurrenceDate() { return occurrenceDate; }
-    public void setOccurrenceDate(LocalDate occurrenceDate) { this.occurrenceDate = occurrenceDate; }
+    public String getOccurrenceDate() { return occurrenceDate; }
+    public void setOccurrenceDate(String occurrenceDate) { this.occurrenceDate = occurrenceDate; }
 
-    public LocalDate getDeviationDate() { return deviationDate; }
-    public void setDeviationDate(LocalDate deviationDate) { this.deviationDate = deviationDate; }
+    public String getDeviationDate() { return deviationDate; }
+    public void setDeviationDate(String deviationDate) { this.deviationDate = deviationDate; }
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }

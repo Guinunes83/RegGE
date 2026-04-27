@@ -76,7 +76,7 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
     if (formData.studyId) {
       const study = studies.find(s => s.id === formData.studyId);
       if (study) {
-        setFormData(prev => ({ ...prev, piName: study.pi, centerNumber: study.centerNumber }));
+        setFormData(prev => ({ ...prev, piName: study.pi, centerNumber: study.regulatoryCenterNumber || study.centerNumber }));
       }
     }
   }, [formData.studyId, studies]);
@@ -92,7 +92,10 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
 
   const handleRegister = async () => {
     if (isReadOnly) return;
-    if (!formData.studyId || !formData.patientId || !formData.description) return;
+    if (!formData.studyId || !formData.patientId || !formData.description) {
+      alert("Por favor, preencha os campos obrigatórios (Estudo, Participante, Descrição).");
+      return;
+    }
     
     const isNew = !formData.id;
     const newDev: ProtocolDeviation = {
@@ -105,6 +108,7 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
     await db.upsert(config.collection as any, newDev);
     
     await fetchDeviations();
+    setActiveTab(selectedType);
     setFormData({});
     onShowSuccess(isNew ? 'Cadastrado com Sucesso!' : 'Salvo com Sucesso!', `Registro de ${config.label} processado.`);
   };
@@ -239,19 +243,19 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
 
             <h2 className="text-center font-bold text-xl uppercase mb-6 border-b-2 border-black inline-block pb-1">{activeTabConfig.pdfTitle}</h2>
 
-            <table className="w-full border-collapse border border-black mb-12 text-[11px]">
+            <table className="w-full border-collapse border border-black mb-12 text-[11px] table-fixed">
               <thead>
                 <tr className="bg-gray-100">
-                  <th className="border border-black p-2">Estudos</th>
-                  <th className="border border-black p-2">PI</th>
-                  <th className="border border-black p-2">N do Centro</th>
-                  <th className="border border-black p-2">N do Participante</th>
-                  <th className="border border-black p-2">Data ocorrência</th>
-                  <th className="border border-black p-2">Data do Desvio</th>
-                  <th className="border border-black p-2">Descrição</th>
+                  <th className="border border-black p-2 w-[12%]">Estudos</th>
+                  <th className="border border-black p-2 w-[15%]">PI</th>
+                  <th className="border border-black p-2 w-[10%]">N do Centro</th>
+                  <th className="border border-black p-2 w-[12%]">N do Participante</th>
+                  <th className="border border-black p-2 w-[11%]">Data ocorrência</th>
+                  <th className="border border-black p-2 w-[11%]">Data do Desvio</th>
+                  <th className="border border-black p-2 w-[29%]">Descrição</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="break-words">
                 {selectedDeviations.map(d => (
                   <tr key={d.id}>
                     <td className="border border-black p-2 font-bold">{studies.find(s => s.id === d.studyId)?.name}</td>
@@ -379,6 +383,7 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
               key={t.type}
               onClick={() => {
                 setActiveTab(t.type);
+                if (!formData.id) setSelectedType(t.type);
                 setSelectedIds(new Set());
               }}
               className={`px-6 py-2 uppercase font-bold text-xs rounded-t-lg transition-colors ${activeTab === t.type ? 'bg-[#007b63] text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
