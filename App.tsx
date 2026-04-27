@@ -72,6 +72,29 @@ export default function App() {
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
 
   useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      // Mostrar popup nativo de confirmação
+      e.preventDefault();
+      e.returnValue = ''; 
+    };
+
+    const handleUnload = () => {
+      // Ao fechar ou atualizar, tentamos matar o backend java para que não fique rodando no desktop em segundo plano.
+      if (document.visibilityState === 'hidden' || true) {
+         navigator.sendBeacon('http://localhost:8080/api/shutdown');
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('unload', handleUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('unload', handleUnload);
+    };
+  }, []);
+
+  useEffect(() => {
     const handleOpenPasswordModal = () => setIsChangePasswordModalOpen(true);
     window.addEventListener('openChangePasswordModal', handleOpenPasswordModal);
     return () => window.removeEventListener('openChangePasswordModal', handleOpenPasswordModal);
