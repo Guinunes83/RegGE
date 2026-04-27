@@ -72,14 +72,7 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
     wipeMocks();
   }, []);
 
-  useEffect(() => {
-    if (formData.studyId) {
-      const study = studies.find(s => s.id === formData.studyId);
-      if (study) {
-        setFormData(prev => ({ ...prev, piName: study.pi, centerNumber: study.regulatoryCenterNumber || study.centerNumber }));
-      }
-    }
-  }, [formData.studyId, studies]);
+
 
   useEffect(() => {
     if (formData.patientId) {
@@ -200,7 +193,7 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
     }
   }, [piSelectionType, bottomPiOptions]);
 
-  const coords = team.filter(t => t.role === 'Coordenador de estudos').sort((a,b) => a.name.localeCompare(b.name));
+  const coords = team.filter(t => t.role?.toLowerCase().includes('coordenador')).sort((a,b) => a.name.localeCompare(b.name));
   const activeStudies = studies.filter(s => s.status === 'Active').sort((a,b) => a.name.localeCompare(b.name));
 
   const activeTabConfig = DEVIATION_TYPES.find(t => t.type === activeTab)!;
@@ -318,7 +311,16 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
           </div>
           <div className="flex flex-col gap-1 md:col-span-1">
             <label className="text-[10px] uppercase font-bold text-gray-500">Estudo</label>
-            <select disabled={isReadOnly} className="border border-gray-300 rounded px-2 py-1.5 text-sm bg-white outline-none focus:ring-2 focus:ring-[#007b63]" value={formData.studyId || ''} onChange={e => setFormData({...formData, studyId: e.target.value})}>
+            <select disabled={isReadOnly} className="border border-gray-300 rounded px-2 py-1.5 text-sm bg-white outline-none focus:ring-2 focus:ring-[#007b63]" value={formData.studyId || ''} 
+              onChange={e => {
+                const val = e.target.value;
+                const study = studies.find(s => s.id === val);
+                if (study) {
+                  setFormData({...formData, studyId: val, piName: study.pi, centerNumber: study.regulatoryCenterNumber || study.centerNumber || ''});
+                } else {
+                  setFormData({...formData, studyId: val, piName: '', centerNumber: ''});
+                }
+              }}>
               <option value="">Selecione...</option>
               {activeStudies.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
