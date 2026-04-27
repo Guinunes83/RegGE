@@ -349,14 +349,30 @@ export const MOCK_KIT_STOCK: KitStockEntry[] = [
 ];
 
 export const LOGO_SVG = (
-  <div className="flex flex-col items-center">
-    <svg viewBox="0 0 800 500" className="w-[450px] h-auto" fill="#007b63">
+  <div className="flex flex-col items-center w-full max-w-[450px]">
+    {/* Logo Image Placeholder - Cole/faça o upload da sua imagem .png ou .jpg aqui no sistema com o nome 'logo.png' na pasta raiz */}
+    <img 
+      src="/logo.png" 
+      alt="Grupo Elora" 
+      className="w-full h-auto max-w-[450px] object-contain"
+      onError={(e) => {
+        (e.target as HTMLImageElement).style.display = 'none';
+        const fallback = document.getElementById('logo-fallback');
+        if (fallback) fallback.style.display = 'block';
+      }}
+    />
+    
+    <svg id="logo-fallback" viewBox="0 0 800 320" className="w-[450px] h-auto hidden" fill="#007b63">
       <text x="50%" y="100" textAnchor="middle" fontSize="50" fontWeight="400" letterSpacing="25">GRUPO</text>
       <text x="50%" y="280" textAnchor="middle" fontSize="230" fontWeight="900" style={{ fontStyle: 'normal', fontFamily: 'sans-serif' }}>elora</text>
-      <text x="50%" y="360" textAnchor="middle" fontSize="32" fontWeight="400" letterSpacing="4">pesquisa, ensino</text>
-      <text x="50%" y="405" textAnchor="middle" fontSize="32" fontWeight="400" letterSpacing="4">e acolhimento</text>
-      <text x="50%" y="465" textAnchor="middle" fontSize="42" fontWeight="400" letterSpacing="6">contra o câncer</text>
     </svg>
+
+    {/* Espaçamento solicitado entre os textos */}
+    <div className="mt-8 w-full flex justify-center">
+      <svg viewBox="0 0 800 120" className="w-[450px] h-auto" fill="#007b63">
+         <text x="50%" y="100" textAnchor="middle" fontSize="110" fontWeight="900" style={{ fontStyle: 'normal', fontFamily: 'sans-serif' }}>RegGE</text>
+      </svg>
+    </div>
   </div>
 );
 
