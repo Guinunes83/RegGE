@@ -30,8 +30,12 @@ public class ProtocolDeviation {
     private String description;
     
     private String status; // Pendente, Gerado
+    private String type;
 
     // Getters and Setters
+    public String getType() { return type; }
+    public void setType(String type) { this.type = type; }
+
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 

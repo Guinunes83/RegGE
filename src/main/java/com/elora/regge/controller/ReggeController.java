@@ -81,13 +81,49 @@ public class ReggeController {
 
     // --- Endpoints de Desvios ---
     @GetMapping("/deviations")
-    public List<ProtocolDeviation> getAllDeviations() { return deviationRepo.findAll(); }
+    public List<ProtocolDeviation> getAllDeviations() { 
+        List<ProtocolDeviation> list = deviationRepo.findByType("Protocolo");
+        if (list.isEmpty()) {
+             // Fallback for older records
+            return deviationRepo.findAll().stream().filter(d -> d.getType() == null || d.getType().equals("Protocolo")).toList();
+        }
+        return list;
+    }
 
     @PostMapping("/deviations")
-    public ProtocolDeviation saveDeviation(@RequestBody ProtocolDeviation deviation) { return deviationRepo.save(deviation); }
+    public ProtocolDeviation saveDeviation(@RequestBody ProtocolDeviation deviation) { 
+        deviation.setType("Protocolo");
+        return deviationRepo.save(deviation); 
+    }
 
     @DeleteMapping("/deviations/{id}")
     public void deleteDeviation(@PathVariable String id) { deviationRepo.deleteById(id); }
+
+    // --- Endpoints de GCP Deviations ---
+    @GetMapping("/gcpDeviations")
+    public List<ProtocolDeviation> getAllGcpDeviations() { return deviationRepo.findByType("GCP"); }
+
+    @PostMapping("/gcpDeviations")
+    public ProtocolDeviation saveGcpDeviation(@RequestBody ProtocolDeviation deviation) { 
+        deviation.setType("GCP");
+        return deviationRepo.save(deviation); 
+    }
+
+    @DeleteMapping("/gcpDeviations/{id}")
+    public void deleteGcpDeviation(@PathVariable String id) { deviationRepo.deleteById(id); }
+
+    // --- Endpoints de SAE Deviations ---
+    @GetMapping("/saeDeviations")
+    public List<ProtocolDeviation> getAllSaeDeviations() { return deviationRepo.findByType("SAE"); }
+
+    @PostMapping("/saeDeviations")
+    public ProtocolDeviation saveSaeDeviation(@RequestBody ProtocolDeviation deviation) { 
+        deviation.setType("SAE");
+        return deviationRepo.save(deviation); 
+    }
+
+    @DeleteMapping("/saeDeviations/{id}")
+    public void deleteSaeDeviation(@PathVariable String id) { deviationRepo.deleteById(id); }
 
     // --- Endpoints de Calibrações ---
     @GetMapping("/calibrations")
