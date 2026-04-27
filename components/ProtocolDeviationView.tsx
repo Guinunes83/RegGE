@@ -91,8 +91,12 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
     }
     
     const isNew = !formData.id;
+    const currentStudy = studies.find(s => s.id === formData.studyId);
+    
     const newDev: ProtocolDeviation = {
       ...formData as ProtocolDeviation,
+      piName: formData.piName || currentStudy?.pi || '',
+      centerNumber: formData.centerNumber || currentStudy?.regulatoryCenterNumber || currentStudy?.centerNumber || '',
       id: formData.id || Math.random().toString(36).substr(2, 9),
       status: 'Pendente'
     };
@@ -193,7 +197,7 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
     }
   }, [piSelectionType, bottomPiOptions]);
 
-  const coords = team.filter(t => t.role?.toLowerCase().includes('coordenador')).sort((a,b) => a.name.localeCompare(b.name));
+  const coords = team.filter(t => t.active !== false).sort((a,b) => a.name.localeCompare(b.name));
   const activeStudies = studies.filter(s => s.status === 'Active').sort((a,b) => a.name.localeCompare(b.name));
 
   const activeTabConfig = DEVIATION_TYPES.find(t => t.type === activeTab)!;
@@ -249,17 +253,19 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
                 </tr>
               </thead>
               <tbody className="break-words">
-                {selectedDeviations.map(d => (
+                {selectedDeviations.map(d => {
+                  const study = studies.find(s => s.id === d.studyId);
+                  return (
                   <tr key={d.id}>
-                    <td className="border border-black p-2 font-bold">{studies.find(s => s.id === d.studyId)?.name}</td>
-                    <td className="border border-black p-2">{d.piName}</td>
-                    <td className="border border-black p-2">{d.centerNumber}</td>
+                    <td className="border border-black p-2 font-bold">{study?.name}</td>
+                    <td className="border border-black p-2">{d.piName || study?.pi}</td>
+                    <td className="border border-black p-2">{d.centerNumber || study?.regulatoryCenterNumber || study?.centerNumber}</td>
                     <td className="border border-black p-2">{d.patientNumber}</td>
                     <td className="border border-black p-2 text-center">{formatDatePTBR(d.occurrenceDate)}</td>
                     <td className="border border-black p-2 text-center">{formatDatePTBR(d.deviationDate)}</td>
                     <td className="border border-black p-2 italic">{d.description}</td>
                   </tr>
-                ))}
+                )})}
               </tbody>
             </table>
 
@@ -327,11 +333,11 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
           </div>
           <div className="flex flex-col gap-1 md:col-span-1">
             <label className="text-[10px] uppercase font-bold text-gray-500">PI</label>
-            <input className="border border-gray-300 rounded px-2 py-1.5 text-sm bg-white outline-none" value={formData.piName || ''} readOnly />
+            <input className="border border-gray-300 rounded px-2 py-1.5 text-sm bg-white outline-none" value={formData.piName || currentFormStudy?.pi || ''} readOnly />
           </div>
           <div className="flex flex-col gap-1 md:col-span-1">
             <label className="text-[10px] uppercase font-bold text-gray-500">Nº do Centro</label>
-            <input className="border border-gray-300 rounded px-2 py-1.5 text-sm bg-white outline-none" value={formData.centerNumber || ''} readOnly />
+            <input className="border border-gray-300 rounded px-2 py-1.5 text-sm bg-white outline-none" value={formData.centerNumber || currentFormStudy?.regulatoryCenterNumber || currentFormStudy?.centerNumber || ''} readOnly />
           </div>
           
           <div className="flex flex-col gap-1 md:col-span-1">
@@ -469,7 +475,7 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
            <div className="h-4 md:h-6"></div> 
            <select className="border border-gray-300 rounded px-2 py-2 text-sm bg-white outline-none focus:ring-2 focus:ring-[#007b63] shadow-sm transition-all" value={bottomCoordId} onChange={e => setBottomCoordId(e.target.value)}>
              <option value="">Selecione o Coordenador...</option>
-             {coords.map(c => <option key={c.id} value={c.id}>{c.honorific} {c.name}</option>)}
+             {coords.map(c => <option key={c.id} value={c.id}>{c.honorific} {c.name} ({c.role || 'Sem função'})</option>)}
            </select>
         </div>
         <div className="md:col-span-2 flex justify-center mt-4">
