@@ -362,14 +362,14 @@ export const LOGO_SVG = (
       }}
     />
     
-    <svg id="logo-fallback" viewBox="0 0 800 320" className="w-[450px] h-auto hidden" fill="#007b63">
+    <svg id="logo-fallback" viewBox="0 0 800 320" className="w-full max-w-[450px] h-auto hidden" fill="#007b63">
       <text x="50%" y="100" textAnchor="middle" fontSize="50" fontWeight="400" letterSpacing="25">GRUPO</text>
       <text x="50%" y="280" textAnchor="middle" fontSize="230" fontWeight="900" style={{ fontStyle: 'normal', fontFamily: 'sans-serif' }}>elora</text>
     </svg>
 
     {/* Espaçamento solicitado entre os textos */}
     <div className="mt-8 w-full flex justify-center">
-      <svg viewBox="0 0 800 120" className="w-[450px] h-auto" fill="#007b63">
+      <svg viewBox="0 0 800 120" className="w-full max-w-[450px] h-auto" fill="#007b63">
          <text x="50%" y="100" textAnchor="middle" fontSize="110" fontWeight="900" style={{ fontStyle: 'normal', fontFamily: 'sans-serif' }}>RegGE</text>
       </svg>
     </div>

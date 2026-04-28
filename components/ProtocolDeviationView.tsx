@@ -209,15 +209,15 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
     const coord = team.find(t => t.id === bottomCoordId);
 
     return (
-      <div className="bg-white p-0 m-0 min-h-screen font-serif text-black flex justify-center">
+      <div className="bg-white p-0 m-0 min-h-screen font-serif text-black flex justify-center print:block print:w-full print:h-auto print:min-h-0">
         <style>{`
           @media print {
-            @page { size: A4 portrait; margin: 15mm; }
-            body { background: white; margin: 0; padding: 0; }
+            @page { size: A4 landscape; margin: 15mm; }
+            body { background: white; margin: 0; padding: 0 !important; }
             .no-print { display: none !important; }
-            .print-container { width: 210mm !important; min-height: 297mm !important; box-shadow: none !important; border: none !important; margin: 0 !important; }
+            .printable-a4 { width: 100% !important; min-height: 100% !important; padding: 0 !important; box-shadow: none !important; border: none !important; margin: 0 !important; }
           }
-          .printable-a4 { width: 210mm; min-height: 297mm; padding: 15mm; margin: 0 auto; background: white; box-sizing: border-box; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+          .printable-a4 { width: 297mm; min-height: 210mm; padding: 15mm; margin: 0 auto; background: white; box-sizing: border-box; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
         `}</style>
         
         <div className="printable-a4 relative">
@@ -484,7 +484,7 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
              onClick={handleGeneratePDF}
              className="bg-[#007b63] disabled:opacity-50 disabled:cursor-not-allowed text-white px-12 py-3 rounded-2xl font-black uppercase text-xs shadow-xl tracking-widest hover:scale-105 transition-all"
            >
-             Gerar (PDF A4)
+             Gerar (PDF A4 Paisagem)
            </button>
         </div>
       </div>

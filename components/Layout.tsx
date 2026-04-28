@@ -278,10 +278,10 @@ export const Layout: React.FC<LayoutProps> = ({ onNavigate, onLogout, onSwitchPr
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-gray-100 font-sans">
+    <div className="flex h-screen w-screen overflow-hidden bg-gray-100 font-sans print:h-auto print:w-auto print:overflow-visible print:bg-white">
       
       {/* SIDEBAR */}
-      <aside className="w-64 bg-[#007b63] text-white flex flex-col shadow-2xl z-30 flex-shrink-0 transition-all">
+      <aside className="print:hidden w-64 bg-[#007b63] text-white flex flex-col shadow-2xl z-30 flex-shrink-0 transition-all">
         {/* Logo Area */}
         <div className="h-16 flex items-center px-6 border-b border-white/10 bg-[#006b56]">
            <div className="flex flex-col cursor-pointer" onClick={() => handleNavigation('Dashboard', 'Dashboard')}>
@@ -310,10 +310,10 @@ export const Layout: React.FC<LayoutProps> = ({ onNavigate, onLogout, onSwitchPr
       </aside>
 
       {/* MAIN CONTENT WRAPPER */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 print:min-w-full print:w-full print:block">
         
         {/* TOP HEADER */}
-        <header className="h-16 bg-white border-b border-gray-200 flex justify-between items-center px-6 shadow-sm z-20">
+        <header className="print:hidden h-16 bg-white border-b border-gray-200 flex justify-between items-center px-6 shadow-sm z-20">
            {/* Close menus when clicking outside */}
            {(isProfileMenuOpen || isNotificationMenuOpen) && (
              <div className="fixed inset-0 z-40 bg-transparent" onClick={() => { setIsProfileMenuOpen(false); setIsNotificationMenuOpen(false); }}></div>
@@ -443,7 +443,7 @@ export const Layout: React.FC<LayoutProps> = ({ onNavigate, onLogout, onSwitchPr
         </header>
 
         {/* PAGE CONTENT */}
-        <main className="flex-1 overflow-hidden relative bg-gray-50 flex flex-col">
+        <main className="flex-1 overflow-hidden relative bg-gray-50 flex flex-col print:overflow-visible print:bg-white print:block">
            {children}
         </main>
 
