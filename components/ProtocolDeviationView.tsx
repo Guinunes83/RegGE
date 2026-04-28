@@ -223,7 +223,20 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
         <div className="printable-a4 relative">
             <div className="relative mb-8">
                <div className="flex justify-center w-full">
-                  <div className="w-48">{LOGO_SVG}</div>
+                  <img 
+                    src="/logo.png" 
+                    alt="Grupo Elora" 
+                    className="w-64 h-auto object-contain"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                      const fallback = document.getElementById('print-logo-fallback');
+                      if (fallback) fallback.style.display = 'block';
+                    }}
+                  />
+                  <svg id="print-logo-fallback" viewBox="0 0 800 320" className="w-64 h-auto hidden" fill="#007b63">
+                    <text x="50%" y="100" textAnchor="middle" fontSize="50" fontWeight="400" letterSpacing="25">GRUPO</text>
+                    <text x="50%" y="280" textAnchor="middle" fontSize="230" fontWeight="900" style={{ fontStyle: 'normal', fontFamily: 'sans-serif' }}>elora</text>
+                  </svg>
                </div>
                <div className="no-print absolute top-0 right-0 space-x-4">
                  <button onClick={() => setIsPrinting(false)} className="bg-gray-500 text-white px-6 py-2 rounded-xl font-bold uppercase text-xs">Voltar</button>
@@ -231,7 +244,7 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
                </div>
             </div>
             
-            <div className="text-center font-bold text-lg uppercase mb-8 flex flex-col gap-4 items-center">
+            <div className="text-center font-bold text-[14px] uppercase mb-8 flex flex-col gap-4 items-center">
               <p className="text-justify leading-relaxed max-w-4xl mx-auto">
                 A Coordenadora do Comitê de Ética em Pesquisa com Seres Humanos: Sra Maria Luiza Vieira e Vieira.<br/>
                 Vimos por meio desta, encaminhar ao Comitê de Ética, os desvios abaixo descritos:
