@@ -161,7 +161,7 @@ export const DashboardView: React.FC = () => {
         {/* KPI Row */}
         <div className="grid grid-cols-4 gap-4 shrink-0">
           {kpis.map((kpi, i) => (
-            <div key={i} className="bg-white p-3 rounded shadow-sm flex flex-col items-center justify-between border border-gray-200 h-24">
+            <div key={i} className="bg-white p-3 rounded-2xl shadow-sm flex flex-col items-center justify-between border border-gray-200 h-24">
               <span className="text-[10px] font-bold text-gray-800 text-center">{kpi.label}</span>
               <span className="text-xl font-light text-gray-700">{kpi.value}</span>
               <span className={`text-[8px] font-medium text-center ${kpi.color}`}>{kpi.change}</span>
@@ -174,7 +174,7 @@ export const DashboardView: React.FC = () => {
           {/* Left Column (Charts) */}
           <div className="col-span-7 flex flex-col gap-4">
             {/* Profit Trend (Studies by Year) */}
-            <div className="flex-1 bg-white rounded shadow-sm border border-gray-200 p-4 flex flex-col">
+            <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-200 p-4 flex flex-col">
               <h3 className="text-xs font-bold text-center text-gray-800 mb-4">Estudos Iniciados / Ano (Parecer Inicial)</h3>
               <div className="flex-1 w-full min-h-[200px]">
                 {studiesByYearData.length > 0 ? (
@@ -217,7 +217,7 @@ export const DashboardView: React.FC = () => {
               </div>
             </div>
             {/* PI/SI Report */}
-            <div className="flex-1 bg-white rounded shadow-sm border border-gray-200 p-4 flex flex-col min-h-[250px]">
+            <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-200 p-4 flex flex-col min-h-[250px]">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xs font-bold text-gray-800 uppercase">Relatório de Estudos Vinculados</h3>
                 <select 
@@ -356,7 +356,7 @@ export const DashboardView: React.FC = () => {
             </div>
             
             {/* Bottom Right Empty Space (Kept as placeholder or generic box) */}
-            <div className="flex-1 bg-white rounded shadow-sm border border-gray-200 p-4 flex flex-col">
+            <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-200 p-4 flex flex-col">
               <h3 className="text-xs font-bold text-gray-800 mb-4">Outros Indicadores</h3>
               <div className="flex-1 border border-dashed border-gray-200 rounded flex items-center justify-center text-gray-400 text-xs bg-gray-50/50">
                 [ Espaço Livre ]
