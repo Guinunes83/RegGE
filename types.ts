@@ -144,7 +144,7 @@ export type Sponsor = {
 export type TeamMember = {
   id: string;
   active?: boolean; // Novo campo
-  honorific: string;
+  sex: 'M' | 'F';
   name: string;
   role: string;
   email: string;

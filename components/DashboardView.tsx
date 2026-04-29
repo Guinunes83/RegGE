@@ -9,6 +9,30 @@ export const DashboardView: React.FC = () => {
   const [team, setTeam] = useState<TeamMember[]>([]);
   const [selectedStudyForParticipants, setSelectedStudyForParticipants] = useState<string>('all');
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
+  const [selectedReportMemberId, setSelectedReportMemberId] = useState<string>('');
+
+  const memberReportInfo = useMemo(() => {
+    if (!selectedReportMemberId) return { piStudies: [], siStudies: [] };
+    const member = team.find(t => t.id === selectedReportMemberId);
+    if (!member) return { piStudies: [], siStudies: [] };
+    
+    // Studies where member is PI (match by name or ID, fallback to name)
+    const piStudies = studies.filter(s => s.pi === member.name).sort((a, b) => a.name.localeCompare(b.name));
+    
+    // Studies where member is SI
+    const siStudiesList = studies.filter(s => {
+      // Is SI in study delegation?
+      const inDelegation = s.delegation?.some(d => d.memberId === member.id && d.role?.includes('Sub-Investigador'));
+      // Is SI in team member study Roles? Wait, the form saves it directly to TeamMember
+      const inRoles = member.studyRoles?.some(sr => sr.studyId === s.id && sr.role?.includes('Sub-Investigador'));
+      return inDelegation || inRoles;
+    });
+
+    // Remove duplicates if any
+    const uniqueSiStudies = siStudiesList.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i).sort((a,b) => a.name.localeCompare(b.name));
+
+    return { piStudies, siStudies: uniqueSiStudies };
+  }, [team, studies, selectedReportMemberId]);
 
   useEffect(() => {
     Promise.all([
@@ -192,12 +216,61 @@ export const DashboardView: React.FC = () => {
                 )}
               </div>
             </div>
-            {/* Income & Expenses Trend */}
-            <div className="flex-1 bg-white rounded shadow-sm border border-gray-200 p-4 flex flex-col">
-              <h3 className="text-xs font-bold text-center text-gray-800 mb-4">Income & Expenses Trend</h3>
-              <div className="flex-1 border border-dashed border-gray-200 rounded flex items-center justify-center text-gray-400 text-xs bg-gray-50/50">
-                [ Gráfico de Barras/Linha: Income & Expenses Trend ]
+            {/* PI/SI Report */}
+            <div className="flex-1 bg-white rounded shadow-sm border border-gray-200 p-4 flex flex-col min-h-[250px]">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xs font-bold text-gray-800 uppercase">Relatório de Estudos Vinculados</h3>
+                <select 
+                  className="text-[10px] font-bold border border-gray-300 bg-gray-50 text-gray-600 rounded-md px-2 py-1 focus:ring-2 focus:ring-[#007b63] outline-none max-w-[200px]"
+                  value={selectedReportMemberId}
+                  onChange={(e) => setSelectedReportMemberId(e.target.value)}
+                >
+                  <option value="">Selecione o Membro...</option>
+                  {[...team].sort((a,b) => a.name.localeCompare(b.name)).map(m => (
+                    <option key={m.id} value={m.id}>{m.name}</option>
+                  ))}
+                </select>
               </div>
+
+              {!selectedReportMemberId ? (
+                <div className="flex-1 rounded flex items-center justify-center text-gray-400 text-xs bg-gray-50/50">
+                  Selecione um membro para exibir o relatório.
+                </div>
+              ) : (
+                <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-2">
+                  <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                    <h4 className="text-[10px] font-black text-[#007b63] uppercase tracking-wider mb-2 flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-[#007b63]"></span>
+                      Investigador Principal ({memberReportInfo.piStudies.length})
+                    </h4>
+                    {memberReportInfo.piStudies.length === 0 ? (
+                      <p className="text-[10px] text-gray-400 italic pl-4">Nenhum estudo como PI.</p>
+                    ) : (
+                      <ul className="space-y-1 pl-4">
+                        {memberReportInfo.piStudies.map(s => (
+                          <li key={s.id} className="text-xs text-gray-700 list-disc list-inside">{s.name}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+
+                  <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                    <h4 className="text-[10px] font-black text-[#005a48] uppercase tracking-wider mb-2 flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-[#005a48]"></span>
+                      Sub-Investigador ({memberReportInfo.siStudies.length})
+                    </h4>
+                    {memberReportInfo.siStudies.length === 0 ? (
+                      <p className="text-[10px] text-gray-400 italic pl-4">Nenhum estudo como SI.</p>
+                    ) : (
+                      <ul className="space-y-1 pl-4 flex flex-col">
+                        {memberReportInfo.siStudies.map(s => (
+                          <li key={s.id} className="text-xs text-gray-700 list-disc list-inside">{s.name}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

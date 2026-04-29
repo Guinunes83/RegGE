@@ -197,7 +197,7 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
     }
   }, [piSelectionType, bottomPiOptions]);
 
-  const coords = team.filter(t => t.active !== false).sort((a,b) => a.name.localeCompare(b.name));
+  const coords = team.filter(t => t.active !== false && t.role?.toLowerCase().includes('coordenador')).sort((a,b) => a.name.localeCompare(b.name));
   const activeStudies = studies.filter(s => s.status === 'Active').sort((a,b) => a.name.localeCompare(b.name));
 
   const activeTabConfig = DEVIATION_TYPES.find(t => t.type === activeTab)!;
@@ -291,7 +291,7 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
               </div>
               <div className="text-center w-80">
                 <p className="mb-1 border-t border-black pt-1">
-                  <span className="font-bold">{coord?.honorific} {coord?.name}</span><br/>
+                  <span className="font-bold">{coord?.name}</span><br/>
                   <span className="text-[10px] uppercase">Coordenador(a) de Estudos</span>
                 </p>
               </div>
@@ -488,7 +488,7 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
            <div className="h-4 md:h-6"></div> 
            <select className="border border-gray-300 rounded px-2 py-2 text-sm bg-white outline-none focus:ring-2 focus:ring-[#007b63] shadow-sm transition-all" value={bottomCoordId} onChange={e => setBottomCoordId(e.target.value)}>
              <option value="">Selecione o Coordenador...</option>
-             {coords.map(c => <option key={c.id} value={c.id}>{c.honorific} {c.name} ({c.role || 'Sem função'})</option>)}
+             {coords.map(c => <option key={c.id} value={c.id}>{c.name} ({c.role || 'Sem função'})</option>)}
            </select>
         </div>
         <div className="md:col-span-2 flex justify-center mt-4">
