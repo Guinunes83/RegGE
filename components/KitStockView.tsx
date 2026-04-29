@@ -447,12 +447,12 @@ export const KitStockView: React.FC<KitStockViewProps> = ({ studies, isReadOnly 
           <table className="w-full text-left text-xs">
             <thead className="bg-[#007b63] text-white uppercase tracking-tighter sticky top-0 z-10">
               <tr>
-                <th className="px-3 py-3 cursor-pointer hover:bg-[#00604d]" onClick={() => requestSort('studyName')}>Estudo <SortIcon colKey="studyName"/></th>
-                <th className="px-3 py-3 cursor-pointer hover:bg-[#00604d]" onClick={() => requestSort('kitName')}>Kit <SortIcon colKey="kitName"/></th>
-                <th className="px-3 py-3 cursor-pointer hover:bg-[#00604d]" onClick={() => requestSort('expirationDate')}>Data Validade <SortIcon colKey="expirationDate"/></th>
-                <th className="px-3 py-3 cursor-pointer hover:bg-[#00604d]" onClick={() => requestSort('quantity')}>Quantidade <SortIcon colKey="quantity"/></th>
-                <th className="px-3 py-3 cursor-pointer hover:bg-[#00604d]" onClick={() => requestSort('daysRemaining')}>Dias p/ Vencimento <SortIcon colKey="daysRemaining"/></th>
-                <th className="px-3 py-3 text-right">Ação</th>
+                <th className="px-3 py-1.5 cursor-pointer hover:bg-[#00604d]" onClick={() => requestSort('studyName')}>Estudo <SortIcon colKey="studyName"/></th>
+                <th className="px-3 py-1.5 cursor-pointer hover:bg-[#00604d]" onClick={() => requestSort('kitName')}>Kit <SortIcon colKey="kitName"/></th>
+                <th className="px-3 py-1.5 cursor-pointer hover:bg-[#00604d]" onClick={() => requestSort('expirationDate')}>Data Validade <SortIcon colKey="expirationDate"/></th>
+                <th className="px-3 py-1.5 cursor-pointer hover:bg-[#00604d]" onClick={() => requestSort('quantity')}>Quantidade <SortIcon colKey="quantity"/></th>
+                <th className="px-3 py-1.5 cursor-pointer hover:bg-[#00604d]" onClick={() => requestSort('daysRemaining')}>Dias p/ Vencimento <SortIcon colKey="daysRemaining"/></th>
+                <th className="px-3 py-1.5 text-right">Ação</th>
               </tr>
             </thead>
             <tbody className="divide-y text-gray-600">
@@ -466,12 +466,12 @@ export const KitStockView: React.FC<KitStockViewProps> = ({ studies, isReadOnly 
                     onClick={() => setViewingHistoryKit(k)}
                     title="Clique para ver histórico"
                   >
-                    <td className="px-3 py-3 font-bold text-gray-800">{studies.find(s => s.id === k.studyId)?.name || 'N/A'}</td>
-                    <td className="px-3 py-3 font-medium">{k.kitName}</td>
-                    <td className="px-3 py-3">{k.expirationDate.split('-').reverse().join('/')}</td>
-                    <td className="px-3 py-3 font-bold text-lg">{k.quantity}</td>
-                    <td className="px-3 py-3 font-bold">{getDaysRemaining(k.expirationDate) < 0 ? 'VENCIDO' : `${getDaysRemaining(k.expirationDate)} dias`}</td>
-                    <td className="px-3 py-3 text-right flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                    <td className="px-3 py-1.5 font-bold text-gray-800">{studies.find(s => s.id === k.studyId)?.name || 'N/A'}</td>
+                    <td className="px-3 py-1.5 font-medium">{k.kitName}</td>
+                    <td className="px-3 py-1.5">{k.expirationDate.split('-').reverse().join('/')}</td>
+                    <td className="px-3 py-1.5 font-bold text-lg">{k.quantity}</td>
+                    <td className="px-3 py-1.5 font-bold">{getDaysRemaining(k.expirationDate) < 0 ? 'VENCIDO' : `${getDaysRemaining(k.expirationDate)} dias`}</td>
+                    <td className="px-3 py-1.5 text-right flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
                       <button onClick={() => setViewingHistoryKit(k)} className="text-gray-600 font-bold hover:underline uppercase text-[10px] bg-white/50 px-2 py-1 rounded">Visualizar</button>
                       {!isReadOnly && (
                         <>
