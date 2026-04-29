@@ -454,6 +454,73 @@ export const StudyForm: React.FC<StudyFormProps> = ({ study, mode, onSave, onCan
         </section>
 
         <section>
+          <SectionTitle title="Membros da Equipe: Sub-Investigadores (SI)" />
+          <div className="flex flex-col gap-3 w-full">
+            <div className="grid grid-cols-2 gap-6">
+              {/* Left Column: Available Members */}
+              <div className="border border-gray-200 bg-white rounded-xl shadow-sm flex flex-col h-48">
+                <div className="bg-gray-100 px-4 py-2 border-b border-gray-200 font-bold text-xs text-gray-600 uppercase flex justify-between shrink-0">
+                  <span>Membros Disponíveis</span>
+                  <span className="text-[10px] bg-gray-200 px-1.5 rounded">{teamMembers.filter(m => !(formData.delegation || []).some(d => d.memberId === m.id)).length}</span>
+                </div>
+                <div className="overflow-y-auto flex-1 p-2 space-y-1 bg-white">
+                  {teamMembers.filter(m => !(formData.delegation || []).some(d => d.memberId === m.id)).length === 0 && <p className="text-center text-xs text-gray-400 mt-6 italic">Todos os membros selecionados.</p>}
+                  {teamMembers.filter(m => !(formData.delegation || []).some(d => d.memberId === m.id)).map(member => (
+                    <label key={member.id} className={`flex items-center gap-2 p-2 hover:bg-gray-50 rounded group transition-colors ${isView || isReadOnly ? 'cursor-default' : 'cursor-pointer'}`}>
+                      <div className="relative flex items-center justify-center">
+                        <input 
+                          type="checkbox" 
+                          disabled={isView || isReadOnly}
+                          className="peer appearance-none w-4 h-4 border-2 border-gray-300 rounded checked:bg-[#007b63] checked:border-[#007b63] transition-all disabled:opacity-50"
+                          checked={false}
+                          onChange={() => {
+                            const newDelegation = { memberId: member.id, memberName: member.name, role: 'Sub-Investigador (SI)' };
+                            setFormData({ ...formData, delegation: [...(formData.delegation || []), newDelegation] });
+                          }}
+                        />
+                        <svg className="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                      </div>
+                      <span className="text-xs text-gray-600 group-hover:text-gray-900">{member.name}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right Column: Selected Members */}
+              <div className="border border-gray-200 bg-white rounded-xl shadow-sm flex flex-col h-48">
+                <div className="bg-[#d1e7e4] px-4 py-2 border-b border-[#007b63]/20 font-bold text-xs text-[#007b63] uppercase flex justify-between shrink-0">
+                  <span>Sub-Investigadores (SI) Selecionados</span>
+                  <span className="text-[10px] bg-white px-1.5 rounded text-[#007b63]">{(formData.delegation || []).length}</span>
+                </div>
+                <div className="overflow-y-auto flex-1 p-2 space-y-1 bg-white">
+                  {(formData.delegation || []).length === 0 && <p className="text-center text-xs text-gray-400 mt-6 italic">Nenhum membro selecionado.</p>}
+                  {(formData.delegation || []).map(d => {
+                    return (
+                      <label key={d.memberId} className={`flex items-center gap-2 p-2 bg-gray-50 hover:bg-red-50 border-transparent hover:border-red-100 rounded group transition-colors border ${isView || isReadOnly ? 'cursor-default' : 'cursor-pointer'}`}>
+                        <div className="relative flex items-center justify-center">
+                          <input 
+                            type="checkbox" 
+                            disabled={isView || isReadOnly}
+                            className="peer appearance-none w-4 h-4 border-2 rounded transition-all disabled:opacity-50 border-[#007b63] bg-[#007b63] checked:bg-red-500 checked:border-red-500"
+                            checked={true}
+                            onChange={() => {
+                              setFormData({ ...formData, delegation: (formData.delegation || []).filter(item => item.memberId !== d.memberId) })
+                            }}
+                          />
+                          <svg className="absolute w-3 h-3 text-white peer-checked:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                          <svg className="absolute w-3 h-3 text-white pointer-events-none hidden peer-checked:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
+                        </div>
+                        <span className="text-xs font-medium text-gray-700 group-hover:text-red-600">{d.memberName}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section>
           <SectionTitle title="MONITÓRIA" />
           {!isView && !isReadOnly && (
             <div className="mb-4 flex gap-2">

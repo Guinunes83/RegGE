@@ -217,19 +217,19 @@ export const MOCK_SPONSORS: Sponsor[] = [
 // 3 Membros de Equipe (1 Oncologista, 2 Coordenadores conforme solicitado)
 export const MOCK_TEAM: TeamMember[] = [
   { 
-    id: 't1', active: true, honorific: 'Dr.', name: 'Fernando Mendes', role: 'Oncologista', email: 'fernando.mendes@elora.com', 
+    id: 't1', active: true, sex: 'M', name: 'Fernando Mendes', role: 'Oncologista', email: 'fernando.mendes@elora.com', 
     profile: UserProfile.ADMIN, phone: '(11) 3000-1000', cellphone: '(11) 99999-1000', birthDate: '1975-03-15', 
     cpf: '111.222.333-00', license: 'CRM-SP 90909', cvDate: '2023-01-10', gcpDate: '2023-02-15', platforms: [],
     contractType: 'PJ', matricula: '1001', admissionDate: '2022-01-01'
   },
   { 
-    id: 't2', active: true, honorific: 'Sra.', name: 'Camila Sommer', role: 'Coordenador de estudos', email: 'camila.sommer@elora.com', 
+    id: 't2', active: true, sex: 'F', name: 'Camila Sommer', role: 'Coordenador de estudos', email: 'camila.sommer@elora.com', 
     profile: UserProfile.COORDINATOR, phone: '(11) 3000-2000', cellphone: '(11) 98888-2000', birthDate: '1988-07-22', 
     cpf: '222.333.444-11', license: 'N/A', cvDate: '2023-03-20', gcpDate: '2023-04-01', platforms: [],
     contractType: 'CLT', matricula: '2050', admissionDate: '2022-06-15'
   },
   { 
-    id: 't3', active: true, honorific: 'Sr.', name: 'Bruno Vivan', role: 'Coordenador de estudos', email: 'bruno.vivan@elora.com', 
+    id: 't3', active: true, sex: 'M', name: 'Bruno Vivan', role: 'Coordenador de estudos', email: 'bruno.vivan@elora.com', 
     profile: UserProfile.COORDINATOR, phone: '(11) 3000-3000', cellphone: '(11) 97777-3000', birthDate: '1990-11-05', 
     cpf: '333.444.555-22', license: 'N/A', cvDate: '2023-05-10', gcpDate: '2023-05-15', platforms: [],
     contractType: 'CLT', matricula: '2060', admissionDate: '2022-08-01'
