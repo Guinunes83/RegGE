@@ -33,16 +33,16 @@ public class CsvImportController {
         try {
             switch (entityType.toLowerCase()) {
                 case "studies":
-                    csvImportService.importStudies(file);
-                    response.put("message", "Estudos importados com sucesso.");
+                    int studiesCount = csvImportService.importStudies(file);
+                    response.put("message", "Estudos importados com sucesso. Total: " + studiesCount);
                     break;
                 case "team":
-                    csvImportService.importTeam(file);
-                    response.put("message", "Membros da equipe importados com sucesso.");
+                    int teamCount = csvImportService.importTeam(file);
+                    response.put("message", "Membros da equipe importados com sucesso. Total: " + teamCount);
                     break;
                 case "participants":
-                    csvImportService.importParticipants(file);
-                    response.put("message", "Participantes importados com sucesso.");
+                    int partCount = csvImportService.importParticipants(file);
+                    response.put("message", "Participantes importados com sucesso. Total: " + partCount);
                     break;
                 default:
                     response.put("error", "Tipo de entidade desconhecido: " + entityType);
