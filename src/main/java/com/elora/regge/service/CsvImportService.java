@@ -81,10 +81,10 @@ public class CsvImportService {
                 study.setStudyType(safeGet(data, 15));
                 study.setMedicationRoute(safeGet(data, 16));
                 study.setStudyParticipantsCount(safeGet(data, 17));
-                study.setRegulatoryCAAE(safeGet(data, 18));
+                study.setTituloEstudo(safeGet(data, 18));
                 study.setRegulatoryCenterNumber(safeGet(data, 19));
                 study.setRegulatoryObs(safeGet(data, 20));
-                study.setRegulatorySusarPlatform(safeGet(data, 21));
+                // ignore regulatorySusarPlatform since we're using complex PlatformAccess section now
                 study.setFeasibilityReceptionDate(safeGet(data, 22));
                 study.setFeasibilitySigningDate(safeGet(data, 23));
                 study.setCenterSelectionNoticeDate(safeGet(data, 24));

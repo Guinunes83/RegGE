@@ -39,10 +39,15 @@ public class Study {
     private String studyParticipantsCount;
 
     // Seção Regulatório
-    private String regulatoryCAAE;
     private String regulatoryCenterNumber;
     private String regulatoryObs;
-    private String regulatorySusarPlatform;
+
+    private String tituloEstudo;
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "study_id")
+    private List<PlatformAccess> susarPlatforms;
+
 
     // Seção Índices (Datas)
     private String feasibilityReceptionDate;
@@ -59,9 +64,14 @@ public class Study {
     private String firstRandomizedDate;
     private String finalOpinionDate;
 
+    private Boolean active = true;
+
     // Getters and Setters
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
+
+    public Boolean getActive() { return active; }
+    public void setActive(Boolean active) { this.active = active; }
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
@@ -120,17 +130,17 @@ public class Study {
     public String getStudyParticipantsCount() { return studyParticipantsCount; }
     public void setStudyParticipantsCount(String studyParticipantsCount) { this.studyParticipantsCount = studyParticipantsCount; }
 
-    public String getRegulatoryCAAE() { return regulatoryCAAE; }
-    public void setRegulatoryCAAE(String regulatoryCAAE) { this.regulatoryCAAE = regulatoryCAAE; }
+    public String getTituloEstudo() { return tituloEstudo; }
+    public void setTituloEstudo(String tituloEstudo) { this.tituloEstudo = tituloEstudo; }
+
+    public List<PlatformAccess> getSusarPlatforms() { return susarPlatforms; }
+    public void setSusarPlatforms(List<PlatformAccess> susarPlatforms) { this.susarPlatforms = susarPlatforms; }
 
     public String getRegulatoryCenterNumber() { return regulatoryCenterNumber; }
     public void setRegulatoryCenterNumber(String regulatoryCenterNumber) { this.regulatoryCenterNumber = regulatoryCenterNumber; }
 
     public String getRegulatoryObs() { return regulatoryObs; }
     public void setRegulatoryObs(String regulatoryObs) { this.regulatoryObs = regulatoryObs; }
-
-    public String getRegulatorySusarPlatform() { return regulatorySusarPlatform; }
-    public void setRegulatorySusarPlatform(String regulatorySusarPlatform) { this.regulatorySusarPlatform = regulatorySusarPlatform; }
 
     public String getFeasibilityReceptionDate() { return feasibilityReceptionDate; }
     public void setFeasibilityReceptionDate(String feasibilityReceptionDate) { this.feasibilityReceptionDate = feasibilityReceptionDate; }

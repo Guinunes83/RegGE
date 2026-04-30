@@ -149,7 +149,7 @@ export const TeamForm: React.FC<TeamFormProps> = ({ member, mode, onSave, onCanc
     };
     const loadStudies = async () => {
       const allStudies = await db.getAll<any>('studies');
-      setActiveStudiesFull(allStudies.filter(s => s.status === 'Active'));
+      setActiveStudiesFull(allStudies.filter(s => s.active !== false));
     };
     const loadUserPermissions = async () => {
       if (currentUser) {

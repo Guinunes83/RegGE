@@ -32,7 +32,7 @@ export const PartialReportView: React.FC<PartialReportViewProps> = ({ studies, i
   const [sortConfig, setSortConfig] = useState<SortConfig>(null);
 
   useEffect(() => {
-    setActiveStudies(studies.filter(s => s.status === 'Active'));
+    setActiveStudies(studies.filter(s => s.active !== false));
   }, [studies]);
 
   const calculateNextReport = (study: Study) => {

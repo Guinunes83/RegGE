@@ -599,13 +599,13 @@ export default function App() {
                   </tr>
                 </thead>
                 <tbody className="divide-y">
-                  {getSortedData(showInactiveStudies ? studies : studies.filter(s => s.status === 'Active')).map((s: Study) => (
+                  {getSortedData(showInactiveStudies ? studies : studies.filter(s => s.active !== false)).map((s: Study) => (
                     <tr key={s.id} onClick={() => navigate('Studies', { mode: 'view', study: s })} className="hover:bg-gray-50 cursor-pointer">
                       <td className="px-6 py-1 text-sm font-bold text-blue-600 hover:underline">{s.name}</td>
                       <td className="px-6 py-1 text-sm">{s.protocol}</td>
                       <td className="px-6 py-1 text-sm">{s.pi}</td>
                       <td className="px-6 py-1 text-sm">{s.sponsor}</td>
-                      <td className="px-6 py-1 text-sm"><span className={`px-2 py-0.5 rounded text-xs font-bold ${s.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{s.status}</span></td>
+                      <td className="px-6 py-1 text-sm"><span className={`px-2 py-0.5 rounded text-xs font-bold ${s.active !== false ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{s.status}</span></td>
                     </tr>
                   ))}
                 </tbody>

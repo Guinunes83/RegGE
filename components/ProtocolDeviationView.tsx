@@ -198,7 +198,7 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
   }, [piSelectionType, bottomPiOptions]);
 
   const coords = team.filter(t => t.active !== false && t.role?.toLowerCase().includes('coordenador')).sort((a,b) => a.name.localeCompare(b.name));
-  const activeStudies = studies.filter(s => s.status === 'Active').sort((a,b) => a.name.localeCompare(b.name));
+  const activeStudies = studies.filter(s => s.active !== false).sort((a,b) => a.name.localeCompare(b.name));
 
   const activeTabConfig = DEVIATION_TYPES.find(t => t.type === activeTab)!;
   const currentDeviations = deviations[activeTab];

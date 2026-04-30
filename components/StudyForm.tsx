@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Study, MonitorEntry, Patient, TeamMember, StudyDelegation, PIEntry, Sponsor } from '../types';
+import { Study, MonitorEntry, Patient, TeamMember, StudyDelegation, PIEntry, Sponsor, PlatformAccess } from '../types';
 import { DROPDOWN_OPTIONS, MOCK_AVAILABLE_MONITORS, MOCK_PATIENTS, COLORS, DELEGATION_ROLES } from '../constants';
 import { ConfirmationModal } from './ConfirmationModal';
 import { db } from '../database';
@@ -111,18 +111,28 @@ export const StudyForm: React.FC<StudyFormProps> = ({ study, mode, onSave, onCan
   // Controle de Modais de Cadastro Rápido
   const [activeModal, setActiveModal] = useState<'pi' | 'sponsor' | 'cro' | 'coordinator' | 'monitor' | 'participant' | 'teamMember' | null>(null);
 
+  const [customPlatforms, setCustomPlatforms] = useState<string[]>([]);
+  const [newPlatform, setNewPlatform] = useState<{name: string, login: string, password: string, link: string}>({name: '', login: '', password: '', link: ''});
+  const [showAddPlatformModal, setShowAddPlatformModal] = useState(false);
+  const [newPlatformName, setNewPlatformName] = useState('');
+  const [editingPlatformOption, setEditingPlatformOption] = useState<string | null>(null);
+  const [editingOptionName, setEditingOptionName] = useState('');
+
   useEffect(() => {
     fetchDropdownData();
   }, []);
 
   const fetchDropdownData = async () => {
-    const [allTeam, allPis, allSponsors, allMonitors, allPatients] = await Promise.all([
+    const [allTeam, allPis, allSponsors, allMonitors, allPatients, platforms] = await Promise.all([
       db.getAll<TeamMember>('team-members'),
       db.getAll<PIEntry>('pis'),
       db.getAll<Sponsor>('sponsors'),
       db.getAll<MonitorEntry>('monitors'),
-      db.getAll<Patient>('patients')
+      db.getAll<Patient>('patients'),
+      db.getAll<{id: string, name: string}>('customPlatforms')
     ]);
+
+    setCustomPlatforms(platforms.map(p => p.name));
 
     setTeamMembers(allTeam.sort((a,b) => a.name.localeCompare(b.name)));
     setMonitorList(allMonitors.concat(MOCK_AVAILABLE_MONITORS).filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i));
@@ -219,7 +229,8 @@ export const StudyForm: React.FC<StudyFormProps> = ({ study, mode, onSave, onCan
     if (isView || isReadOnly) return; 
     setFormData(prev => ({
       ...prev,
-      status: prev.status === 'Active' ? 'Closed' : 'Active'
+      active: prev.active === false ? true : false,
+      status: prev.active === false ? 'Active' : 'Closed' // Maintain backwards compatibility for status
     }));
   };
 
@@ -319,7 +330,42 @@ export const StudyForm: React.FC<StudyFormProps> = ({ study, mode, onSave, onCan
   };
 
   const linkedParticipants = participantList.filter(p => formData.participantsIds?.includes(p.id));
-  const isActive = formData.status === 'Active';
+  const isActive = formData.active !== false;
+
+  const handleAddCustomPlatform = async () => {
+    if (newPlatformName.trim()) {
+      const pName = newPlatformName.trim();
+      await db.upsert('customPlatforms', { id: pName, name: pName });
+      setCustomPlatforms([...customPlatforms, pName]);
+      setNewPlatform({...newPlatform, name: pName});
+      setNewPlatformName('');
+    }
+  };
+
+  const handleEditCustomPlatform = async (oldName: string, newName: string) => {
+    if (!newName.trim() || oldName === newName) {
+      setEditingPlatformOption(null);
+      return;
+    }
+    const name = newName.trim();
+    await db.delete('customPlatforms', oldName);
+    await db.upsert('customPlatforms', { id: name, name: name });
+    
+    setCustomPlatforms(customPlatforms.map(p => p === oldName ? name : p));
+    setEditingPlatformOption(null);
+
+    if (newPlatform.name === oldName) {
+      setNewPlatform({ ...newPlatform, name });
+    }
+  };
+
+  const handleDeleteCustomPlatformOption = async (name: string) => {
+    await db.delete('customPlatforms', name);
+    setCustomPlatforms(customPlatforms.filter(p => p !== name));
+    if (newPlatform.name === name) {
+      setNewPlatform({ ...newPlatform, name: '' });
+    }
+  };
 
   const performValidationAndSave = async (): Promise<boolean> => {
     if (!formData.name) {
@@ -406,6 +452,7 @@ export const StudyForm: React.FC<StudyFormProps> = ({ study, mode, onSave, onCan
             
             {/* Linha 3 */}
             <StudyInput label="Patologia" value={formData.pathology} onChange={(v: string) => handleChange('pathology', v)} isView={isView} span="md:col-span-2" />
+            
             <StudyInput 
               label="Coord. de estudos" 
               value={formData.coordinator} 
@@ -413,22 +460,133 @@ export const StudyForm: React.FC<StudyFormProps> = ({ study, mode, onSave, onCan
               options={coordinatorList}
               isForcedDropdown 
               isView={isView} 
+              span="md:col-span-1"
             />
-            <StudyInput label="Recrutamento" value={formData.recruitment} onChange={(v: string) => handleChange('recruitment', v)} options={DROPDOWN_OPTIONS.recruitmentStatus} isForcedDropdown isView={isView} />
+            <StudyInput label="Recrutamento" value={formData.recruitment} onChange={(v: string) => handleChange('recruitment', v)} options={DROPDOWN_OPTIONS.recruitmentStatus} isForcedDropdown isView={isView} span="md:col-span-1" />
+
+            <div className="md:col-span-4 mb-2 -mt-1">
+              <label className="text-[10px] uppercase font-bold text-gray-500 ml-1 mb-1 block">Título do Estudo</label>
+              <textarea
+                className={`w-full border border-gray-300 rounded-md px-3 py-2 bg-white text-sm focus:ring-2 focus:ring-[#007b63] outline-none resize-y ${isView ? 'bg-gray-50' : ''}`}
+                value={formData.tituloEstudo || ''}
+                onChange={(e) => handleChange('tituloEstudo', e.target.value)}
+                disabled={isView || isReadOnly}
+                rows={2}
+              />
+            </div>
           </div>
         </section>
 
         <section>
           <SectionTitle title="REGULATÓRIO" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <StudyInput label="C.A.A.E" value={formData.regulatoryCAAE} onChange={(v: string) => handleChange('regulatoryCAAE', v)} isView={isView} />
+            <StudyInput label="C.A.A.E" value={formData.caae} onChange={(v: string) => handleChange('caae', v)} isView={isView} />
             <StudyInput label="Nº Centro" value={formData.regulatoryCenterNumber} onChange={(v: string) => handleChange('regulatoryCenterNumber', v)} isView={isView} />
             <div className="md:col-span-2">
               <StudyInput label="Obs.:" value={formData.regulatoryObs} onChange={(v: string) => handleChange('regulatoryObs', v)} isView={isView} />
             </div>
-            <div className="md:col-span-2">
-              <StudyInput label="Plataforma de Distribuição de SUSAR / CIOM" value={formData.regulatorySusarPlatform} onChange={(v: string) => handleChange('regulatorySusarPlatform', v)} isView={isView} />
+          </div>
+        </section>
+
+        <section>
+          <SectionTitle title="PLATAFORMA DE DISTRIBUIÇÃO DE SUSAR / CIOM" />
+          {!isView && !isReadOnly && (
+            <div className="grid grid-cols-1 md:grid-cols-[1fr,1fr,1fr,1fr,auto] gap-3 mb-4 items-end">
+              <div className="flex gap-2 w-full">
+                <select 
+                  className="border border-gray-300 rounded-md px-3 py-2 bg-white text-sm focus:ring-2 focus:ring-[#007b63] outline-none w-full"
+                  value={newPlatform.name || ''}
+                  onChange={e => setNewPlatform({...newPlatform, name: e.target.value})}
+                >
+                  <option value="">Selecione Plataforma...</option>
+                  {[...customPlatforms].sort((a,b) => a.localeCompare(b)).map((p) => <option key={p} value={p}>{p}</option>)}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => setShowAddPlatformModal(true)}
+                  className="bg-[#007b63] text-white px-3 py-2 rounded-md font-bold hover:bg-[#005a48] transition-colors flex items-center justify-center min-w-[40px]"
+                  title="Gerenciar plataformas"
+                >
+                  +
+                </button>
+              </div>
+              <input 
+                className="border border-gray-300 rounded-md px-3 py-2 bg-white text-sm focus:ring-2 focus:ring-[#007b63] outline-none w-full" 
+                placeholder="Login"
+                value={newPlatform.login || ''}
+                onChange={e => setNewPlatform({...newPlatform, login: e.target.value})}
+              />
+              <input 
+                className="border border-gray-300 rounded-md px-3 py-2 bg-white text-sm focus:ring-2 focus:ring-[#007b63] outline-none w-full" 
+                placeholder="Senha"
+                value={newPlatform.password || ''}
+                onChange={e => setNewPlatform({...newPlatform, password: e.target.value})}
+              />
+              <input 
+                className="border border-gray-300 rounded-md px-3 py-2 bg-white text-sm focus:ring-2 focus:ring-[#007b63] outline-none w-full" 
+                placeholder="URL/Link"
+                value={newPlatform.link || ''}
+                onChange={e => setNewPlatform({...newPlatform, link: e.target.value})}
+              />
+              <button 
+                type="button"
+                onClick={() => {
+                  if (newPlatform.name && newPlatform.login) {
+                    setFormData({ ...formData, susarPlatforms: [...(formData.susarPlatforms || []), { id: crypto.randomUUID(), ...newPlatform } as any] });
+                    setNewPlatform({name: '', login: '', password: '', link: ''});
+                  } else {
+                    showValidation("Preencha Plataforma e Login para adicionar.");
+                  }
+                }}
+                className="bg-[#007b63] text-white px-4 py-2 rounded-md font-bold text-[10px] uppercase hover:bg-[#005a48] transition-colors"
+              >
+                Vincular
+              </button>
             </div>
+          )}
+          <div className="overflow-x-auto border border-gray-200 rounded-xl">
+            <table className="w-full text-left bg-white">
+              <thead className="bg-gray-100 border-b border-gray-200">
+                <tr>
+                  <th className="px-4 py-2 font-bold text-gray-500 text-[10px] uppercase border-r border-gray-200">Plataforma</th>
+                  <th className="px-4 py-2 font-bold text-gray-500 text-[10px] uppercase border-r border-gray-200">Login</th>
+                  <th className="px-4 py-2 font-bold text-gray-500 text-[10px] uppercase border-r border-gray-200">Senha</th>
+                  <th className="px-4 py-2 font-bold text-gray-500 text-[10px] uppercase border-r border-gray-200">Link</th>
+                  {!isView && !isReadOnly && <th className="px-4 py-2 font-bold text-gray-500 text-[10px] uppercase">Ação</th>}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {(formData.susarPlatforms || []).map((p, idx) => (
+                  <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-4 py-3 text-sm border-r border-gray-100">{p.name}</td>
+                    <td className="px-4 py-3 text-sm border-r border-gray-100 text-blue-600 truncate max-w-[150px] font-mono">{p.login}</td>
+                    <td className="px-4 py-3 text-sm border-r border-gray-100 font-mono tracking-widest">{p.password}</td>
+                    <td className="px-4 py-3 text-sm border-r border-gray-100">
+                      {p.link && (
+                        <a href={p.link.startsWith('http') ? p.link : `https://${p.link}`} target="_blank" rel="noreferrer" className="text-blue-500 hover:text-blue-700 underline truncate max-w-[150px] inline-block">
+                          Acessar
+                        </a>
+                      )}
+                    </td>
+                    {!isView && !isReadOnly && (
+                      <td className="px-4 py-3 text-right">
+                        <button 
+                          onClick={() => {
+                            setFormData({ ...formData, susarPlatforms: (formData.susarPlatforms || []).filter((_, i) => i !== idx) });
+                          }}
+                          className="text-red-500 font-bold text-[10px] uppercase"
+                        >
+                          Remover
+                        </button>
+                      </td>
+                    )}
+                  </tr>
+                ))}
+                {(!formData.susarPlatforms || formData.susarPlatforms.length === 0) && (
+                  <tr><td colSpan={5} className="px-4 py-4 text-center text-gray-500 text-xs italic">Nenhuma plataforma vinculada a este estudo.</td></tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </section>
 
@@ -725,6 +883,99 @@ export const StudyForm: React.FC<StudyFormProps> = ({ study, mode, onSave, onCan
         }}
         onCancel={() => setConfirmModal({ isOpen: false, id: '', type: 'monitor' })}
       />
+
+      {showAddPlatformModal && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-sm p-6 relative flex flex-col max-h-[80vh]">
+            <h3 className="text-lg font-bold text-[#007b63] mb-4">Gerenciar Plataformas</h3>
+            
+            <div className="flex flex-col gap-2 mb-4 overflow-y-auto flex-1 p-1">
+               {customPlatforms.map(p => (
+                  <div key={p} className="flex justify-between items-center bg-gray-50 p-2 rounded border border-gray-200">
+                    {editingPlatformOption === p ? (
+                      <div className="flex w-full gap-2">
+                        <input 
+                          autoFocus
+                          value={editingOptionName}
+                          onChange={e => setEditingOptionName(e.target.value)}
+                          className="border border-gray-300 rounded px-2 py-1 text-sm flex-1 outline-none focus:border-[#007b63]"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleEditCustomPlatform(p, editingOptionName);
+                            if (e.key === 'Escape') setEditingPlatformOption(null);
+                          }}
+                        />
+                        <button onClick={() => handleEditCustomPlatform(p, editingOptionName)} className="text-[#007b63] font-bold text-xs hover:underline">Salvar</button>
+                        <button onClick={() => setEditingPlatformOption(null)} className="text-gray-500 font-bold text-xs hover:underline">Canc.</button>
+                      </div>
+                    ) : (
+                      <>
+                        <span className="text-sm text-gray-700">{p}</span>
+                        <div className="flex gap-2">
+                          <button 
+                            onClick={() => {
+                              setEditingPlatformOption(p);
+                              setEditingOptionName(p);
+                            }} 
+                            className="text-blue-500 hover:text-blue-700"
+                            title="Editar"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                          </button>
+                          <button 
+                            onClick={() => handleDeleteCustomPlatformOption(p)} 
+                            className="text-red-500 hover:text-red-700"
+                            title="Remover"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+               ))}
+               {customPlatforms.length === 0 && (
+                 <p className="text-xs text-gray-400 italic text-center py-4">Nenhuma plataforma cadastrada.</p>
+               )}
+            </div>
+
+            <div className="flex flex-col gap-2 mb-6 border-t pt-4">
+              <label className="text-[10px] uppercase font-bold text-gray-500">Adicionar Nova Plataforma</label>
+              <div className="flex gap-2">
+                <input 
+                  type="text" 
+                  className="border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-[#007b63] outline-none flex-1"
+                  placeholder="Ex.: Plataforma Brasil"
+                  value={newPlatformName}
+                  onChange={(e) => setNewPlatformName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleAddCustomPlatform();
+                  }}
+                />
+                <button 
+                  onClick={handleAddCustomPlatform}
+                  className="px-3 py-2 bg-[#007b63] text-white rounded text-sm font-bold shadow hover:bg-[#005a48] disabled:opacity-50"
+                  disabled={!newPlatformName.trim()}
+                >
+                  Criar
+                </button>
+              </div>
+            </div>
+            
+            <div className="flex justify-end gap-2">
+              <button 
+                onClick={() => {
+                  setShowAddPlatformModal(false);
+                  setNewPlatformName('');
+                  setEditingPlatformOption(null);
+                }}
+                className="px-6 py-2 border border-gray-300 text-gray-600 rounded text-sm font-semibold hover:bg-gray-50 w-full"
+              >
+                Fechar Gerenciador
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

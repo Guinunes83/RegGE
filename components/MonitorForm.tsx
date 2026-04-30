@@ -178,7 +178,7 @@ export const MonitorForm: React.FC<MonitorFormProps> = ({ monitor, studies, mode
 
   // Only show Active studies in the dropdown
   const studyOptions = studies
-    .filter(s => s.status === 'Active')
+    .filter(s => s.active !== false)
     .map(s => ({ label: s.name, value: s.id }));
     
   // Using custom options from db instead of DROPDOWN_OPTIONS
@@ -248,11 +248,11 @@ export const MonitorForm: React.FC<MonitorFormProps> = ({ monitor, studies, mode
                 <div className="border border-gray-200 bg-white rounded-xl shadow-sm overflow-hidden flex flex-col h-48">
                   <div className="bg-gray-100 px-4 py-2 border-b border-gray-200 font-bold text-xs text-gray-600 uppercase flex justify-between">
                     <span>Estudos Disponíveis</span>
-                    <span className="text-[10px] bg-gray-200 px-1.5 rounded">{studies.filter(s => s.status === 'Active' && !(formData.studyIds || []).includes(s.id)).length}</span>
+                    <span className="text-[10px] bg-gray-200 px-1.5 rounded">{studies.filter(s => s.active !== false && !(formData.studyIds || []).includes(s.id)).length}</span>
                   </div>
                   <div className="overflow-y-auto flex-1 p-2 space-y-1 bg-white">
-                    {studies.filter(s => s.status === 'Active' && !(formData.studyIds || []).includes(s.id)).length === 0 && <p className="text-center text-xs text-gray-400 mt-6 italic">Todos os estudos selecionados.</p>}
-                    {studies.filter(s => s.status === 'Active' && !(formData.studyIds || []).includes(s.id)).map(study => (
+                    {studies.filter(s => s.active !== false && !(formData.studyIds || []).includes(s.id)).length === 0 && <p className="text-center text-xs text-gray-400 mt-6 italic">Todos os estudos selecionados.</p>}
+                    {studies.filter(s => s.active !== false && !(formData.studyIds || []).includes(s.id)).map(study => (
                       <label key={study.id} className={`flex items-center gap-2 p-2 hover:bg-gray-50 rounded group transition-colors ${isView || isReadOnly ? 'cursor-default' : 'cursor-pointer'}`}>
                         <div className="relative flex items-center justify-center">
                           <input 

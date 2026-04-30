@@ -270,12 +270,13 @@ export type Study = {
   studyType: string;
   studyParticipantsCount: string; 
   status: StudyStatus;
+  active?: boolean;
   
   // Seção Regulatório
-  regulatoryCAAE?: string;
   regulatoryCenterNumber?: string;
   regulatoryObs?: string;
-  regulatorySusarPlatform?: string;
+  tituloEstudo?: string;
+  susarPlatforms?: PlatformAccess[];
 
   // Seção Índices
   feasibilityReceptionDate?: string;

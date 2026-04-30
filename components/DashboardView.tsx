@@ -79,7 +79,7 @@ export const DashboardView: React.FC = () => {
   }, [patients, selectedStudyForParticipants]);
 
   const activeStudiesCount = useMemo(() => {
-    return studies.filter(s => s.status === 'Active').length;
+    return studies.filter(s => s.active !== false).length;
   }, [studies]);
 
   const activeOncologistsCount = useMemo(() => {

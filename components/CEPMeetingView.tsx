@@ -313,7 +313,7 @@ export const CEPMeetingView: React.FC<CEPMeetingViewProps> = ({ studies, isReadO
     await db.upsert('cepMeetings', updatedMeeting);
   };
 
-  const activeStudies = studies.filter(s => s.status === 'Active').sort((a,b) => a.name.localeCompare(b.name));
+  const activeStudies = studies.filter(s => s.active !== false).sort((a,b) => a.name.localeCompare(b.name));
 
   return (
     <div className="flex flex-col gap-8 w-full max-w-7xl mx-auto p-6 bg-white/90 rounded-3xl shadow-2xl border border-gray-100 overflow-y-auto max-h-full scrollbar-thin relative">
