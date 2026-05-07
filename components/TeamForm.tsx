@@ -85,11 +85,13 @@ export const TeamForm: React.FC<TeamFormProps> = ({ member, mode, onSave, onCanc
   const [editingRoleOption, setEditingRoleOption] = React.useState<string | null>(null);
   const [editingRoleName, setEditingRoleName] = React.useState('');
   
-  const [customPlatforms, setCustomPlatforms] = React.useState<string[]>([]);
-  const [showAddPlatformModal, setShowAddPlatformModal] = React.useState(false);
-  const [newPlatformName, setNewPlatformName] = React.useState('');
-  const [editingPlatformOption, setEditingPlatformOption] = React.useState<string | null>(null);
-  const [editingOptionName, setEditingOptionName] = React.useState('');
+  const [customDelegationRoles, setCustomDelegationRoles] = React.useState<string[]>([]);
+  const [showAddDelegationRoleModal, setShowAddDelegationRoleModal] = React.useState(false);
+  const [newDelegationRole, setNewDelegationRole] = React.useState('');
+  const [editingDelegationRoleOption, setEditingDelegationRoleOption] = React.useState<string | null>(null);
+  const [editingDelegationRoleName, setEditingDelegationRoleName] = React.useState('');
+
+  const [regulatoryLinks, setRegulatoryLinks] = React.useState<{id: string, name: string, url: string}[]>([]);
 
   const [activeStudiesFull, setActiveStudiesFull] = React.useState<any[]>([]);
   const [divergentStudies, setDivergentStudies] = React.useState<string[]>([]);
@@ -122,8 +124,8 @@ export const TeamForm: React.FC<TeamFormProps> = ({ member, mode, onSave, onCanc
         // Is SI?
         const inDelegation = study.delegation?.find((d: any) => d.memberId === formData.id);
         if (inDelegation) {
-          if (!roles.some(r => r.studyId === study.id && r.role === inDelegation.role)) {
-             roles.push({ studyId: study.id, role: inDelegation.role || 'Sub-Investigador (SI)', source: 'study', studyName: study.name });
+          if (!roles.some(r => r.studyId === study.id && r.role.toLowerCase().includes('sub-investigador'))) {
+             roles.push({ studyId: study.id, role: 'Sub-Investigador', source: 'study', studyName: study.name });
           }
         }
       });
@@ -143,9 +145,13 @@ export const TeamForm: React.FC<TeamFormProps> = ({ member, mode, onSave, onCanc
       const roles = await db.getAll<{id: string, name: string}>('customRoles');
       setCustomRoles(roles.map(r => r.name));
     };
-    const loadCustomPlatforms = async () => {
-      const platforms = await db.getAll<{id: string, name: string}>('customPlatforms');
-      setCustomPlatforms(platforms.map(p => p.name));
+    const loadCustomDelegationRoles = async () => {
+      const delegationRoles = await db.getAll<{id: string, name: string}>('customDelegationRoles');
+      setCustomDelegationRoles(delegationRoles.map(r => r.name));
+    };
+    const loadRegulatoryLinks = async () => {
+      const links = await db.getAll<{id: string, name: string, url: string}>('regulatoryLinks');
+      setRegulatoryLinks(links);
     };
     const loadStudies = async () => {
       const allStudies = await db.getAll<any>('studies');
@@ -160,7 +166,8 @@ export const TeamForm: React.FC<TeamFormProps> = ({ member, mode, onSave, onCanc
     };
     
     loadCustomRoles();
-    loadCustomPlatforms();
+    loadCustomDelegationRoles();
+    loadRegulatoryLinks();
     loadStudies();
     loadUserPermissions();
   }, [currentUser]);
@@ -201,40 +208,44 @@ export const TeamForm: React.FC<TeamFormProps> = ({ member, mode, onSave, onCanc
     }
   };
 
-  const handleAddCustomPlatform = async () => {
-    if (newPlatformName.trim()) {
-      const pName = newPlatformName.trim();
-      await db.upsert('customPlatforms', { id: pName, name: pName });
-      setCustomPlatforms([...customPlatforms, pName]);
-      setNewPlatform({...newPlatform, name: pName});
-      setNewPlatformName('');
+  const handleAddCustomDelegationRole = async () => {
+    if (newDelegationRole.trim()) {
+      const roleName = newDelegationRole.trim();
+      await db.upsert('customDelegationRoles', { id: roleName, name: roleName });
+      setCustomDelegationRoles([...customDelegationRoles, roleName]);
+      setSelectedStudyRole(roleName);
+      setNewDelegationRole('');
     }
   };
 
-  const handleEditCustomPlatform = async (oldName: string, newName: string) => {
+  const handleEditCustomDelegationRole = async (oldName: string, newName: string) => {
     if (!newName.trim() || oldName === newName) {
-      setEditingPlatformOption(null);
+      setEditingDelegationRoleOption(null);
       return;
     }
     const name = newName.trim();
-    await db.delete('customPlatforms', oldName);
-    await db.upsert('customPlatforms', { id: name, name: name });
+    await db.delete('customDelegationRoles', oldName);
+    await db.upsert('customDelegationRoles', { id: name, name: name });
     
-    setCustomPlatforms(customPlatforms.map(p => p === oldName ? name : p));
-    setEditingPlatformOption(null);
+    setCustomDelegationRoles(customDelegationRoles.map(r => r === oldName ? name : r));
+    setEditingDelegationRoleOption(null);
 
-    // Update in any selected newPlatform dropdown
-    if (newPlatform.name === oldName) {
-      setNewPlatform({ ...newPlatform, name });
+    if (selectedStudyRole === oldName) {
+      setSelectedStudyRole(name);
     }
   };
 
-  const handleDeleteCustomPlatformOption = async (name: string) => {
-    await db.delete('customPlatforms', name);
-    setCustomPlatforms(customPlatforms.filter(p => p !== name));
-    if (newPlatform.name === name) {
-      setNewPlatform({ ...newPlatform, name: '' });
+  const handleDeleteCustomDelegationRoleOption = async (name: string) => {
+    await db.delete('customDelegationRoles', name);
+    setCustomDelegationRoles(customDelegationRoles.filter(r => r !== name));
+    if (selectedStudyRole === name) {
+      setSelectedStudyRole('');
     }
+  };
+
+  const handlePlatformChange = (pName: string) => {
+    const linkObj = regulatoryLinks.find(l => l.name === pName);
+    setNewPlatform({...newPlatform, name: pName, link: linkObj ? linkObj.url : newPlatform.link});
   };
 
   const [newPlatform, setNewPlatform] = React.useState<Partial<PlatformAccess>>({});
@@ -380,41 +391,13 @@ export const TeamForm: React.FC<TeamFormProps> = ({ member, mode, onSave, onCanc
       showValidation('O campo CPF é obrigatório e precisa ser preenchido antes de salvar.');
       return false;
     }
-    
-    // Logic for Study divergence
-    const currentDivergences: string[] = [];
-    const updatesToStudies: any[] = [];
-    
-    for (const studyId of (formData.studyIds || [])) {
-        const study = activeStudiesFull.find(s => s.id === studyId);
-        if (study) {
-            if (study.pi && study.pi.trim() !== '' && study.pi !== formData.name) {
-                currentDivergences.push(study.id);
-            } else if (!study.pi || study.pi.trim() === '') {
-                updatesToStudies.push({ ...study, pi: formData.name });
-            }
-        }
-    }
-
-    if (currentDivergences.length > 0) {
-        setDivergentStudies(currentDivergences);
-        setDivergenceMessage('Há uma divergência no cadastro. O(s) estudo(s) destacado(s) em vermelho já possuem um PI diferente no sistema.');
-        const contentDiv = document.getElementById('teamFormContent');
-        if (contentDiv) contentDiv.scrollTo({ top: 0, behavior: 'smooth' });
-        return false; 
+    if (formData.institutionalEmail && !formData.institutionalEmail.includes('@')) {
+      showValidation('O campo E-mail Institucional deve conter o caractere "@" (arroba).');
+      return false;
     }
 
     setDivergentStudies([]);
     setDivergenceMessage('');
-
-    for (const study of updatesToStudies) {
-       await db.upsert('studies', study);
-    }
-
-    // Clean up old studyRoles to avoid confusion
-    if (formData.studyRoles) {
-      formData.studyRoles = [];
-    }
 
     await onSave(formData);
     return true; // Used if we need to let caller know
@@ -512,13 +495,56 @@ export const TeamForm: React.FC<TeamFormProps> = ({ member, mode, onSave, onCanc
               isView={isView} 
             />
           </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mt-3">
+            {/* Linha 3 (Emails) */}
+            <TeamInput 
+              label="E-mail Institucional" 
+              value={formData.institutionalEmail} 
+              onChange={(v: string) => handleFieldChange('institutionalEmail', v)} 
+              isView={isView} 
+              span="md:col-span-2"
+            />
+            <TeamInput 
+              label="E-mail Pessoal" 
+              value={formData.personalEmail} 
+              onChange={(v: string) => handleFieldChange('personalEmail', v)} 
+              isView={isView} 
+              span="md:col-span-2"
+            />
+          </div>
         </section>
 
         <section>
-          <SectionTitle title="CV e GCP" />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <TeamInput label="Data CV" value={isView ? formatDateView(formData.cvDate) : formData.cvDate} onChange={(v: string) => handleFieldChange('cvDate', v)} type="date" isView={isView} />
-            <TeamInput label="Data GCP" value={isView ? formatDateView(formData.gcpDate) : formData.gcpDate} onChange={(v: string) => handleFieldChange('gcpDate', v)} type="date" isView={isView} />
+          <SectionTitle title="RH / FINANCEIRO" />
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <TeamInput 
+              label="CPF" 
+              value={formData.cpf} 
+              onChange={(v: string) => handleFieldChange('cpf', v)} 
+              required 
+              isView={isView} 
+              placeholder="000.000.000-00"
+            />
+            <TeamInput label="LICENÇA" value={formData.license} onChange={(v: string) => handleFieldChange('license', v)} required isView={isView} />
+            <TeamInput label="RQE" value={formData.rqe} onChange={(v: string) => handleFieldChange('rqe', v)} isView={isView} />
+            <TeamInput label="MATRÍCULA" value={formData.matricula} onChange={(v: string) => handleFieldChange('matricula', v)} isView={isView} />
+            
+            <TeamInput 
+              label="REGIME" 
+              value={formData.contractType} 
+              onChange={(v: string) => handleFieldChange('contractType', v)} 
+              options={['CLT', 'PJ']} 
+              isView={isView} 
+            />
+            {formData.contractType === 'PJ' && (
+                <TeamInput label="CNPJ" value={formData.cnpj} onChange={(v: string) => handleFieldChange('cnpj', v)} isView={isView} placeholder="00.000.000/0000-00" />
+            )}
+            {formData.contractType === 'CLT' && (
+              <>
+                <TeamInput label="DATA ADMISSÃO" value={isView ? formatDateView(formData.admissionDate) : formData.admissionDate} onChange={(v: string) => handleFieldChange('admissionDate', v)} type="date" isView={isView} />
+                <TeamInput label="DATA DESLIGAMENTO" value={isView ? formatDateView(formData.terminationDate) : formData.terminationDate} onChange={(v: string) => handleFieldChange('terminationDate', v)} type="date" isView={isView} />
+              </>
+            )}
           </div>
         </section>
 
@@ -526,15 +552,25 @@ export const TeamForm: React.FC<TeamFormProps> = ({ member, mode, onSave, onCanc
           <SectionTitle title="ESTUDOS VINCULADOS" />
           <div className="flex flex-col gap-3 w-full">
             {!isView && !isReadOnly && (
-              <div className="mb-4 flex gap-2">
+              <div className="mb-4 grid grid-cols-[1fr,1fr,auto] gap-2">
                 <select className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white text-sm outline-none focus:ring-2 focus:ring-[#007b63]" value={selectedStudyId} onChange={(e) => setSelectedStudyId(e.target.value)}>
                   <option value="">Selecione o Estudo...</option>
                   {[...activeStudiesFull].sort((a,b) => a.name.localeCompare(b.name)).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>
-                <select className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white text-sm outline-none focus:ring-2 focus:ring-[#007b63]" value={selectedStudyRole} onChange={(e) => setSelectedStudyRole(e.target.value)}>
-                  <option value="">Selecione a Função no Estudo...</option>
-                  {DELEGATION_ROLES.map(r => <option key={r} value={r}>{r}</option>)}
-                </select>
+                <div className="flex gap-2">
+                  <select className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white text-sm outline-none focus:ring-2 focus:ring-[#007b63]" value={selectedStudyRole} onChange={(e) => setSelectedStudyRole(e.target.value)}>
+                    <option value="">Selecione a Função no Estudo...</option>
+                    {[...customDelegationRoles].sort((a,b) => a.localeCompare(b)).map(r => <option key={r} value={r}>{r}</option>)}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddDelegationRoleModal(true)}
+                    className="bg-[#007b63] text-white px-3 py-2 rounded-md font-bold hover:bg-[#005a48] transition-colors flex items-center justify-center min-w-[40px]"
+                    title="Gerenciar funções em estudos"
+                  >
+                    +
+                  </button>
+                </div>
                 <button 
                   onClick={() => {
                     if (selectedStudyId && selectedStudyRole) {
@@ -552,7 +588,7 @@ export const TeamForm: React.FC<TeamFormProps> = ({ member, mode, onSave, onCanc
                   className="bg-[#007b63] disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-2 rounded-md font-bold hover:bg-[#005a48] transition-colors flex items-center justify-center min-w-[40px]"
                   title="Vincular Estudo"
                 >
-                  +
+                  OK
                 </button>
               </div>
             )}
@@ -571,9 +607,6 @@ export const TeamForm: React.FC<TeamFormProps> = ({ member, mode, onSave, onCanc
                       <tr key={`${sRole.studyId}-${sRole.role}`}>
                         <td className="px-4 py-3 font-medium">
                           {sRole.studyName}
-                          {sRole.source === 'study' && (
-                            <span className="ml-2 text-[8px] bg-blue-50 text-blue-500 px-1.5 py-0.5 rounded border border-blue-100 uppercase tracking-widest" title="Vinculado via formulário do estudo">Automático</span>
-                          )}
                         </td>
                         <td className="px-4 py-3">{sRole.role}</td>
                         {!isView && !isReadOnly && (
@@ -608,24 +641,14 @@ export const TeamForm: React.FC<TeamFormProps> = ({ member, mode, onSave, onCanc
           <SectionTitle title="PLATAFORMAS DE ACESSO" />
           {!isView && !isReadOnly && (
             <div className={`grid grid-cols-1 md:grid-cols-[1fr,1fr,${canViewPasswords ? '1fr,' : ''}1fr,auto] gap-3 mb-4 items-end`}>
-              <div className="flex gap-2 w-full">
-                <select 
-                  className="border border-gray-300 rounded-md px-3 py-2 bg-white text-sm focus:ring-2 focus:ring-[#007b63] outline-none w-full"
-                  value={newPlatform.name || ''}
-                  onChange={e => setNewPlatform({...newPlatform, name: e.target.value})}
-                >
-                  <option value="">Selecione Plataforma...</option>
-                  {[...customPlatforms].sort((a,b) => a.localeCompare(b)).map((p) => <option key={p} value={p}>{p}</option>)}
-                </select>
-                <button
-                  type="button"
-                  onClick={() => setShowAddPlatformModal(true)}
-                  className="bg-[#007b63] text-white px-3 py-2 rounded-md font-bold hover:bg-[#005a48] transition-colors flex items-center justify-center min-w-[40px]"
-                  title="Gerenciar plataformas"
-                >
-                  +
-                </button>
-              </div>
+              <select 
+                className="border border-gray-300 rounded-md px-3 py-2 bg-white text-sm focus:ring-2 focus:ring-[#007b63] outline-none w-full"
+                value={newPlatform.name || ''}
+                onChange={e => handlePlatformChange(e.target.value)}
+              >
+                <option value="">Selecione Plataforma...</option>
+                {[...regulatoryLinks].sort((a,b) => a.name.localeCompare(b.name)).map((p) => <option key={p.id} value={p.name}>{p.name}</option>)}
+              </select>
               <input 
                 className="border border-gray-300 rounded-md px-3 py-2 bg-white text-sm focus:ring-2 focus:ring-[#007b63] outline-none w-full" 
                 placeholder="Login"
@@ -681,7 +704,7 @@ export const TeamForm: React.FC<TeamFormProps> = ({ member, mode, onSave, onCanc
                     <td className="px-4 py-2">{p.name}</td>
                     <td className="px-4 py-2">{p.login}</td>
                     {canViewPasswords && <td className="px-4 py-2">{p.password}</td>}
-                    <td className="px-4 py-2"><a href={p.link} target="_blank" rel="noreferrer" className="text-blue-500 hover:underline">{p.link}</a></td>
+                    <td className="px-4 py-2"><a href={p.link?.startsWith('http') ? p.link : `https://${p.link}`} target="_blank" rel="noreferrer" className="text-blue-500 hover:underline">{p.link}</a></td>
                     {!isView && !isReadOnly && (
                       <td className="px-4 py-2 text-right">
                         <button onClick={() => setConfirmModal({ isOpen: true, id: p.id })} className="text-red-500 font-bold uppercase text-[10px]">Remover</button>
@@ -695,36 +718,10 @@ export const TeamForm: React.FC<TeamFormProps> = ({ member, mode, onSave, onCanc
         </section>
 
         <section>
-          <SectionTitle title="RH / FINANCEIRO" />
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-            <TeamInput 
-              label="CPF" 
-              value={formData.cpf} 
-              onChange={(v: string) => handleFieldChange('cpf', v)} 
-              required 
-              isView={isView} 
-              placeholder="000.000.000-00"
-            />
-            <TeamInput label="LICENÇA" value={formData.license} onChange={(v: string) => handleFieldChange('license', v)} required isView={isView} />
-            <TeamInput label="RQE" value={formData.rqe} onChange={(v: string) => handleFieldChange('rqe', v)} isView={isView} />
-            <TeamInput label="MATRÍCULA" value={formData.matricula} onChange={(v: string) => handleFieldChange('matricula', v)} isView={isView} />
-            
-            <TeamInput 
-              label="REGIME" 
-              value={formData.contractType} 
-              onChange={(v: string) => handleFieldChange('contractType', v)} 
-              options={['CLT', 'PJ']} 
-              isView={isView} 
-            />
-            {formData.contractType === 'PJ' && (
-                <TeamInput label="CNPJ" value={formData.cnpj} onChange={(v: string) => handleFieldChange('cnpj', v)} isView={isView} placeholder="00.000.000/0000-00" />
-            )}
-            {formData.contractType === 'CLT' && (
-              <>
-                <TeamInput label="DATA ADMISSÃO" value={isView ? formatDateView(formData.admissionDate) : formData.admissionDate} onChange={(v: string) => handleFieldChange('admissionDate', v)} type="date" isView={isView} />
-                <TeamInput label="DATA DESLIGAMENTO" value={isView ? formatDateView(formData.terminationDate) : formData.terminationDate} onChange={(v: string) => handleFieldChange('terminationDate', v)} type="date" isView={isView} />
-              </>
-            )}
+          <SectionTitle title="CV e GCP" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <TeamInput label="Data CV" value={isView ? formatDateView(formData.cvDate) : formData.cvDate} onChange={(v: string) => handleFieldChange('cvDate', v)} type="date" isView={isView} />
+            <TeamInput label="Data GCP" value={isView ? formatDateView(formData.gcpDate) : formData.gcpDate} onChange={(v: string) => handleFieldChange('gcpDate', v)} type="date" isView={isView} />
           </div>
         </section>
       </div>
@@ -878,38 +875,38 @@ export const TeamForm: React.FC<TeamFormProps> = ({ member, mode, onSave, onCanc
         </div>
       )}
 
-      {showAddPlatformModal && (
+      {showAddDelegationRoleModal && (
         <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/50 p-4">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-sm p-6 relative flex flex-col max-h-[80vh]">
-            <h3 className="text-lg font-bold text-[#007b63] mb-4">Gerenciar Plataformas</h3>
+            <h3 className="text-lg font-bold text-[#007b63] mb-4">Gerenciar Funções no Estudo</h3>
             
-            {/* List of existing platforms */}
+            {/* List of existing custom delegation roles */}
             <div className="flex flex-col gap-2 mb-4 overflow-y-auto flex-1 p-1">
-               {customPlatforms.map(p => (
-                  <div key={p} className="flex justify-between items-center bg-gray-50 p-2 rounded border border-gray-200">
-                    {editingPlatformOption === p ? (
+               {customDelegationRoles.map(r => (
+                  <div key={r} className="flex justify-between items-center bg-gray-50 p-2 rounded border border-gray-200">
+                    {editingDelegationRoleOption === r ? (
                       <div className="flex w-full gap-2">
                         <input 
                           autoFocus
-                          value={editingOptionName}
-                          onChange={e => setEditingOptionName(e.target.value)}
+                          value={editingDelegationRoleName}
+                          onChange={e => setEditingDelegationRoleName(e.target.value)}
                           className="border border-gray-300 rounded px-2 py-1 text-sm flex-1 outline-none focus:border-[#007b63]"
                           onKeyDown={(e) => {
-                            if (e.key === 'Enter') handleEditCustomPlatform(p, editingOptionName);
-                            if (e.key === 'Escape') setEditingPlatformOption(null);
+                            if (e.key === 'Enter') handleEditCustomDelegationRole(r, editingDelegationRoleName);
+                            if (e.key === 'Escape') setEditingDelegationRoleOption(null);
                           }}
                         />
-                        <button onClick={() => handleEditCustomPlatform(p, editingOptionName)} className="text-[#007b63] font-bold text-xs hover:underline">Salvar</button>
-                        <button onClick={() => setEditingPlatformOption(null)} className="text-gray-500 font-bold text-xs hover:underline">Canc.</button>
+                        <button onClick={() => handleEditCustomDelegationRole(r, editingDelegationRoleName)} className="text-[#007b63] font-bold text-xs hover:underline">Salvar</button>
+                        <button onClick={() => setEditingDelegationRoleOption(null)} className="text-gray-500 font-bold text-xs hover:underline">Canc.</button>
                       </div>
                     ) : (
                       <>
-                        <span className="text-sm text-gray-700">{p}</span>
+                        <span className="text-sm text-gray-700">{r}</span>
                         <div className="flex gap-2">
                           <button 
                             onClick={() => {
-                              setEditingPlatformOption(p);
-                              setEditingOptionName(p);
+                              setEditingDelegationRoleOption(r);
+                              setEditingDelegationRoleName(r);
                             }} 
                             className="text-blue-500 hover:text-blue-700"
                             title="Editar"
@@ -917,7 +914,7 @@ export const TeamForm: React.FC<TeamFormProps> = ({ member, mode, onSave, onCanc
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                           </button>
                           <button 
-                            onClick={() => handleDeleteCustomPlatformOption(p)} 
+                            onClick={() => handleDeleteCustomDelegationRoleOption(r)} 
                             className="text-red-500 hover:text-red-700"
                             title="Remover"
                           >
@@ -928,28 +925,28 @@ export const TeamForm: React.FC<TeamFormProps> = ({ member, mode, onSave, onCanc
                     )}
                   </div>
                ))}
-               {customPlatforms.length === 0 && (
-                 <p className="text-xs text-gray-400 italic text-center py-4">Nenhuma plataforma cadastrada.</p>
+               {customDelegationRoles.length === 0 && (
+                 <p className="text-xs text-gray-400 italic text-center py-4">Nenhuma função customizada.</p>
                )}
             </div>
 
             <div className="flex flex-col gap-2 mb-6 border-t pt-4">
-              <label className="text-[10px] uppercase font-bold text-gray-500">Adicionar Nova Plataforma</label>
+              <label className="text-[10px] uppercase font-bold text-gray-500">Adicionar Nova Função</label>
               <div className="flex gap-2">
                 <input 
                   type="text" 
                   className="border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-[#007b63] outline-none flex-1"
-                  placeholder="Ex.: Plataforma Brasil"
-                  value={newPlatformName}
-                  onChange={(e) => setNewPlatformName(e.target.value)}
+                  placeholder="Ex.: Sub-Investigador"
+                  value={newDelegationRole}
+                  onChange={(e) => setNewDelegationRole(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleAddCustomPlatform();
+                    if (e.key === 'Enter') handleAddCustomDelegationRole();
                   }}
                 />
                 <button 
-                  onClick={handleAddCustomPlatform}
+                  onClick={handleAddCustomDelegationRole}
                   className="px-3 py-2 bg-[#007b63] text-white rounded text-sm font-bold shadow hover:bg-[#005a48] disabled:opacity-50"
-                  disabled={!newPlatformName.trim()}
+                  disabled={!newDelegationRole.trim()}
                 >
                   Criar
                 </button>
@@ -959,9 +956,9 @@ export const TeamForm: React.FC<TeamFormProps> = ({ member, mode, onSave, onCanc
             <div className="flex justify-end gap-2">
               <button 
                 onClick={() => {
-                  setShowAddPlatformModal(false);
-                  setNewPlatformName('');
-                  setEditingPlatformOption(null);
+                  setShowAddDelegationRoleModal(false);
+                  setNewDelegationRole('');
+                  setEditingDelegationRoleOption(null);
                 }}
                 className="px-6 py-2 border border-gray-300 text-gray-600 rounded text-sm font-semibold hover:bg-gray-50 w-full"
               >
