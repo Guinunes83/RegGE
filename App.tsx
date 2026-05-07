@@ -430,7 +430,31 @@ export default function App() {
       
       case 'PI': // Agora Team Member
         if (activeProps.mode === 'edit' || activeProps.mode === 'view') {
-           return <TeamForm currentUser={currentUser} member={activeProps.pi} mode={activeProps.mode} onSave={async (data) => { await db.upsert('team-members', data); showSuccess('Salvo', 'Membro salvo com sucesso.'); navigate('PI'); }} onCancel={() => navigate('PI')} onEdit={() => navigate('PI', { mode: 'edit', pi: activeProps.pi })} isReadOnly={!hasPermission('edit_team')} />;
+           const handleSaveTeamMember = async (data: TeamMember) => {
+             const savedMember = (await db.upsert('team-members', data)) as TeamMember;
+             const actualMember = typeof savedMember === 'string' ? data : savedMember;
+             
+             // Two-way sync: update Studies' delegation if member is Sub-Investigador
+             const allStudies = await db.getAll<Study>('studies');
+             for (const study of allStudies) {
+               const sr = actualMember.studyRoles || [];
+               const hasRole = sr.some(s => s.studyId === study.id && s.role.toLowerCase().includes('sub-investigador'));
+               const delegation = study.delegation || [];
+               const isDelegated = delegation.some(d => d.memberId === actualMember.id);
+               
+               if (hasRole && !isDelegated) {
+                 await db.upsert('studies', { ...study, delegation: [...delegation, { memberId: actualMember.id, memberName: actualMember.name, role: 'Sub-Investigador (SI)' }] });
+               } else if (!hasRole && isDelegated) {
+                 await db.upsert('studies', { ...study, delegation: delegation.filter(d => d.memberId !== actualMember.id) });
+               }
+             }
+             
+             refreshData();
+             showSuccess('Salvo', 'Membro salvo com sucesso.');
+             navigate('PI');
+           };
+           
+           return <TeamForm currentUser={currentUser} member={activeProps.pi} mode={activeProps.mode} onSave={handleSaveTeamMember} onCancel={() => navigate('PI')} onEdit={() => navigate('PI', { mode: 'edit', pi: activeProps.pi })} isReadOnly={!hasPermission('edit_team')} />;
         }
         return (
           <div className="flex flex-col gap-6 p-6 h-full w-full">
@@ -544,6 +568,20 @@ export default function App() {
                    }
                }
                
+               // --- Handle Sub-Investigators (Delegation) Sync ---
+               const delegationMemIds = new Set((actualStudy.delegation || []).map(d => d.memberId));
+               for (const member of allTeam) {
+                 const isDelegated = delegationMemIds.has(member.id);
+                 const sr = member.studyRoles || [];
+                 const hasRole = sr.some(s => s.studyId === actualStudy.id && s.role.toLowerCase().includes('sub-investigador'));
+                 
+                 if (isDelegated && !hasRole) {
+                   await db.upsert('team-members', { ...member, studyRoles: [...sr, { studyId: actualStudy.id, role: 'Sub-Investigador' }] });
+                 } else if (!isDelegated && hasRole) {
+                   await db.upsert('team-members', { ...member, studyRoles: sr.filter(s => !(s.studyId === actualStudy.id && s.role.toLowerCase().includes('sub-investigador'))) });
+                 }
+               }
+
                // --- Handle Monitor Sync ---
                const allMonitors = await db.getAll<MonitorEntry>('monitors');
                for (const m of allMonitors) {

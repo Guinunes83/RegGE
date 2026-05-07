@@ -22,7 +22,9 @@ public class TeamMember {
     private String honorific;
     private String name;
     private String role;
-    private String email;
+    private String email; // Keeping for DB backward compat if needed, or remove if safe  
+    private String institutionalEmail;
+    private String personalEmail;
     private String profile;
     private String phone;
     private String cellphone;

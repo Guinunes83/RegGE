@@ -147,7 +147,8 @@ export type TeamMember = {
   sex: 'M' | 'F';
   name: string;
   role: string;
-  email: string;
+  institutionalEmail?: string;
+  personalEmail?: string;
   profile: UserProfile;
   profiles?: UserProfile[]; // Múltiplos perfis
   systemAccess?: boolean; // Se tem acesso ao sistema
