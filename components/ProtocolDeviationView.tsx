@@ -177,15 +177,18 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
     if (!selectedTableStudy) return [];
     
     if (piSelectionType === 'IP') {
-        return pis.filter(p => {
+        return team.filter(p => {
             const piName = p.name.trim();
             const studyPiName = (selectedTableStudy.pi || '').replace(/Dr(a)?\.\s*/, '').trim();
             return piName.includes(studyPiName) || p.name === selectedTableStudy.pi;
         });
     } else {
-        return pis.filter(p => p.name !== selectedTableStudy.pi && !p.name.includes(selectedTableStudy.pi));
+        const subIds = new Set((selectedTableStudy.delegation || [])
+          .filter((d: any) => d.role?.toLowerCase().includes('sub-investigador'))
+          .map((d: any) => d.memberId));
+        return team.filter(p => subIds.has(p.id));
     }
-  }, [selectedTableStudy, pis, piSelectionType]);
+  }, [selectedTableStudy, team, piSelectionType]);
 
   useEffect(() => {
     if (piSelectionType === 'IP' && bottomPiOptions.length > 0) {

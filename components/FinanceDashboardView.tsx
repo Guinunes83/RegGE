@@ -274,6 +274,7 @@ export const FinanceDashboardView: React.FC<FinanceDashboardViewProps> = ({ onSh
                 <div className="flex flex-col gap-3">
                   {vacations.filter(v => v.status === 'PLANNED').sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()).slice(0, 5).map(v => {
                     const employee = team.find(t => t.id === v.employeeId);
+                    const days = Math.ceil((new Date(v.endDate).getTime() - new Date(v.startDate).getTime()) / (1000 * 3600 * 24)) + 1;
                     return (
                       <div key={v.id} className="flex justify-between items-center p-3 hover:bg-gray-50 rounded-lg border border-gray-100">
                         <div className="flex flex-col">
@@ -281,7 +282,7 @@ export const FinanceDashboardView: React.FC<FinanceDashboardViewProps> = ({ onSh
                           <span className="text-xs text-gray-500">{employee?.role || '-'}</span>
                         </div>
                         <div className="text-right flex flex-col">
-                          <span className="font-bold text-sm text-[#007b63]">{v.startDate.split('-').reverse().join('/')}</span>
+                          <span className="font-bold text-sm text-[#007b63]">{v.startDate.split('-').reverse().join('/')} <span className="text-xs font-normal text-gray-400">({days} dias)</span></span>
                           <span className="text-xs text-gray-500">até {v.endDate.split('-').reverse().join('/')}</span>
                         </div>
                       </div>
