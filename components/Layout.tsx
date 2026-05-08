@@ -100,7 +100,7 @@ export const Layout: React.FC<LayoutProps> = ({ onNavigate, onLogout, onSwitchPr
             { label: 'Regulatórios', view: 'RegulatoryIndices', permission: 'access_indices' }
           ]
         },
-        { label: 'Monitoria', view: 'MonitoriaData', permission: 'access_monitoria' },
+        { label: 'Monitor', view: 'MonitoriaData', permission: 'access_monitoria' },
         { label: 'Participantes', view: 'Participants', permission: 'access_participants' },
         { label: 'Patrocinador', view: 'Sponsors', permission: 'access_sponsors' },
       ]

@@ -148,7 +148,7 @@ export default function App() {
   }, []);
 
   // Sorting state
-  const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
+  const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>({ key: 'name', direction: 'asc' });
 
   const [currentUserPermissions, setCurrentUserPermissions] = useState<string[]>([]);
   const [appConfig, setAppConfig] = useState({
@@ -369,7 +369,7 @@ export default function App() {
     navigationInterceptorRef.current = null;
     setActiveView(view);
     setActiveProps(props);
-    setSortConfig(null); // Reset sort when changing views
+    setSortConfig({ key: 'name', direction: 'asc' }); // Reset sort when changing views
     refreshData(); // Refresh data on navigation
   };
 
@@ -810,7 +810,7 @@ export default function App() {
       case 'RegulatoryLinks': return <RegulatoryLinksView />;
       case 'RegulatoryIndices': return <RegulatoryIndicesView studies={studies} />;
       case 'RegulatoryPartialReport': return <PartialReportView studies={studies} isReadOnly={isReadOnly} onShowSuccess={showSuccess} />;
-      case 'CEPMeeting': return <CEPMeetingView studies={studies} isReadOnly={isReadOnly} onShowSuccess={showSuccess} />;
+      case 'CEPMeeting': return <CEPMeetingView studies={studies} isReadOnly={isReadOnly} hasDeletePermission={hasPermission('delete_cep_meeting')} onShowSuccess={showSuccess} onNavigate={navigate} />;
       case 'CEPCalendar': return <CEPCalendarView />;
       case 'KitStock': return <KitStockView studies={studies} isReadOnly={isReadOnly} onShowSuccess={showSuccess} />;
       case 'ProtocolDeviation': return <ProtocolDeviationView studies={studies} pis={team} patients={patients} team={team} isReadOnly={isReadOnly} onShowSuccess={showSuccess} />;

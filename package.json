@@ -4,17 +4,21 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "tsx server.ts",
     "build": "vite build",
     "preview": "vite preview",
     "lint": "tsc --noEmit"
   },
   "dependencies": {
     "@react-oauth/google": "^0.13.5",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
     "lucide-react": "^1.8.0",
+    "puppeteer": "^24.43.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "recharts": "^3.8.1"
+    "recharts": "^3.8.1",
+    "tsx": "^4.21.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
