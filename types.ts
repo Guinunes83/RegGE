@@ -557,7 +557,7 @@ export type VacationRecord = {
   employeeId: string;
   startDate: string;
   endDate: string;
-  status: 'PLANNED' | 'TAKEN' | 'CANCELLED';
+  status: 'PLANNED' | 'IN_PROGRESS' | 'TAKEN' | 'CANCELLED';
   notes?: string;
 };
 

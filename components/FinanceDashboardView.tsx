@@ -39,8 +39,34 @@ export const FinanceDashboardView: React.FC<FinanceDashboardViewProps> = ({ onSh
   const loadData = async () => {
     setTransactions(await db.getAll('transactions'));
     setAssets(await db.getAll('assets'));
-    setVacations(await db.getAll('vacations'));
     setTeam(await db.getAll('team-members'));
+    
+    const computeVacationStatus = (startDate: string, endDate: string) => {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      const now = new Date();
+      start.setHours(0, 0, 0, 0);
+      end.setHours(23, 59, 59, 999);
+      now.setHours(0, 0, 0, 0);
+
+      if (now < start) return 'PLANNED';
+      if (now >= start && now <= end) return 'IN_PROGRESS';
+      return 'TAKEN';
+    };
+
+    const rawVacations = await db.getAll<VacationRecord>('vacations');
+    const processedVacations = [];
+    for (const v of rawVacations) {
+      if (v.status !== 'CANCELLED') {
+         const newStatus = computeVacationStatus(v.startDate, v.endDate);
+         if (newStatus !== v.status) {
+           v.status = newStatus;
+           await db.upsert('vacations', v);
+         }
+      }
+      processedVacations.push(v);
+    }
+    setVacations(processedVacations);
     
     let cats = await db.getAll<TransactionCategory>('transaction_categories');
     if (cats.length === 0) {
@@ -150,7 +176,26 @@ export const FinanceDashboardView: React.FC<FinanceDashboardViewProps> = ({ onSh
 
   const handleSaveVacation = async () => {
     if (!vacationForm.employeeId || !vacationForm.startDate || !vacationForm.endDate) return;
-    await db.upsert('vacations', vacationForm);
+    
+    const computeVacationStatus = (startDate: string, endDate: string) => {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      const now = new Date();
+      start.setHours(0, 0, 0, 0);
+      end.setHours(23, 59, 59, 999);
+      now.setHours(0, 0, 0, 0);
+
+      if (now < start) return 'PLANNED';
+      if (now >= start && now <= end) return 'IN_PROGRESS';
+      return 'TAKEN';
+    };
+
+    const finalForm = {
+      ...vacationForm,
+      status: computeVacationStatus(vacationForm.startDate, vacationForm.endDate) as any
+    };
+
+    await db.upsert('vacations', finalForm);
     onShowSuccess('Salvo', 'Férias salvas com sucesso.');
     setShowVacationModal(false);
     setVacationForm({ status: 'PLANNED' });
@@ -445,9 +490,10 @@ export const FinanceDashboardView: React.FC<FinanceDashboardViewProps> = ({ onSh
                         <td className="px-4 py-3 text-sm">
                           <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${
                             v.status === 'TAKEN' ? 'bg-green-100 text-green-700' : 
+                            v.status === 'IN_PROGRESS' ? 'bg-yellow-100 text-yellow-700' : 
                             v.status === 'CANCELLED' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
                           }`}>
-                            {v.status === 'TAKEN' ? 'Gozadas' : v.status === 'CANCELLED' ? 'Canceladas' : 'Programadas'}
+                            {v.status === 'TAKEN' ? 'Gozadas' : v.status === 'IN_PROGRESS' ? 'Em progresso' : v.status === 'CANCELLED' ? 'Canceladas' : 'Programadas'}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-sm text-right">
@@ -779,14 +825,6 @@ export const FinanceDashboardView: React.FC<FinanceDashboardViewProps> = ({ onSh
                 <div className="flex flex-col gap-1">
                   <label className="text-[10px] uppercase font-bold text-gray-500">Data de Fim</label>
                   <input type="date" className="border border-gray-300 rounded-md px-3 py-2 text-sm" value={vacationForm.endDate || ''} onChange={e => setVacationForm({...vacationForm, endDate: e.target.value})} />
-                </div>
-                <div className="flex flex-col gap-1 col-span-2">
-                  <label className="text-[10px] uppercase font-bold text-gray-500">Status</label>
-                  <select className="border border-gray-300 rounded-md px-3 py-2 text-sm" value={vacationForm.status} onChange={e => setVacationForm({...vacationForm, status: e.target.value as any})}>
-                    <option value="PLANNED">Programadas</option>
-                    <option value="TAKEN">Gozadas</option>
-                    <option value="CANCELLED">Canceladas</option>
-                  </select>
                 </div>
                 <div className="flex flex-col gap-1 col-span-2">
                   <label className="text-[10px] uppercase font-bold text-gray-500">Observações</label>

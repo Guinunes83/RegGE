@@ -4,10 +4,12 @@ import { Study, CEPMeeting, AppNotification, UserProfile } from '../types';
 import { DROPDOWN_OPTIONS, CEP_DOCUMENT_OPTIONS, formatDatePTBR } from '../constants';
 import { db } from '../database';
 import { ConfirmationModal } from './ConfirmationModal';
+import { CEPCalendarView } from './CEPCalendarView';
 
 interface CEPMeetingViewProps {
   studies: Study[];
   isReadOnly?: boolean;
+  hasDeletePermission?: boolean;
   onShowSuccess: (title: string, message: string) => void;
   onNavigate: (view: any) => void;
 }
@@ -49,7 +51,7 @@ const SelectField = ({ label, value, onChange, options, disabled = false }: any)
   </div>
 );
 
-export const CEPMeetingView: React.FC<CEPMeetingViewProps> = ({ studies, isReadOnly = false, onShowSuccess, onNavigate }) => {
+export const CEPMeetingView: React.FC<CEPMeetingViewProps> = ({ studies, isReadOnly = false, hasDeletePermission = false, onShowSuccess, onNavigate }) => {
   const [meetings, setMeetings] = useState<CEPMeeting[]>([]);
   const [calendarDates, setCalendarDates] = useState<string[]>([]);
   const [docOptions, setDocOptions] = useState<string[]>([]);
@@ -57,7 +59,63 @@ export const CEPMeetingView: React.FC<CEPMeetingViewProps> = ({ studies, isReadO
   const [newDocName, setNewDocName] = useState('');
   const [editingDoc, setEditingDoc] = useState<string | null>(null);
   const [editDocName, setEditDocName] = useState('');
+  const [isCalendarModalOpen, setIsCalendarModalOpen] = useState(false);
   const [formData, setFormData] = useState<Partial<CEPMeeting>>({});
+  const [isScraping, setIsScraping] = useState(false);
+
+  const handleScrapePB = async () => {
+    // Collect specific CAAEs (from studies where cepApproval !== 'APROVADO' and need to be updated in the system)
+    // Or we just get all that are in our current list but not approved
+    const meetingsToUpdate = meetings.filter(m => m.cepApproval !== 'APROVADO' && m.caae);
+    const caaesToUpdate = [...new Set(meetingsToUpdate.map(m => m.caae))].filter(Boolean) as string[];
+
+    if (caaesToUpdate.length === 0) {
+      alert("Nenhum CAAE pendente de aprovação para atualizar.");
+      return;
+    }
+
+    setIsScraping(true);
+    try {
+      const response = await fetch('/api/scrape-pb', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ caaes: caaesToUpdate })
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.details || data.error || 'Erro na requisição');
+      }
+
+      // Automatically update the table in indexedDB based on results!
+      const results = data.results || [];
+      let updatedCount = 0;
+
+      for (const res of results) {
+         if (res.status && !res.status.includes('Erro')) {
+             // Find meetings with this caae
+             const matched = meetings.filter(m => m.caae === res.caae);
+             for (const m of matched) {
+                 if (m.cepApproval !== res.status) {
+                     m.cepApproval = res.status;
+                     await db.upsert('cepMeetings', m);
+                     updatedCount++;
+                 }
+             }
+         }
+      }
+
+      await fetchMeetings();
+      onShowSuccess('RPA Concluído', `A atualização finalizou. ${updatedCount} registros atualizados.`);
+
+    } catch (err: any) {
+      console.error(err);
+      alert("O processo automatizado falhou. \n" + (err.message || 'Erro desconhecido') + "\n\n(Lembre-se que por restrições do ambiente de nuvem, pode ser necessário Exportar o Projeto e rodar localmente com 'npm run dev').");
+    } finally {
+      setIsScraping(false);
+    }
+  };
   
   // Controle de expansão da linha
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
@@ -271,7 +329,7 @@ export const CEPMeetingView: React.FC<CEPMeetingViewProps> = ({ studies, isReadO
   };
 
   const handleDelete = (id: string) => {
-    if (isReadOnly) return;
+    if (isReadOnly || !hasDeletePermission) return;
     setModalConfig({
       isOpen: true,
       title: 'Excluir Reunião CEP',
@@ -329,12 +387,29 @@ export const CEPMeetingView: React.FC<CEPMeetingViewProps> = ({ studies, isReadO
       <div className={`p-6 bg-[#d1e7e4]/20 rounded-2xl border border-[#007b63]/10 flex-shrink-0 ${isReadOnly ? 'opacity-60 pointer-events-none' : ''}`}>
         <div className="flex justify-between items-center mb-6 border-b border-[#007b63]/20 pb-2">
            <h3 className="text-[#007b63] font-black uppercase text-xs tracking-widest">Registro de Reunião CEP</h3>
-           <button 
-             onClick={() => onNavigate('CEPCalendar')}
-             className="bg-[#007b63] text-white px-4 py-2 rounded-lg shadow-md font-bold text-xs uppercase hover:bg-[#00604d] transition-colors"
-           >
-             Calendário de reuniões do CEP
-           </button>
+           <div className="flex gap-2">
+             <button 
+               onClick={handleScrapePB}
+               disabled={isScraping}
+               className={`${isScraping ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'} text-white px-4 py-2 rounded-lg shadow-md font-bold text-xs uppercase transition-colors flex items-center gap-2`}
+             >
+               {isScraping ? (
+                 <>
+                   <svg className="animate-spin h-3 w-3 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                   </svg>
+                   Buscando...
+                 </>
+               ) : 'Atualização na PB'}
+             </button>
+             <button 
+               onClick={() => setIsCalendarModalOpen(true)}
+               className="bg-[#007b63] text-white px-4 py-2 rounded-lg shadow-md font-bold text-xs uppercase hover:bg-[#00604d] transition-colors"
+             >
+               Calendário de reuniões do CEP
+             </button>
+           </div>
         </div>
         
         {/* SEÇÃO EMENDA */}
@@ -348,7 +423,7 @@ export const CEPMeetingView: React.FC<CEPMeetingViewProps> = ({ studies, isReadO
             <InputField label="Emenda" value={formData.amendment} onChange={(v: string) => setFormData({...formData, amendment: v})} readOnly={isReadOnly} />
             <InputField label="Linha PB" value={formData.pbLine} onChange={(v: string) => setFormData({...formData, pbLine: v})} readOnly={isReadOnly} />
             <SelectField label="Treinamento" value={formData.training} options={DROPDOWN_OPTIONS.cepTraining} onChange={(v: string) => setFormData({...formData, training: v})} disabled={isReadOnly} />
-            <SelectField label="Aprovação do CEP" value={formData.cepApproval} options={DROPDOWN_OPTIONS.cepApproval} onChange={(v: string) => setFormData({...formData, cepApproval: v})} disabled={isReadOnly} />
+            <SelectField label="Status CEP" value={formData.cepApproval} options={DROPDOWN_OPTIONS.cepApproval} onChange={(v: string) => setFormData({...formData, cepApproval: v})} disabled={isReadOnly} />
           </div>
         </div>
 
@@ -369,7 +444,7 @@ export const CEPMeetingView: React.FC<CEPMeetingViewProps> = ({ studies, isReadO
           <div className="mt-6 flex justify-end gap-2">
               <button onClick={() => setFormData({})} className="px-4 py-2 text-gray-500 text-xs font-bold uppercase hover:bg-gray-100 rounded-lg">Limpar</button>
               <button onClick={handleRegister} className="bg-[#007b63] text-white px-8 py-2 rounded-xl font-bold uppercase text-xs shadow-lg hover:bg-[#005a48] transition-colors">
-                {formData.id ? 'Atualizar' : 'Salvar'}
+                {formData.id ? 'Atualizar' : 'Cadastrar'}
               </button>
           </div>
         )}
@@ -388,7 +463,7 @@ export const CEPMeetingView: React.FC<CEPMeetingViewProps> = ({ studies, isReadO
                 <th className="px-3 py-3 whitespace-nowrap">C.A.A.E</th>
                 <th className="px-3 py-3 whitespace-nowrap">Emenda</th>
                 <th className="px-3 py-3 whitespace-nowrap">Linha PB</th>
-                <th className="px-3 py-3 whitespace-nowrap">Aprovação CEP</th>
+                <th className="px-3 py-3 whitespace-nowrap">Status CEP</th>
                 <th className="px-3 py-3 whitespace-nowrap">Dias Úteis</th>
                 <th className="px-3 py-3 whitespace-nowrap">Treinamento</th>
                 <th className="px-3 py-3 whitespace-nowrap">Data Últ. Ver.</th>
@@ -423,7 +498,14 @@ export const CEPMeetingView: React.FC<CEPMeetingViewProps> = ({ studies, isReadO
                         <td className="px-3 py-3">{m.caae}</td>
                         <td className="px-3 py-3">{m.amendment}</td>
                         <td className="px-3 py-3">{m.pbLine || '-'}</td>
-                        <td className="px-3 py-3"><span className="px-2 py-0.5 bg-gray-100 rounded text-xs">{m.cepApproval || '-'}</span></td>
+                        <td className="px-3 py-3"><span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                          m.cepApproval === 'APROVADO' ? 'bg-green-100 text-green-700' :
+                          m.cepApproval === 'Em Apreciação Ética' ? 'bg-yellow-100 text-yellow-700' :
+                          m.cepApproval === 'Em Edição' ? 'bg-yellow-200 text-yellow-800' :
+                          m.cepApproval === 'Em Recepção e Validação Documental' ? 'bg-gray-200 text-gray-800' :
+                          m.cepApproval === 'Retirado pelo Centro Coordenador' ? 'bg-gray-400 text-gray-900' :
+                          'bg-gray-100 text-gray-700'
+                        }`}>{m.cepApproval || '-'}</span></td>
                         <td className="px-3 py-3 text-center">{m.businessDays}</td>
                         <td className="px-3 py-3">{m.training}</td>
                         <td className="px-3 py-3">{m.lastVerificationDate ? formatDatePTBR(m.lastVerificationDate) : '-'}</td>
@@ -433,9 +515,11 @@ export const CEPMeetingView: React.FC<CEPMeetingViewProps> = ({ studies, isReadO
                               <button onClick={() => handleEdit(m)} title="Editar" className="text-blue-500 font-bold hover:underline uppercase text-[10px]">
                                 Editar
                               </button>
-                              <button onClick={() => handleDelete(m.id)} title="Excluir" className="text-red-500 font-bold hover:underline uppercase text-[10px]">
-                                Excluir
-                              </button>
+                              {hasDeletePermission && (
+                                <button onClick={() => handleDelete(m.id)} title="Excluir" className="text-red-500 font-bold hover:underline uppercase text-[10px]">
+                                  Excluir
+                                </button>
+                              )}
                             </>
                           )}
                         </td>
@@ -655,6 +739,15 @@ export const CEPMeetingView: React.FC<CEPMeetingViewProps> = ({ studies, isReadO
             </div>
           </div>
         </div>
+      )}
+
+      {isCalendarModalOpen && (
+        <CEPCalendarView onClose={async () => {
+          setIsCalendarModalOpen(false);
+          // Refetch calendar dates when closing the modal to assure updated states
+          const data = await db.getAll('cepCalendar');
+          setCalendarDates(data.map((d: any) => d.meetingDate).sort((a: string, b: string) => b.localeCompare(a)));
+        }} />
       )}
     </div>
   );

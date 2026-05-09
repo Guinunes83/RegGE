@@ -199,7 +199,10 @@ export const DROPDOWN_OPTIONS = {
   cepApproval: [
     'Aguardando Aprovação',
     'APROVADO',
+    'Em Apreciação Ética',
     'Em Edição',
+    'Em Recepção e Validação Documental',
+    'Retirado pelo Centro Coordenador',
     'Não Aprovado',
     'Pendencia'
   ]

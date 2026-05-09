@@ -193,8 +193,10 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
   useEffect(() => {
     if (piSelectionType === 'IP' && bottomPiOptions.length > 0) {
       setBottomPiId(bottomPiOptions[0].id);
-    } else if (piSelectionType === 'Sub') {
-      setBottomPiId(''); 
+    } else if (piSelectionType === 'Sub' && bottomPiOptions.length > 0) {
+      if (!bottomPiId || !bottomPiOptions.find(p => p.id === bottomPiId)) {
+        setBottomPiId('');
+      }
     } else {
       setBottomPiId('');
     }

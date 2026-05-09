@@ -4,7 +4,7 @@ import { CEPCalendarEntry } from '../types';
 import { db } from '../database';
 import { ConfirmationModal } from './ConfirmationModal';
 
-export const CEPCalendarView: React.FC = () => {
+export const CEPCalendarView: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
   const [events, setEvents] = useState<CEPCalendarEntry[]>([]);
   const [formData, setFormData] = useState<Partial<CEPCalendarEntry>>({});
   const [isEditing, setIsEditing] = useState(false);
@@ -76,10 +76,18 @@ export const CEPCalendarView: React.FC = () => {
     return dateStr.split('-').reverse().join('/');
   };
 
-  return (
-    <div className="flex flex-col gap-6 w-full max-w-5xl mx-auto p-6 bg-white h-full">
+  const content = (
+    <div className={`flex flex-col gap-6 w-full max-w-5xl mx-auto p-6 bg-white ${onClose ? 'rounded-2xl max-h-[90vh] overflow-hidden' : 'h-full'}`} onClick={e => e.stopPropagation()}>
+      {onClose && (
+        <div className="flex justify-between items-center mb-2">
+          <h2 className="text-xl font-black text-[#007b63] uppercase tracking-tighter">Calendário do CEP</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+      )}
       {/* Formulário de Cadastro */}
-      <div className="bg-[#d1e7e4]/20 border border-[#007b63]/10 rounded-xl p-6 flex flex-col gap-4 shadow-sm">
+      <div className="bg-[#d1e7e4]/20 border border-[#007b63]/10 rounded-xl p-6 flex flex-col gap-4 shadow-sm shrink-0">
          <h3 className="text-[#007b63] font-black uppercase text-xs tracking-widest border-b border-[#007b63]/20 pb-2">
             {isEditing ? 'Editar Data' : 'Agendar Nova Reunião'}
          </h3>
@@ -126,7 +134,7 @@ export const CEPCalendarView: React.FC = () => {
                onClick={handleSave}
                className={`text-white w-full h-[38px] rounded flex items-center justify-center font-bold text-xs uppercase shadow-md transition-colors ${isEditing ? 'bg-blue-600 hover:bg-blue-700' : 'bg-[#007b63] hover:bg-[#005a48]'}`}
              >
-               {isEditing ? 'Atualizar' : 'Agendar'}
+               {isEditing ? 'Atualizar' : 'Cadastrar'}
              </button>
            </div>
          </div>
@@ -203,4 +211,14 @@ export const CEPCalendarView: React.FC = () => {
       />
     </div>
   );
+
+  if (onClose) {
+    return (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
+        {content}
+      </div>
+    );
+  }
+
+  return content;
 };
