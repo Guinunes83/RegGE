@@ -226,7 +226,7 @@ export const CEPMeetingView: React.FC<CEPMeetingViewProps> = ({ studies, isReadO
   const fetchCalendarDates = async () => {
     const data = await db.getAll<any>('cepCalendar');
     // Extract unique dates properly sorting them
-    const dates = Array.from(new Set(data.map(d => d.meetingDate).filter(Boolean))).sort((a,b) => a.localeCompare(b));
+    const dates = Array.from(new Set(data.map(d => d.month).filter(Boolean))).sort((a: string,b: string) => a.localeCompare(b));
     setCalendarDates(dates);
   };
 
@@ -416,7 +416,7 @@ export const CEPMeetingView: React.FC<CEPMeetingViewProps> = ({ studies, isReadO
         <div className="mb-4">
           <h4 className="text-[10px] font-bold text-[#007b63] uppercase mb-2">Emenda</h4>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <SelectField label="Data da Reunião CEP" value={formData.date} options={calendarDates.map(d => ({id: d, name: formatDatePTBR(d)}))} onChange={(v: string) => setFormData({...formData, date: v})} disabled={isReadOnly} />
+            <SelectField label="Mês de Referência" value={formData.date} options={calendarDates.map(d => ({id: d, name: d}))} onChange={(v: string) => setFormData({...formData, date: v})} disabled={isReadOnly} />
             <SelectField label="Categoria" value={formData.category} options={DROPDOWN_OPTIONS.cepCategories} onChange={(v: string) => setFormData({...formData, category: v})} disabled={isReadOnly} />
             <SelectField label="Estudo" value={formData.studyId} options={activeStudies.map(s => ({id: s.id, name: s.name}))} onChange={(v: string) => setFormData({...formData, studyId: v})} disabled={isReadOnly} />
             <InputField label="C.A.A.E" value={formData.caae} readOnly />
@@ -457,7 +457,7 @@ export const CEPMeetingView: React.FC<CEPMeetingViewProps> = ({ studies, isReadO
             <thead className="bg-[#007b63] text-white uppercase tracking-tighter sticky top-0 z-10">
               <tr>
                 <th className="px-3 py-3 w-8"></th>
-                <th className="px-3 py-3 whitespace-nowrap">Data Reunião</th>
+                <th className="px-3 py-3 whitespace-nowrap">Mês de Referência</th>
                 <th className="px-3 py-3 whitespace-nowrap">Categoria</th>
                 <th className="px-3 py-3 whitespace-nowrap">Estudo</th>
                 <th className="px-3 py-3 whitespace-nowrap">C.A.A.E</th>
@@ -476,7 +476,7 @@ export const CEPMeetingView: React.FC<CEPMeetingViewProps> = ({ studies, isReadO
                   <td colSpan={12} className="px-3 py-8 text-center italic text-gray-400">Nenhuma reunião registrada.</td>
                 </tr>
               ) : (
-                meetings.map(m => {
+                [...meetings].sort((a, b) => (a.date || '').localeCompare(b.date || '')).map(m => {
                   const isExpanded = expandedRowId === m.id;
                   const selectedDocs = m.selectedDocuments || [];
                   const availableDocs = docOptions.filter(doc => !selectedDocs.includes(doc));
@@ -492,7 +492,7 @@ export const CEPMeetingView: React.FC<CEPMeetingViewProps> = ({ studies, isReadO
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                           </svg>
                         </td>
-                        <td className="px-3 py-3 font-medium">{formatDatePTBR(m.date)}</td>
+                        <td className="px-3 py-3 font-medium">{m.date}</td>
                         <td className="px-3 py-3">{m.category}</td>
                         <td className="px-3 py-3 font-bold text-gray-800">{studies.find(s => s.id === m.studyId)?.name || 'N/A'}</td>
                         <td className="px-3 py-3">{m.caae}</td>
