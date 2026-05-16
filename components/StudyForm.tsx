@@ -500,7 +500,7 @@ export const StudyForm: React.FC<StudyFormProps> = ({ study, mode, onSave, onCan
           <SectionTitle title="REGULATÓRIO" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <StudyInput label="C.A.A.E" value={formData.caae} onChange={(v: string) => handleChange('caae', v)} isView={isView} />
-            <StudyInput label="Nº Centro" value={formData.regulatoryCenterNumber} onChange={(v: string) => handleChange('regulatoryCenterNumber', v)} isView={isView} />
+            <StudyInput label="Nº Centro" value={formData.centerNumber} onChange={(v: string) => handleChange('centerNumber', v)} isView={isView} />
             <div className="md:col-span-2">
               <StudyInput label="Obs.:" value={formData.regulatoryObs} onChange={(v: string) => handleChange('regulatoryObs', v)} isView={isView} />
             </div>

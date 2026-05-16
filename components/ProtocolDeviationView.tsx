@@ -96,7 +96,7 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
     const newDev: ProtocolDeviation = {
       ...formData as ProtocolDeviation,
       piName: formData.piName || currentStudy?.pi || '',
-      centerNumber: formData.centerNumber || currentStudy?.regulatoryCenterNumber || currentStudy?.centerNumber || '',
+      centerNumber: formData.centerNumber || currentStudy?.centerNumber || '',
       id: formData.id || Math.random().toString(36).substr(2, 9),
       status: 'Pendente'
     };
@@ -277,7 +277,7 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
                   <tr key={d.id}>
                     <td className="border border-black p-2 font-bold">{study?.name}</td>
                     <td className="border border-black p-2">{d.piName || study?.pi}</td>
-                    <td className="border border-black p-2">{d.centerNumber || study?.regulatoryCenterNumber || study?.centerNumber}</td>
+                    <td className="border border-black p-2">{d.centerNumber || study?.centerNumber}</td>
                     <td className="border border-black p-2">{d.patientNumber}</td>
                     <td className="border border-black p-2 text-center">{formatDatePTBR(d.occurrenceDate)}</td>
                     <td className="border border-black p-2 text-center">{formatDatePTBR(d.deviationDate)}</td>
@@ -340,7 +340,7 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
                 const val = e.target.value;
                 const study = studies.find(s => s.id === val);
                 if (study) {
-                  setFormData({...formData, studyId: val, piName: study.pi, centerNumber: study.regulatoryCenterNumber || study.centerNumber || ''});
+                  setFormData({...formData, studyId: val, piName: study.pi, centerNumber: study.centerNumber || ''});
                 } else {
                   setFormData({...formData, studyId: val, piName: '', centerNumber: ''});
                 }
@@ -355,7 +355,7 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
           </div>
           <div className="flex flex-col gap-1 md:col-span-1">
             <label className="text-[10px] uppercase font-bold text-gray-500">Nº do Centro</label>
-            <input className="border border-gray-300 rounded px-2 py-1.5 text-sm bg-white outline-none" value={formData.centerNumber || currentFormStudy?.regulatoryCenterNumber || currentFormStudy?.centerNumber || ''} readOnly />
+            <input className="border border-gray-300 rounded px-2 py-1.5 text-sm bg-white outline-none" value={formData.centerNumber || currentFormStudy?.centerNumber || ''} readOnly />
           </div>
           
           <div className="flex flex-col gap-1 md:col-span-1">

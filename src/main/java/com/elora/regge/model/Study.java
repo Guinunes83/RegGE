@@ -24,7 +24,6 @@ public class Study {
     private String recruitment;
     private String centerNumber;
     private String caae;
-    private String ciomsDistribution;
     
     @Column(length = 1000)
     private String credentials;
@@ -39,7 +38,6 @@ public class Study {
     private String studyParticipantsCount;
 
     // Seção Regulatório
-    private String regulatoryCenterNumber;
     private String regulatoryObs;
 
     private String tituloEstudo;
@@ -109,9 +107,6 @@ public class Study {
     public String getCaae() { return caae; }
     public void setCaae(String caae) { this.caae = caae; }
 
-    public String getCiomsDistribution() { return ciomsDistribution; }
-    public void setCiomsDistribution(String ciomsDistribution) { this.ciomsDistribution = ciomsDistribution; }
-
     public String getCredentials() { return credentials; }
     public void setCredentials(String credentials) { this.credentials = credentials; }
 
@@ -135,9 +130,6 @@ public class Study {
 
     public List<PlatformAccess> getSusarPlatforms() { return susarPlatforms; }
     public void setSusarPlatforms(List<PlatformAccess> susarPlatforms) { this.susarPlatforms = susarPlatforms; }
-
-    public String getRegulatoryCenterNumber() { return regulatoryCenterNumber; }
-    public void setRegulatoryCenterNumber(String regulatoryCenterNumber) { this.regulatoryCenterNumber = regulatoryCenterNumber; }
 
     public String getRegulatoryObs() { return regulatoryObs; }
     public void setRegulatoryObs(String regulatoryObs) { this.regulatoryObs = regulatoryObs; }

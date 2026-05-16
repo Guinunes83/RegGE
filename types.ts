@@ -262,7 +262,6 @@ export type Study = {
   recruitment: string;
   centerNumber: string;
   caae: string;
-  ciomsDistribution: string;
   credentials: string;
   monitors: MonitorEntry[];
   participantsIds: string[]; 
@@ -274,7 +273,6 @@ export type Study = {
   active?: boolean;
   
   // Seção Regulatório
-  regulatoryCenterNumber?: string;
   regulatoryObs?: string;
   tituloEstudo?: string;
   susarPlatforms?: PlatformAccess[];

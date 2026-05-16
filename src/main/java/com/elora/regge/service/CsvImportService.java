@@ -62,7 +62,7 @@ public class CsvImportService {
                 String[] data = line.split("[,;](?=([^\"]*\"[^\"]*\")*[^\"]*$)");
                 if (data.length < 1) continue;
                 Study study = new Study();
-                // Ordem esperada: name, alternativeName, coordinatorCenter, protocol, sponsor, pi, cro, coordinator, pathology, recruitment, centerNumber, caae, ciomsDistribution, credentials, status, studyType, medicationRoute, studyParticipantsCount, regulatoryCAAE, regulatoryCenterNumber, regulatoryObs, regulatorySusarPlatform, feasibilityReceptionDate, feasibilitySigningDate, centerSelectionNoticeDate, contractReceptionDate, contractSigningDate, initialDossierReceptionDate, initialDossierSubmissionDate, cepAcceptanceDate, initialOpinionApprovalDate, centerActivationDate, firstParticipantDate, firstRandomizedDate, finalOpinionDate
+                // Ordem esperada: name, alternativeName, coordinatorCenter, protocol, sponsor, pi, cro, coordinator, pathology, recruitment, centerNumber, caae, credentials, status, studyType, medicationRoute, studyParticipantsCount, regulatoryCAAE, regulatoryObs, regulatorySusarPlatform, feasibilityReceptionDate, feasibilitySigningDate, centerSelectionNoticeDate, contractReceptionDate, contractSigningDate, initialDossierReceptionDate, initialDossierSubmissionDate, cepAcceptanceDate, initialOpinionApprovalDate, centerActivationDate, firstParticipantDate, firstRandomizedDate, finalOpinionDate
                 study.setName(safeGet(data, 0));
                 study.setAlternativeName(safeGet(data, 1));
                 study.setCoordinatorCenter(safeGet(data, 2));
@@ -75,29 +75,35 @@ public class CsvImportService {
                 study.setRecruitment(safeGet(data, 9));
                 study.setCenterNumber(safeGet(data, 10));
                 study.setCaae(safeGet(data, 11));
-                study.setCiomsDistribution(safeGet(data, 12));
-                study.setCredentials(safeGet(data, 13));
-                study.setStatus(safeGet(data, 14));
-                study.setStudyType(safeGet(data, 15));
-                study.setMedicationRoute(safeGet(data, 16));
-                study.setStudyParticipantsCount(safeGet(data, 17));
-                study.setTituloEstudo(safeGet(data, 18));
-                study.setRegulatoryCenterNumber(safeGet(data, 19));
-                study.setRegulatoryObs(safeGet(data, 20));
-                // ignore regulatorySusarPlatform since we're using complex PlatformAccess section now
-                study.setFeasibilityReceptionDate(safeGet(data, 22));
-                study.setFeasibilitySigningDate(safeGet(data, 23));
-                study.setCenterSelectionNoticeDate(safeGet(data, 24));
-                study.setContractReceptionDate(safeGet(data, 25));
-                study.setContractSigningDate(safeGet(data, 26));
-                study.setInitialDossierReceptionDate(safeGet(data, 27));
-                study.setInitialDossierSubmissionDate(safeGet(data, 28));
-                study.setCepAcceptanceDate(safeGet(data, 29));
-                study.setInitialOpinionApprovalDate(safeGet(data, 30));
-                study.setCenterActivationDate(safeGet(data, 31));
-                study.setFirstParticipantDate(safeGet(data, 32));
-                study.setFirstRandomizedDate(safeGet(data, 33));
-                study.setFinalOpinionDate(safeGet(data, 34));
+                study.setCredentials(safeGet(data, 12));
+                study.setStatus(safeGet(data, 13));
+                study.setStudyType(safeGet(data, 14));
+                study.setMedicationRoute(safeGet(data, 15));
+                study.setStudyParticipantsCount(safeGet(data, 16));
+                study.setTituloEstudo(safeGet(data, 17));
+                study.setRegulatoryObs(safeGet(data, 18));
+                
+                String susarPlatformName = safeGet(data, 19);
+                if (susarPlatformName != null && !susarPlatformName.trim().isEmpty()) {
+                    PlatformAccess access = new PlatformAccess();
+                    access.setId(java.util.UUID.randomUUID().toString());
+                    access.setName(susarPlatformName);
+                    study.setSusarPlatforms(java.util.List.of(access));
+                }
+
+                study.setFeasibilityReceptionDate(safeGet(data, 20));
+                study.setFeasibilitySigningDate(safeGet(data, 21));
+                study.setCenterSelectionNoticeDate(safeGet(data, 22));
+                study.setContractReceptionDate(safeGet(data, 23));
+                study.setContractSigningDate(safeGet(data, 24));
+                study.setInitialDossierReceptionDate(safeGet(data, 25));
+                study.setInitialDossierSubmissionDate(safeGet(data, 26));
+                study.setCepAcceptanceDate(safeGet(data, 27));
+                study.setInitialOpinionApprovalDate(safeGet(data, 28));
+                study.setCenterActivationDate(safeGet(data, 29));
+                study.setFirstParticipantDate(safeGet(data, 30));
+                study.setFirstRandomizedDate(safeGet(data, 31));
+                study.setFinalOpinionDate(safeGet(data, 32));
                 studies.add(study);
             }
         }

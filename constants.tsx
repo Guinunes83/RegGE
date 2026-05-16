@@ -251,19 +251,19 @@ export const MOCK_STUDIES: Study[] = [
   {
     id: 's1', name: 'ACRUE', protocol: 'NOV-123', sponsor: 'Novartis', pi: 'Dr. Fernando Mendes', cro: 'IQVIA',
     coordinator: 'Camila Sommer', pathology: 'Câncer de Pulmão', recruitment: 'Aberto', centerNumber: '001', caae: '12345678.1.0000.1111',
-    ciomsDistribution: 'Email', credentials: 'Portal Novartis', status: 'Active', medicationRoute: 'Oral', studyType: 'Intervencional',
+    credentials: 'Portal Novartis', status: 'Active', medicationRoute: 'Oral', studyType: 'Intervencional',
     studyParticipantsCount: '51-100', participantsIds: ['p1'], monitors: [], delegation: []
   },
   {
     id: 's2', name: 'AMPLITUDE', protocol: 'MSD-456', sponsor: 'MSD', pi: 'Dra. Mariana Rocha', cro: 'PPD',
     coordinator: 'Camila Sommer', pathology: 'Melanoma', recruitment: 'Em Pausa', centerNumber: '002', caae: '87654321.2.0000.2222',
-    ciomsDistribution: 'Portal', credentials: 'Portal MSD', status: 'Active', medicationRoute: 'Endovenosa (IV)', studyType: 'Intervencional',
+    credentials: 'Portal MSD', status: 'Active', medicationRoute: 'Endovenosa (IV)', studyType: 'Intervencional',
     studyParticipantsCount: '0-50', participantsIds: ['p2'], monitors: [], delegation: []
   },
   {
     id: 's3', name: 'EMERALD-2', protocol: 'BAY-789', sponsor: 'Bayer', pi: 'Dr. Roberto Alencar', cro: 'Icon',
     coordinator: 'Bruno Vivan', pathology: 'Insuficiência Cardíaca', recruitment: 'Fechado', centerNumber: '003', caae: '11223344.3.0000.3333',
-    ciomsDistribution: 'Email', credentials: 'Portal Bayer', status: 'Closed', medicationRoute: 'Oral', studyType: 'Observacional',
+    credentials: 'Portal Bayer', status: 'Closed', medicationRoute: 'Oral', studyType: 'Observacional',
     studyParticipantsCount: '1000+', participantsIds: ['p3'], monitors: [], delegation: []
   }
 ];
