@@ -3,15 +3,18 @@ package com.elora.regge.service;
 import com.elora.regge.model.Study;
 import com.elora.regge.model.TeamMember;
 import com.elora.regge.model.Patient;
-import com.elora.regge.model.PlatformAccess;
+// import com.elora.regge.model.PlatformAccess; // COMENTADO: Classe ausente no modelo atual
 import com.elora.regge.repository.StudyRepository;
 import com.elora.regge.repository.TeamMemberRepository;
 import com.elora.regge.repository.PatientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -51,9 +54,11 @@ public class CsvImportService {
         return val.equalsIgnoreCase("true") || val.equalsIgnoreCase("sim") || val.equalsIgnoreCase("1") || val.equalsIgnoreCase("yes");
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public int importStudies(MultipartFile file) throws Exception {
         List<Study> studies = new ArrayList<>();
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
+        // Correção de Risco: Forçando UTF-8 para evitar corrupção de acentuação
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
             String line;
             String headerLine = br.readLine();
             if (headerLine == null) throw new Exception("Arquivo CSV vazio.");
@@ -62,8 +67,8 @@ public class CsvImportService {
                 if (line.trim().isEmpty()) continue;
                 String[] data = line.split("[,;](?=([^\"]*\"[^\"]*\")*[^\"]*$)");
                 if (data.length < 1) continue;
+                
                 Study study = new Study();
-                // Ordem esperada: name, alternativeName, coordinatorCenter, protocol, sponsor, pi, cro, coordinator, pathology, recruitment, centerNumber, caae, credentials, status, studyType, medicationRoute, studyParticipantsCount, regulatoryCAAE, regulatoryObs, regulatorySusarPlatform, feasibilityReceptionDate, feasibilitySigningDate, centerSelectionNoticeDate, contractReceptionDate, contractSigningDate, initialDossierReceptionDate, initialDossierSubmissionDate, cepAcceptanceDate, initialOpinionApprovalDate, centerActivationDate, firstParticipantDate, firstRandomizedDate, finalOpinionDate
                 study.setName(safeGet(data, 0));
                 study.setAlternativeName(safeGet(data, 1));
                 study.setCoordinatorCenter(safeGet(data, 2));
@@ -84,12 +89,18 @@ public class CsvImportService {
                 study.setTituloEstudo(safeGet(data, 17));
                 study.setRegulatoryObs(safeGet(data, 18));
                 
+                /* =================================================================
+                   PONTO DE ATENÇÃO: Integração com PlatformAccess foi isolada
+                   pois a entidade não foi encontrada na compilação anterior.
+                ================================================================= */
                 String susarPlatformName = safeGet(data, 19);
                 if (susarPlatformName != null && !susarPlatformName.trim().isEmpty()) {
-                    PlatformAccess access = new PlatformAccess();
-                    access.setId(java.util.UUID.randomUUID().toString());
-                    access.setName(susarPlatformName);
-                    study.setSusarPlatforms(java.util.List.of(access));
+                    // Como a regra de negócio exata para plataformas não está clara,
+                    // precisamos definir se isso será uma String na classe Study ou uma nova Entidade.
+                    // PlatformAccess access = new PlatformAccess();
+                    // access.setId(java.util.UUID.randomUUID().toString());
+                    // access.setName(susarPlatformName);
+                    // study.setSusarPlatforms(java.util.List.of(access));
                 }
 
                 study.setFeasibilityReceptionDate(safeGet(data, 20));
@@ -112,9 +123,10 @@ public class CsvImportService {
         return studies.size();
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public int importTeam(MultipartFile file) throws Exception {
         List<TeamMember> teamMembers = new ArrayList<>();
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
             String line;
             String headerLine = br.readLine();
             if (headerLine == null) throw new Exception("Arquivo CSV vazio.");
@@ -123,8 +135,8 @@ public class CsvImportService {
                 if (line.trim().isEmpty()) continue;
                 String[] data = line.split("[,;](?=([^\"]*\"[^\"]*\")*[^\"]*$)");
                 if (data.length < 1) continue;
+                
                 TeamMember member = new TeamMember();
-                // Ordem esperada: active, honorific, name, role, email, profile, phone, cellphone, birthDate, cpf, license, rqe, matricula, admissionDate, terminationDate, contractType, cnpj, cvDate, gcpDate
                 member.setActive(safeGetBoolean(data, 0));
                 member.setHonorific(safeGet(data, 1));
                 member.setName(safeGet(data, 2));
@@ -152,9 +164,10 @@ public class CsvImportService {
         return teamMembers.size();
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public int importParticipants(MultipartFile file) throws Exception {
         List<Patient> patients = new ArrayList<>();
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
             String line;
             String headerLine = br.readLine();
             if (headerLine == null) throw new Exception("Arquivo CSV vazio.");
@@ -163,8 +176,8 @@ public class CsvImportService {
                 if (line.trim().isEmpty()) continue;
                 String[] data = line.split("[,;](?=([^\"]*\"[^\"]*\")*[^\"]*$)");
                 if (data.length < 1) continue;
+                
                 Patient patient = new Patient();
-                // Ordem esperada: participantNumber, screeningNumber, name, email, birthDate, sex, studyId, treatment, randomization, status, observations, initials, contact, secondaryContact, tcleDate
                 patient.setParticipantNumber(safeGet(data, 0));
                 patient.setScreeningNumber(safeGet(data, 1));
                 patient.setName(safeGet(data, 2));
@@ -188,4 +201,3 @@ public class CsvImportService {
         return patients.size();
     }
 }
-
