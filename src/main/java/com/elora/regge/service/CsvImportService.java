@@ -1,5 +1,6 @@
 package com.elora.regge.service;
 
+import com.elora.regge.model.PlatformAccess;
 import com.elora.regge.model.Study;
 import com.elora.regge.model.TeamMember;
 import com.elora.regge.model.Patient;
@@ -89,18 +90,15 @@ public class CsvImportService {
                 study.setTituloEstudo(safeGet(data, 17));
                 study.setRegulatoryObs(safeGet(data, 18));
                 
-                /* =================================================================
-                   PONTO DE ATENÇÃO: Integração com PlatformAccess foi isolada
-                   pois a entidade não foi encontrada na compilação anterior.
-                ================================================================= */
+                    // Lendo a plataforma da coluna do CSV
                 String susarPlatformName = safeGet(data, 19);
                 if (susarPlatformName != null && !susarPlatformName.trim().isEmpty()) {
-                    // Como a regra de negócio exata para plataformas não está clara,
-                    // precisamos definir se isso será uma String na classe Study ou uma nova Entidade.
-                    // PlatformAccess access = new PlatformAccess();
-                    // access.setId(java.util.UUID.randomUUID().toString());
-                    // access.setName(susarPlatformName);
-                    // study.setSusarPlatforms(java.util.List.of(access));
+                    PlatformAccess access = new PlatformAccess();
+                    // O ID já é gerado automaticamente pelo construtor da nova entidade
+                    access.setName(susarPlatformName);
+                    
+                    // Vincula a plataforma ao estudo
+                    study.setSusarPlatforms(java.util.List.of(access));
                 }
 
                 study.setFeasibilityReceptionDate(safeGet(data, 20));
