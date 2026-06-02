@@ -1,24 +1,22 @@
 package com.elora.regge.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import java.util.UUID;
 
-@Entity
-@Table(name = "team_member_platforms")
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
+@Entity
+@Table(name = "platform_access")
 public class PlatformAccess {
 
     @Id
     private String id;
-    
+
+    @Column(nullable = false)
     private String name;
-    private String login;
-    private String password;
-    
-    @Column(columnDefinition = "TEXT")
-    private String link;
+
+    // Construtor que já gera o ID automaticamente
+    public PlatformAccess() {
+        this.id = UUID.randomUUID().toString();
+    }
 }

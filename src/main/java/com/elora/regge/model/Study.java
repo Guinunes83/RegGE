@@ -1,9 +1,11 @@
-
 package com.elora.regge.model;
 
 import jakarta.persistence.*;
+import lombok.Data;
+import java.util.ArrayList;
 import java.util.List;
 
+@Data
 @Entity
 @Table(name = "studies")
 public class Study {
@@ -39,13 +41,11 @@ public class Study {
 
     // Seção Regulatório
     private String regulatoryObs;
-
     private String tituloEstudo;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "study_id")
-    private List<PlatformAccess> susarPlatforms;
-
+    private List<PlatformAccess> susarPlatforms = new ArrayList<>();
 
     // Seção Índices (Datas)
     private String feasibilityReceptionDate;
@@ -63,113 +63,4 @@ public class Study {
     private String finalOpinionDate;
 
     private Boolean active = true;
-
-    // Getters and Setters
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
-
-    public Boolean getActive() { return active; }
-    public void setActive(Boolean active) { this.active = active; }
-
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-
-    public String getAlternativeName() { return alternativeName; }
-    public void setAlternativeName(String alternativeName) { this.alternativeName = alternativeName; }
-
-    public String getCoordinatorCenter() { return coordinatorCenter; }
-    public void setCoordinatorCenter(String coordinatorCenter) { this.coordinatorCenter = coordinatorCenter; }
-
-    public String getProtocol() { return protocol; }
-    public void setProtocol(String protocol) { this.protocol = protocol; }
-
-    public String getSponsor() { return sponsor; }
-    public void setSponsor(String sponsor) { this.sponsor = sponsor; }
-
-    public String getPi() { return pi; }
-    public void setPi(String pi) { this.pi = pi; }
-
-    public String getCro() { return cro; }
-    public void setCro(String cro) { this.cro = cro; }
-
-    public String getCoordinator() { return coordinator; }
-    public void setCoordinator(String coordinator) { this.coordinator = coordinator; }
-
-    public String getPathology() { return pathology; }
-    public void setPathology(String pathology) { this.pathology = pathology; }
-
-    public String getRecruitment() { return recruitment; }
-    public void setRecruitment(String recruitment) { this.recruitment = recruitment; }
-
-    public String getCenterNumber() { return centerNumber; }
-    public void setCenterNumber(String centerNumber) { this.centerNumber = centerNumber; }
-
-    public String getCaae() { return caae; }
-    public void setCaae(String caae) { this.caae = caae; }
-
-    public String getCredentials() { return credentials; }
-    public void setCredentials(String credentials) { this.credentials = credentials; }
-
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
-
-    public List<String> getParticipantsIds() { return participantsIds; }
-    public void setParticipantsIds(List<String> participantsIds) { this.participantsIds = participantsIds; }
-
-    public String getStudyType() { return studyType; }
-    public void setStudyType(String studyType) { this.studyType = studyType; }
-
-    public String getMedicationRoute() { return medicationRoute; }
-    public void setMedicationRoute(String medicationRoute) { this.medicationRoute = medicationRoute; }
-
-    public String getStudyParticipantsCount() { return studyParticipantsCount; }
-    public void setStudyParticipantsCount(String studyParticipantsCount) { this.studyParticipantsCount = studyParticipantsCount; }
-
-    public String getTituloEstudo() { return tituloEstudo; }
-    public void setTituloEstudo(String tituloEstudo) { this.tituloEstudo = tituloEstudo; }
-
-    public List<PlatformAccess> getSusarPlatforms() { return susarPlatforms; }
-    public void setSusarPlatforms(List<PlatformAccess> susarPlatforms) { this.susarPlatforms = susarPlatforms; }
-
-    public String getRegulatoryObs() { return regulatoryObs; }
-    public void setRegulatoryObs(String regulatoryObs) { this.regulatoryObs = regulatoryObs; }
-
-    public String getFeasibilityReceptionDate() { return feasibilityReceptionDate; }
-    public void setFeasibilityReceptionDate(String feasibilityReceptionDate) { this.feasibilityReceptionDate = feasibilityReceptionDate; }
-
-    public String getFeasibilitySigningDate() { return feasibilitySigningDate; }
-    public void setFeasibilitySigningDate(String feasibilitySigningDate) { this.feasibilitySigningDate = feasibilitySigningDate; }
-
-    public String getCenterSelectionNoticeDate() { return centerSelectionNoticeDate; }
-    public void setCenterSelectionNoticeDate(String centerSelectionNoticeDate) { this.centerSelectionNoticeDate = centerSelectionNoticeDate; }
-
-    public String getContractReceptionDate() { return contractReceptionDate; }
-    public void setContractReceptionDate(String contractReceptionDate) { this.contractReceptionDate = contractReceptionDate; }
-
-    public String getContractSigningDate() { return contractSigningDate; }
-    public void setContractSigningDate(String contractSigningDate) { this.contractSigningDate = contractSigningDate; }
-
-    public String getInitialDossierReceptionDate() { return initialDossierReceptionDate; }
-    public void setInitialDossierReceptionDate(String initialDossierReceptionDate) { this.initialDossierReceptionDate = initialDossierReceptionDate; }
-
-    public String getInitialDossierSubmissionDate() { return initialDossierSubmissionDate; }
-    public void setInitialDossierSubmissionDate(String initialDossierSubmissionDate) { this.initialDossierSubmissionDate = initialDossierSubmissionDate; }
-
-    public String getCepAcceptanceDate() { return cepAcceptanceDate; }
-    public void setCepAcceptanceDate(String cepAcceptanceDate) { this.cepAcceptanceDate = cepAcceptanceDate; }
-
-    public String getInitialOpinionApprovalDate() { return initialOpinionApprovalDate; }
-    public void setInitialOpinionApprovalDate(String initialOpinionApprovalDate) { this.initialOpinionApprovalDate = initialOpinionApprovalDate; }
-
-    public String getCenterActivationDate() { return centerActivationDate; }
-    public void setCenterActivationDate(String centerActivationDate) { this.centerActivationDate = centerActivationDate; }
-
-    public String getFirstParticipantDate() { return firstParticipantDate; }
-    public void setFirstParticipantDate(String firstParticipantDate) { this.firstParticipantDate = firstParticipantDate; }
-
-    public String getFirstRandomizedDate() { return firstRandomizedDate; }
-    public void setFirstRandomizedDate(String firstRandomizedDate) { this.firstRandomizedDate = firstRandomizedDate; }
-
-    public String getFinalOpinionDate() { return finalOpinionDate; }
-    public void setFinalOpinionDate(String finalOpinionDate) { this.finalOpinionDate = finalOpinionDate; }
 }
