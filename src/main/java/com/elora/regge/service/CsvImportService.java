@@ -3,6 +3,7 @@ package com.elora.regge.service;
 import com.elora.regge.model.Study;
 import com.elora.regge.model.TeamMember;
 import com.elora.regge.model.Patient;
+import com.elora.regge.model.PlatformAccess;
 import com.elora.regge.repository.StudyRepository;
 import com.elora.regge.repository.TeamMemberRepository;
 import com.elora.regge.repository.PatientRepository;
