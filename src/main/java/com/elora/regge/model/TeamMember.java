@@ -19,12 +19,15 @@ public class TeamMember {
     private String id;
 
     private Boolean active;
-    private String honorific;
+    private String sex;
     private String name;
     private String role;
     private String email; // Keeping for DB backward compat if needed, or remove if safe  
     private String institutionalEmail;
     private String personalEmail;
+    private String cvLattes;
+    private String systemLogin;
+    private String systemPassword;
     private String profile;
     private String phone;
     private String cellphone;

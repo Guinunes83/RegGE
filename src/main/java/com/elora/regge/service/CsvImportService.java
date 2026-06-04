@@ -136,24 +136,28 @@ public class CsvImportService {
                 
                 TeamMember member = new TeamMember();
                 member.setActive(safeGetBoolean(data, 0));
-                member.setHonorific(safeGet(data, 1));
+                member.setSex(safeGet(data, 1));
                 member.setName(safeGet(data, 2));
                 member.setRole(safeGet(data, 3));
-                member.setEmail(safeGet(data, 4));
-                member.setProfile(safeGet(data, 5));
-                member.setPhone(safeGet(data, 6));
-                member.setCellphone(safeGet(data, 7));
-                member.setBirthDate(safeGetDate(data, 8));
-                member.setCpf(safeGet(data, 9));
-                member.setLicense(safeGet(data, 10));
-                member.setRqe(safeGet(data, 11));
-                member.setMatricula(safeGet(data, 12));
-                member.setAdmissionDate(safeGetDate(data, 13));
-                member.setTerminationDate(safeGetDate(data, 14));
-                member.setContractType(safeGet(data, 15));
-                member.setCnpj(safeGet(data, 16));
-                member.setCvDate(safeGetDate(data, 17));
-                member.setGcpDate(safeGetDate(data, 18));
+                member.setInstitutionalEmail(safeGet(data, 4));
+                member.setPersonalEmail(safeGet(data, 5));
+                member.setSystemLogin(safeGet(data, 6));
+                member.setSystemPassword(safeGet(data, 7));
+                member.setCvLattes(safeGet(data, 8));
+                member.setProfile(safeGet(data, 9));
+                member.setPhone(safeGet(data, 10));
+                member.setCellphone(safeGet(data, 11));
+                member.setBirthDate(safeGetDate(data, 12));
+                member.setCpf(safeGet(data, 13));
+                member.setLicense(safeGet(data, 14));
+                member.setRqe(safeGet(data, 15));
+                member.setMatricula(safeGet(data, 16));
+                member.setAdmissionDate(safeGetDate(data, 17));
+                member.setTerminationDate(safeGetDate(data, 18));
+                member.setContractType(safeGet(data, 19));
+                member.setCnpj(safeGet(data, 20));
+                member.setCvDate(safeGetDate(data, 21));
+                member.setGcpDate(safeGetDate(data, 22));
                 
                 teamMembers.add(member);
             }

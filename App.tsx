@@ -69,6 +69,7 @@ export default function App() {
   // Modal state
   const [successModal, setSuccessModal] = useState({ isOpen: false, title: '', message: '' });
   const [deleteTeamMemberPhase, setDeleteTeamMemberPhase] = useState<{phase: number, id: string | null}>({ phase: 0, id: null });
+  const [deleteStudyPhase, setDeleteStudyPhase] = useState<{phase: number, id: string | null}>({ phase: 0, id: null });
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
 
   // File import state
@@ -349,6 +350,21 @@ export default function App() {
 
   const handleToggleSponsorActive = async (id: string) => {
     await db.patch('sponsors', id, 'toggle-active');
+    refreshData();
+  };
+
+  const handleToggleStudyActive = async (s: Study) => {
+    const updatedStatus = s.active !== false ? 'Closed' as const : 'Active' as const;
+    const updated = {
+      ...s,
+      active: s.active !== false ? false : true,
+      status: updatedStatus
+    };
+    await db.upsert('studies', updated);
+    showSuccess(
+      updated.active ? 'Ativado' : 'Desativado',
+      `O estudo "${s.name}" foi ${updated.active ? 'ativado' : 'desativado'} com sucesso.`
+    );
     refreshData();
   };
 
@@ -634,16 +650,53 @@ export default function App() {
                     <HeaderCell label="PI" sortKey="pi" onClick={() => handleSort('pi')} />
                     <HeaderCell label="Patrocinador" sortKey="sponsor" onClick={() => handleSort('sponsor')} />
                     <HeaderCell label="Status" sortKey="status" onClick={() => handleSort('status')} />
+                    {(hasPermission('edit_studies') || hasPermission('delete_studies')) && (
+                      <th className="px-6 py-3 text-xs font-bold uppercase tracking-wider text-right">Ação</th>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="divide-y">
                   {getSortedData(showInactiveStudies ? studies : studies.filter(s => s.active !== false)).map((s: Study) => (
-                    <tr key={s.id} onClick={() => navigate('Studies', { mode: 'view', study: s })} className="hover:bg-gray-50 cursor-pointer">
+                    <tr key={s.id} onClick={() => navigate('Studies', { mode: 'view', study: s })} className="hover:bg-gray-50 cursor-pointer transition-colors group">
                       <td className="px-6 py-1 text-sm font-bold text-blue-600 hover:underline">{s.name}</td>
                       <td className="px-6 py-1 text-sm">{s.protocol}</td>
                       <td className="px-6 py-1 text-sm">{s.pi}</td>
                       <td className="px-6 py-1 text-sm">{s.sponsor}</td>
                       <td className="px-6 py-1 text-sm"><span className={`px-2 py-0.5 rounded text-xs font-bold ${s.active !== false ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{s.status}</span></td>
+                      {(hasPermission('edit_studies') || hasPermission('delete_studies')) && (
+                        <td className="px-6 py-1 text-sm text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex gap-2 justify-end items-center">
+                            {hasPermission('edit_studies') && (
+                              <>
+                                <button
+                                  onClick={() => navigate('Studies', { mode: 'edit', study: s })}
+                                  className="text-[#007b63] hover:text-[#006b56] font-bold uppercase text-[10px] px-2.5 py-1 border border-gray-200 hover:border-[#007b63] rounded bg-white transition-colors"
+                                >
+                                  Editar
+                                </button>
+                                <button
+                                  onClick={() => handleToggleStudyActive(s)}
+                                  className={`font-bold uppercase text-[10px] px-2.5 py-1 border rounded transition-colors ${
+                                    s.active !== false
+                                      ? 'text-amber-600 hover:text-amber-800 border-amber-200 hover:border-amber-600 bg-amber-50'
+                                      : 'text-emerald-600 hover:text-emerald-800 border-emerald-200 hover:border-emerald-600 bg-emerald-50'
+                                  }`}
+                                >
+                                  {s.active !== false ? 'Desativar' : 'Ativar'}
+                                </button>
+                              </>
+                            )}
+                            {hasPermission('delete_studies') && (
+                              <button
+                                onClick={() => setDeleteStudyPhase({ phase: 1, id: s.id })}
+                                className="text-red-500 hover:text-red-700 font-bold uppercase text-[10px] px-2.5 py-1 border border-red-200 hover:border-red-500 rounded bg-red-50 hover:bg-red-100 transition-colors"
+                              >
+                                Excluir
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
@@ -887,6 +940,31 @@ export default function App() {
             }}
             onCancel={() => setDeleteTeamMemberPhase({ phase: 0, id: null })}
             confirmText="OK"
+            cancelText="CANCELAR"
+          />
+          <ConfirmationModal
+            isOpen={deleteStudyPhase.phase === 1}
+            title="Exclusão de Estudo"
+            message="Esta exclusão é permanente e irreversível. Você deseja mesmo excluir este estudo?"
+            onConfirm={() => setDeleteStudyPhase(prev => ({ ...prev, phase: 2 }))}
+            onCancel={() => setDeleteStudyPhase({ phase: 0, id: null })}
+            confirmText="SIM"
+            cancelText="NÃO"
+          />
+          <ConfirmationModal
+            isOpen={deleteStudyPhase.phase === 2}
+            title="Confirmar Exclusão de Estudo"
+            message="Tem certeza disso? Todos os dados vinculados ao estudo continuarão salvos, mas o estudo será permanentemente excluído."
+            onConfirm={async () => {
+              if (deleteStudyPhase.id) {
+                await db.delete('studies', deleteStudyPhase.id);
+                showSuccess('Excluído', 'O estudo foi excluído permanentemente.');
+                refreshData();
+              }
+              setDeleteStudyPhase({ phase: 0, id: null });
+            }}
+            onCancel={() => setDeleteStudyPhase({ phase: 0, id: null })}
+            confirmText="SIM, EXCLUIR"
             cancelText="CANCELAR"
           />
           {isChangePasswordModalOpen && (
