@@ -57,6 +57,11 @@ const AVAILABLE_PERMISSIONS: Permission[] = [
   { id: 'create_sponsors', name: 'Acesso à botão "+NOVO"', description: 'Permite adicionar novos patrocinadores.', category: 'Dados', subcategory: 'Patrocinador', dependsOn: 'access_sponsors' },
   { id: 'edit_sponsors', name: 'Acesso ao botão Editar no visualização de dados Patrocinador', description: 'Pode alterar informações dos patrocinadores.', category: 'Dados', subcategory: 'Patrocinador', dependsOn: 'access_sponsors' },
 
+  { id: 'access_studies', name: 'Acesso à Estudos', description: 'Permite visualizar os estudos.', category: 'Dados', subcategory: 'Estudos' },
+  { id: 'create_studies', name: 'Acesso ao botão "+NOVO"', description: 'Permite cadastrar novos estudos.', category: 'Dados', subcategory: 'Estudos', dependsOn: 'access_studies' },
+  { id: 'edit_studies', name: 'Acesso ao botão Editar no visualização/cadastro do estudo', description: 'Pode alterar informações dos estudos.', category: 'Dados', subcategory: 'Estudos', dependsOn: 'access_studies' },
+  { id: 'delete_studies', name: 'Apagar "PERMANENTEMENTE" um registro de estudo', description: 'Permite excluir definitivamente um estudo da lista.', category: 'Dados', subcategory: 'Estudos', dependsOn: 'access_studies' },
+
   // SETOR
   { id: 'access_adm', name: 'Acesso à Adm', description: 'Permite acessar o menu Adm.', category: 'Setor', subcategory: 'Adm' },
   { id: 'access_birthday', name: 'Acesso à Aniversário', description: 'Permite acessar aniversários.', category: 'Setor', subcategory: 'Adm' },

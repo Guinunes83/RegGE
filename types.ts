@@ -149,6 +149,7 @@ export type TeamMember = {
   role: string;
   institutionalEmail?: string;
   personalEmail?: string;
+  cvLattes?: string;
   profile: UserProfile;
   profiles?: UserProfile[]; // Múltiplos perfis
   systemAccess?: boolean; // Se tem acesso ao sistema
