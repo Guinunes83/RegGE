@@ -35,7 +35,12 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
   const [deviations, setDeviations] = useState<Record<DevType, ProtocolDeviation[]>>({ Protocolo: [], GCP: [], SAE: [] });
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   
-  const [formData, setFormData] = useState<Partial<ProtocolDeviation>>({});
+  const getTodayStr = () => {
+    const d = new Date();
+    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+  };
+
+  const [formData, setFormData] = useState<Partial<ProtocolDeviation>>({ deviationDate: getTodayStr() });
   const [piSelectionType, setPiSelectionType] = useState<'IP' | 'Sub'>('IP');
   
   const [bottomPiId, setBottomPiId] = useState<string>('');
@@ -106,7 +111,7 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
     
     await fetchDeviations();
     setActiveTab(selectedType);
-    setFormData({});
+    setFormData({ deviationDate: getTodayStr() });
     onShowSuccess(isNew ? 'Cadastrado com Sucesso!' : 'Salvo com Sucesso!', `Registro de ${config.label} processado.`);
   };
 
@@ -130,7 +135,7 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
         const newSelected = new Set(selectedIds);
         newSelected.delete(id);
         setSelectedIds(newSelected);
-        if (formData.id === id) setFormData({});
+        if (formData.id === id) setFormData({ deviationDate: getTodayStr() });
         setModalConfig(prev => ({ ...prev, isOpen: false }));
         onShowSuccess('Removido com Sucesso!', 'O registro foi excluído permanentemente.');
       }
@@ -390,7 +395,7 @@ export const ProtocolDeviationView: React.FC<ProtocolDeviationViewProps> = ({
             {formData.id && (
               <button 
                 onClick={() => {
-                  setFormData({});
+                  setFormData({ deviationDate: getTodayStr() });
                 }} 
                 className="ml-4 bg-gray-400 text-white px-8 py-2 rounded-xl font-bold uppercase text-xs shadow-lg hover:bg-gray-500 transition-colors"
               >

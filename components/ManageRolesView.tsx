@@ -94,6 +94,8 @@ const AVAILABLE_PERMISSIONS: Permission[] = [
   { id: 'access_regulatory_partial_report', name: 'Acesso à Relatório Parcial', description: 'Permite acessar Relatório Parcial.', category: 'Setor', subcategory: 'Regulatório' },
   { id: 'access_cep_meeting', name: 'Acesso à Reunião do CEP', description: 'Permite acessar Reunião do CEP.', category: 'Setor', subcategory: 'Regulatório' },
   { id: 'delete_cep_meeting', name: 'Acesso ao botão Excluir', description: 'Permite excluir emendas lançadas na Reunião do CEP.', category: 'Setor', subcategory: 'Regulatório', dependsOn: 'access_cep_meeting' },
+
+  { id: 'notify_deviation_generated', name: 'Avisar quando um desvio (Protocolo, GCP e/ou SAE)', description: 'Recebe notificação quando um desvio é gerado ou permanece pendente dia após dia.', category: 'Avisos', subcategory: 'Desvios' },
 ];
 
 export const ManageRolesView: React.FC<ManageRolesViewProps> = ({ onShowSuccess, currentUserProfile }) => {

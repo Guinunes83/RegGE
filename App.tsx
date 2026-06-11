@@ -315,9 +315,63 @@ export default function App() {
       }
     };
     
+    const checkDeviations = async () => {
+      const customRoles = await db.getAll<{ id: string, name: string, permissions?: string[] }>('userProfiles');
+      const targetProfiles: UserProfile[] = [];
+      for (const role of customRoles) {
+        if (role.permissions?.includes('notify_deviation_generated')) {
+          targetProfiles.push(role.name as UserProfile);
+        }
+      }
+
+      // Add ADMIN and DEVELOPER if they natively have permission or by default (they usually see everything anyway)
+      
+      const p1 = await db.getAll<any>('deviations');
+      const p2 = await db.getAll<any>('gcpDeviations');
+      const p3 = await db.getAll<any>('saeDeviations');
+      
+      const allDeviations = [...p1, ...p2, ...p3];
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const existingNotifs = await db.getAll<AppNotification>('notifications');
+
+      for (const dev of allDeviations) {
+        if (dev.status === 'Pendente') {
+          if (!dev.deviationDate) continue; 
+          const devDate = new Date(dev.deviationDate + "T00:00:00");
+          devDate.setHours(0, 0, 0, 0);
+
+          const diffTime = today.getTime() - devDate.getTime();
+          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+          if (diffDays >= 0) {
+            const notifId = `dev_alert_${dev.id}_${diffDays}`;
+            if (!existingNotifs.find(n => n.id === notifId)) {
+               let message = diffDays === 0 ? `O desvio do Participante ${dev.patientNumber || ''} foi gerado e está Pendente.` : `O desvio do Participante ${dev.patientNumber || ''} continua Pendente há ${diffDays} dia(s).`;
+               
+               const studyInfo = dev.studyId ? ` (Estudo: ${dev.studyId})` : '';
+               const notif: AppNotification = {
+                 id: notifId,
+                 title: `Desvio Pendente${studyInfo}`,
+                 message,
+                 date: new Date().toISOString().split('T')[0],
+                 read: false,
+                 targetProfiles,
+                 linkTo: 'ProtocolDeviation' as ViewState
+               };
+               await db.upsert('notifications', notif);
+               existingNotifs.push(notif); // to prevent duplicates in the same run if any
+            }
+          }
+        }
+      }
+    };
+
     if (currentUser) {
       checkCalibrations();
       checkDueDates();
+      checkDeviations();
     }
   }, [currentUser, activeView]);
 

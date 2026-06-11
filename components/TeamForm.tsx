@@ -443,7 +443,7 @@ export const TeamForm: React.FC<TeamFormProps> = ({ member, mode, onSave, onCanc
         )}
         <section>
           <SectionTitle title="GERAL" />
-          <div className="grid grid-cols-1 md:grid-cols-[2fr,1fr,1fr] gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-[2fr,1fr,1fr,1fr] gap-3">
             {/* Linha 1 */}
             <TeamInput 
               label="Nome" 
@@ -468,8 +468,16 @@ export const TeamForm: React.FC<TeamFormProps> = ({ member, mode, onSave, onCanc
               required 
               isView={isView} 
             />
+            <TeamInput 
+              label="Data Nasc." 
+              value={isView ? formatDateView(formData.birthDate) : formData.birthDate} 
+              onChange={(v: string) => handleFieldChange('birthDate', v)} 
+              type="date" 
+              required 
+              isView={isView} 
+            />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mt-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
             {/* Linha 2 */}
             <TeamInput 
               label="Telefone" 
@@ -486,30 +494,20 @@ export const TeamForm: React.FC<TeamFormProps> = ({ member, mode, onSave, onCanc
               placeholder="(00) 00000-0000" 
               isView={isView} 
             />
-            <TeamInput 
-              label="Data Nasc." 
-              value={isView ? formatDateView(formData.birthDate) : formData.birthDate} 
-              onChange={(v: string) => handleFieldChange('birthDate', v)} 
-              type="date" 
-              required 
-              isView={isView} 
-            />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-6 gap-3 mt-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
             {/* Linha 3 (Emails e CV) */}
             <TeamInput 
               label="E-mail Institucional" 
               value={formData.institutionalEmail} 
               onChange={(v: string) => handleFieldChange('institutionalEmail', v)} 
               isView={isView} 
-              span="md:col-span-2"
             />
             <TeamInput 
               label="E-mail Pessoal" 
               value={formData.personalEmail} 
               onChange={(v: string) => handleFieldChange('personalEmail', v)} 
               isView={isView} 
-              span="md:col-span-2"
             />
             <TeamInput 
               label="CV Lattes" 
@@ -517,7 +515,6 @@ export const TeamForm: React.FC<TeamFormProps> = ({ member, mode, onSave, onCanc
               onChange={(v: string) => handleFieldChange('cvLattes', v)} 
               placeholder="https://lattes.cnpq.br/..." 
               isView={isView} 
-              span="md:col-span-2"
             />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">

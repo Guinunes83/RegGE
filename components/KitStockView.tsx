@@ -49,6 +49,8 @@ export const KitStockView: React.FC<KitStockViewProps> = ({ studies, isReadOnly 
 
   const [editingKit, setEditingKit] = useState<KitStockEntry | null>(null);
   const [viewingHistoryKit, setViewingHistoryKit] = useState<KitStockEntry | null>(null);
+  const [withdrawingKit, setWithdrawingKit] = useState<KitStockEntry | null>(null);
+  const [withdrawQuantity, setWithdrawQuantity] = useState<string>('');
 
   const [modalConfig, setModalConfig] = useState<{
     isOpen: boolean;
@@ -147,6 +149,7 @@ export const KitStockView: React.FC<KitStockViewProps> = ({ studies, isReadOnly 
       alert("Quantidade inválida.");
       return;
     }
+
 
     const now = new Date().toLocaleString('pt-BR');
     let isUpdate = false;
@@ -270,6 +273,42 @@ export const KitStockView: React.FC<KitStockViewProps> = ({ studies, isReadOnly 
         onShowSuccess('Removido com Sucesso!', 'Kit removido do estoque.');
       }
     });
+  };
+
+  const handleWithdrawKit = async () => {
+    if (isReadOnly || !withdrawingKit) return;
+    
+    const qty = parseInt(withdrawQuantity);
+    if (isNaN(qty) || qty <= 0) {
+      alert("Quantidade inválida.");
+      return;
+    }
+    if (qty > withdrawingKit.quantity) {
+      alert("Quantidade maior do que a disponível em estoque.");
+      return;
+    }
+
+    const now = new Date().toLocaleString('pt-BR');
+    const newTotal = withdrawingKit.quantity - qty;
+    const newHistory = { 
+      date: now, 
+      action: 'Saída', 
+      amount: qty, 
+      balance: newTotal 
+    };
+
+    const updatedKit: KitStockEntry = {
+      ...withdrawingKit,
+      quantity: newTotal,
+      history: [...(withdrawingKit.history || []), newHistory]
+    };
+
+    await db.upsert('kitStock', updatedKit);
+    const data = await db.getAll<KitStockEntry>('kitStock');
+    setKits(data);
+    setWithdrawingKit(null);
+    setWithdrawQuantity('');
+    onShowSuccess('Retirada Concluída!', 'Os kits foram retirados do estoque.');
   };
 
   const getFilteredReportKits = () => {
@@ -413,6 +452,40 @@ export const KitStockView: React.FC<KitStockViewProps> = ({ studies, isReadOnly 
         </div>
       )}
 
+      {/* WITHDRAW MODAL */}
+      {withdrawingKit && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="bg-[#007b63] text-white p-5 flex justify-between items-center">
+              <h3 className="text-lg font-bold uppercase tracking-wide">Retirar Kits</h3>
+              <button onClick={() => { setWithdrawingKit(null); setWithdrawQuantity(''); }} className="p-1.5 hover:bg-white/20 rounded-full transition-colors"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
+            </div>
+            <div className="p-6 bg-gray-50 flex flex-col gap-4">
+              <InputField label="Kit" value={withdrawingKit.kitName} readOnly={true} />
+              <InputField label="Data Validade" type="date" value={withdrawingKit.expirationDate} readOnly={true} />
+
+              <div className="flex flex-col gap-1 w-full">
+                <label className="text-[10px] uppercase font-bold text-gray-500 ml-1">Quantidade Retirada</label>
+                <input 
+                  type="number" 
+                  className="border border-gray-300 rounded px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-[#007b63] bg-white border-2 border-[#007b63]" 
+                  value={withdrawQuantity} 
+                  onChange={e => setWithdrawQuantity(e.target.value)} 
+                  placeholder="0" 
+                />
+              </div>
+
+              <button 
+                onClick={handleWithdrawKit} 
+                className="mt-2 text-white bg-[#007b63] hover:bg-[#00604d] px-4 py-2 rounded-xl font-bold uppercase text-xs shadow transition-colors"
+              >
+                Confirmar Retirada
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* FORMULÁRIO DE CADASTRO */}
       <div className={`p-6 bg-[#d1e7e4]/20 rounded-2xl border border-[#007b63]/10 flex-shrink-0 transition-opacity ${isReadOnly ? 'opacity-50 pointer-events-none' : ''}`}>
         <h3 className="text-[#007b63] font-black uppercase text-xs tracking-widest mb-6 border-b border-[#007b63]/20 pb-2">
@@ -472,6 +545,9 @@ export const KitStockView: React.FC<KitStockViewProps> = ({ studies, isReadOnly 
                     <td className="px-3 py-1.5 font-bold text-lg">{k.quantity}</td>
                     <td className="px-3 py-1.5 font-bold">{getDaysRemaining(k.expirationDate) < 0 ? 'VENCIDO' : `${getDaysRemaining(k.expirationDate)} dias`}</td>
                     <td className="px-3 py-1.5 text-right flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                      {!isReadOnly && (
+                        <button onClick={() => setWithdrawingKit(k)} title="Retirar Kits" className="text-white font-bold bg-[#007b63] hover:bg-[#00604d] px-2 py-0.5 rounded text-sm flex items-center justify-center">-</button>
+                      )}
                       <button onClick={() => setViewingHistoryKit(k)} className="text-gray-600 font-bold hover:underline uppercase text-[10px] bg-white/50 px-2 py-1 rounded">Visualizar</button>
                       {!isReadOnly && (
                         <>
