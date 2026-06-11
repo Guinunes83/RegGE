@@ -36,7 +36,10 @@ public class CsvImportService {
     private String safeGet(String[] data, int index) {
         if (index >= data.length) return null;
         String val = data[index].replace("\"", "").trim();
-        return val.isEmpty() ? null : val;
+        if (val.isEmpty() || val.equals("-") || val.equals("–") || val.equals("—") || val.equalsIgnoreCase("n/a") || val.equalsIgnoreCase("na") || val.equalsIgnoreCase("não informado")) {
+            return null;
+        }
+        return val;
     }
 
     private LocalDate safeGetDate(String[] data, int index) {
