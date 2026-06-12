@@ -48,14 +48,17 @@ const AVAILABLE_PERMISSIONS: Permission[] = [
   { id: 'access_monitoria', name: 'Acesso à Monitoria', description: 'Permite visualizar a monitoria.', category: 'Dados', subcategory: 'Monitoria' },
   { id: 'create_monitoria', name: 'Acesso à botão "+NOVO"', description: 'Permite adicionar nova monitoria.', category: 'Dados', subcategory: 'Monitoria', dependsOn: 'access_monitoria' },
   { id: 'edit_monitoria', name: 'Acesso ao botão Editar no visualização de dados monitoria', description: 'Pode alterar informações da monitoria.', category: 'Dados', subcategory: 'Monitoria', dependsOn: 'access_monitoria' },
+  { id: 'delete_monitoria', name: 'Acesso à coluna de Ação', description: 'Permite excluir monitorias.', category: 'Dados', subcategory: 'Monitoria', dependsOn: 'access_monitoria' },
 
   { id: 'access_participants', name: 'Acesso à Participante', description: 'Permite visualizar os participantes.', category: 'Dados', subcategory: 'Participantes' },
   { id: 'create_participants', name: 'Acesso à botão "+NOVO"', description: 'Permite adicionar novos participantes.', category: 'Dados', subcategory: 'Participantes', dependsOn: 'access_participants' },
   { id: 'edit_participants', name: 'Acesso ao botão Editar no visualização de dados participantes', description: 'Pode alterar informações dos participantes.', category: 'Dados', subcategory: 'Participantes', dependsOn: 'access_participants' },
+  { id: 'delete_participants', name: 'Acesso à coluna de Ação', description: 'Permite excluir participantes.', category: 'Dados', subcategory: 'Participantes', dependsOn: 'access_participants' },
 
   { id: 'access_sponsors', name: 'Acesso à Patrocinador', description: 'Permite visualizar os patrocinadores.', category: 'Dados', subcategory: 'Patrocinador' },
   { id: 'create_sponsors', name: 'Acesso à botão "+NOVO"', description: 'Permite adicionar novos patrocinadores.', category: 'Dados', subcategory: 'Patrocinador', dependsOn: 'access_sponsors' },
-  { id: 'edit_sponsors', name: 'Acesso ao botão Editar no visualização de dados Patrocinador', description: 'Pode alterar informações dos patrocinadores.', category: 'Dados', subcategory: 'Patrocinador', dependsOn: 'access_sponsors' },
+  { id: 'edit_sponsors', name: 'Acesso ao botão Editar no visualização de dados patrocinador', description: 'Pode alterar informações dos patrocinadores.', category: 'Dados', subcategory: 'Patrocinador', dependsOn: 'access_sponsors' },
+  { id: 'delete_sponsors', name: 'Acesso à coluna de Ação', description: 'Permite excluir patrocinadores.', category: 'Dados', subcategory: 'Patrocinador', dependsOn: 'access_sponsors' },
 
   { id: 'access_studies', name: 'Acesso à Estudos', description: 'Permite visualizar os estudos.', category: 'Dados', subcategory: 'Estudos' },
   { id: 'create_studies', name: 'Acesso ao botão "+NOVO"', description: 'Permite cadastrar novos estudos.', category: 'Dados', subcategory: 'Estudos', dependsOn: 'access_studies' },

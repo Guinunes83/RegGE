@@ -612,21 +612,21 @@ export const StudyForm: React.FC<StudyFormProps> = ({ study, mode, onSave, onCan
         <section>
           <SectionTitle title="ÍNDICES" />
           <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
-            <StudyInput label="DATA Rec. Feasibility" type="date" value={formData.feasibilityReceptionDate} onChange={(v: string) => handleChange('feasibilityReceptionDate', v)} isView={isView} />
-            <StudyInput label="DATA Assin. Feasibility" type="date" value={formData.feasibilitySigningDate} onChange={(v: string) => handleChange('feasibilitySigningDate', v)} isView={isView} />
-            <StudyInput label="DATA Aviso Centro Selec." type="date" value={formData.centerSelectionNoticeDate} onChange={(v: string) => handleChange('centerSelectionNoticeDate', v)} isView={isView} />
-            <StudyInput label="DATA Rec. Contrato" type="date" value={formData.contractReceptionDate} onChange={(v: string) => handleChange('contractReceptionDate', v)} isView={isView} />
-            <StudyInput label="DATA Assin. Contrato" type="date" value={formData.contractSigningDate} onChange={(v: string) => handleChange('contractSigningDate', v)} isView={isView} />
-            <StudyInput label="DATA Rec. Dossiê inicial" type="date" value={formData.initialDossierReceptionDate} onChange={(v: string) => handleChange('initialDossierReceptionDate', v)} isView={isView} />
+            <StudyInput label="Rec. Feasibility" type="date" value={formData.feasibilityReceptionDate} onChange={(v: string) => handleChange('feasibilityReceptionDate', v)} isView={isView} />
+            <StudyInput label="Assin. Feasibility" type="date" value={formData.feasibilitySigningDate} onChange={(v: string) => handleChange('feasibilitySigningDate', v)} isView={isView} />
+            <StudyInput label="Aviso Centro Selec." type="date" value={formData.centerSelectionNoticeDate} onChange={(v: string) => handleChange('centerSelectionNoticeDate', v)} isView={isView} />
+            <StudyInput label="Rec. Contrato" type="date" value={formData.contractReceptionDate} onChange={(v: string) => handleChange('contractReceptionDate', v)} isView={isView} />
+            <StudyInput label="Assin. Contrato" type="date" value={formData.contractSigningDate} onChange={(v: string) => handleChange('contractSigningDate', v)} isView={isView} />
+            <StudyInput label="Rec. Dossiê inicial" type="date" value={formData.initialDossierReceptionDate} onChange={(v: string) => handleChange('initialDossierReceptionDate', v)} isView={isView} />
             
-            <StudyInput label="DATA Sub. Dossiê Inicial" type="date" value={formData.initialDossierSubmissionDate} onChange={(v: string) => handleChange('initialDossierSubmissionDate', v)} isView={isView} />
-            <StudyInput label="DATA Aceite do CEP" type="date" value={formData.cepAcceptanceDate} onChange={(v: string) => handleChange('cepAcceptanceDate', v)} isView={isView} />
-            <StudyInput label="DATA Aprov. Parecer Inicial" type="date" value={formData.initialOpinionApprovalDate} onChange={(v: string) => handleChange('initialOpinionApprovalDate', v)} isView={isView} />
-            <StudyInput label="DATA Ativação do Centro" type="date" value={formData.centerActivationDate} onChange={(v: string) => handleChange('centerActivationDate', v)} isView={isView} />
-            <StudyInput label="DATA 01º Participante" type="date" value={formData.firstParticipantDate} onChange={(v: string) => handleChange('firstParticipantDate', v)} isView={isView} />
-            <StudyInput label="DATA 01º Randomizado" type="date" value={formData.firstRandomizedDate} onChange={(v: string) => handleChange('firstRandomizedDate', v)} isView={isView} />
+            <StudyInput label="Sub. Dossiê Inicial" type="date" value={formData.initialDossierSubmissionDate} onChange={(v: string) => handleChange('initialDossierSubmissionDate', v)} isView={isView} />
+            <StudyInput label="Aceite do CEP" type="date" value={formData.cepAcceptanceDate} onChange={(v: string) => handleChange('cepAcceptanceDate', v)} isView={isView} />
+            <StudyInput label="Aprov. Parecer Inicial" type="date" value={formData.initialOpinionApprovalDate} onChange={(v: string) => handleChange('initialOpinionApprovalDate', v)} isView={isView} />
+            <StudyInput label="Ativação do Centro" type="date" value={formData.centerActivationDate} onChange={(v: string) => handleChange('centerActivationDate', v)} isView={isView} />
+            <StudyInput label="01º Participante" type="date" value={formData.firstParticipantDate} onChange={(v: string) => handleChange('firstParticipantDate', v)} isView={isView} />
+            <StudyInput label="01º Randomizado" type="date" value={formData.firstRandomizedDate} onChange={(v: string) => handleChange('firstRandomizedDate', v)} isView={isView} />
             
-            <StudyInput label="DATA Parecer R. FINAL" type="date" value={formData.finalOpinionDate} onChange={(v: string) => handleChange('finalOpinionDate', v)} isView={isView} />
+            <StudyInput label="Parecer R. FINAL" type="date" value={formData.finalOpinionDate} onChange={(v: string) => handleChange('finalOpinionDate', v)} isView={isView} />
           </div>
         </section>
 

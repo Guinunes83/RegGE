@@ -239,16 +239,16 @@ export const CreateProfileView: React.FC<CreateProfileViewProps> = ({ onCancel, 
   const selectedProfiles = formData.profiles || [];
 
   return (
-    <div className="flex items-center justify-center p-6">
-      <div className="bg-white border border-gray-200 rounded-3xl shadow-2xl w-full max-w-5xl overflow-hidden flex flex-col md:flex-row">
+    <div className="flex h-full items-center justify-center p-6">
+      <div className="bg-white border border-gray-200 rounded-3xl shadow-2xl w-full max-w-5xl h-full max-h-[90vh] flex flex-col overflow-hidden">
         
-        {/* Lado Esquerdo - Decorativo / Info */}
-        <div className="bg-[#007b63] p-8 md:w-1/4 flex flex-col justify-between text-white relative overflow-hidden">
+        {/* Cabeçalho */}
+        <div className="bg-[#007b63] p-6 flex items-center justify-between text-white relative overflow-hidden shrink-0">
            <div className="relative z-10">
-             <h2 className="text-3xl font-black uppercase tracking-tighter leading-none mb-4">
-                {isEditing ? 'Editar' : 'Novo'}<br/>Acesso
+             <h2 className="text-2xl font-black uppercase tracking-tighter leading-none mb-2">
+                {isEditing ? 'Editar' : 'Novo'} Acesso
              </h2>
-             <p className="text-xs font-medium opacity-80 leading-relaxed">
+             <p className="text-xs font-medium opacity-80 leading-relaxed max-w-2xl">
                {isEditing 
                  ? 'Atualize as informações do colaborador e suas permissões de sistema.'
                  : 'Crie credenciais para novos membros da equipe. Certifique-se de atribuir o perfil de acesso correto para garantir a segurança dos dados.'
@@ -258,11 +258,11 @@ export const CreateProfileView: React.FC<CreateProfileViewProps> = ({ onCancel, 
            
            {/* Círculos decorativos */}
            <div className="absolute top-[-50px] right-[-50px] w-48 h-48 bg-white/5 rounded-full blur-2xl"></div>
-           <div className="absolute bottom-[-20px] left-[-20px] w-32 h-32 bg-white/10 rounded-full blur-xl"></div>
+           <div className="absolute bottom-[-20px] right-[20%] w-32 h-32 bg-white/10 rounded-full blur-xl"></div>
         </div>
 
         {/* Lado Direito - Formulário */}
-        <div className="p-8 md:w-3/4 bg-white">
+        <div className="p-8 bg-white flex-1 overflow-y-auto w-full">
           <h3 className="text-[#007b63] font-black uppercase text-sm tracking-widest mb-6 border-b border-gray-100 pb-2">Dados do Usuario</h3>
 
           {error && (
@@ -277,9 +277,9 @@ export const CreateProfileView: React.FC<CreateProfileViewProps> = ({ onCancel, 
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">
             {/* Linha 1 */}
-            <div className="md:col-span-3">
+            <div className="md:col-span-2">
               <ProfileInput 
                 label="Nome Completo" 
                 value={formData.name || ''} 
@@ -299,30 +299,6 @@ export const CreateProfileView: React.FC<CreateProfileViewProps> = ({ onCancel, 
               />
             </div>
 
-            {/* Linha 2 */}
-            <div className="md:col-span-2 md:col-start-1">
-              <ProfileInput 
-                label="CPF" 
-                value={formData.cpf || ''} 
-                onChange={(v: string) => setFormData({...formData, cpf: v})} 
-                placeholder="000.000.000-00"
-                mask="cpf"
-                required 
-              />
-            </div>
-
-            <div className="md:col-span-3">
-              <ProfileInput 
-                label="Contato" 
-                value={formData.contact || ''} 
-                onChange={(v: string) => setFormData({...formData, contact: v})} 
-                placeholder="(00) 00000-0000"
-                mask="phone"
-                required 
-              />
-            </div>
-
-            {/* Linha 3 */}
             <div className="md:col-span-2">
               <ProfileInput 
                 label="Função (Cargo)" 
@@ -334,9 +310,32 @@ export const CreateProfileView: React.FC<CreateProfileViewProps> = ({ onCancel, 
                 required 
               />
             </div>
+
+            {/* Linha 2 */}
+            <div className="md:col-span-2">
+              <ProfileInput 
+                label="CPF" 
+                value={formData.cpf || ''} 
+                onChange={(v: string) => setFormData({...formData, cpf: v})} 
+                placeholder="000.000.000-00"
+                mask="cpf"
+                required 
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <ProfileInput 
+                label="Contato" 
+                value={formData.contact || ''} 
+                onChange={(v: string) => setFormData({...formData, contact: v})} 
+                placeholder="(00) 00000-0000"
+                mask="phone"
+                required 
+              />
+            </div>
             
             {isEditing && (
-               <div className="md:col-span-3 flex flex-col gap-1.5 w-full">
+               <div className="md:col-span-2 flex flex-col gap-1.5 w-full">
                  <label className="text-[10px] uppercase font-bold text-gray-500 ml-1">Status</label>
                  <div className="flex items-center gap-3 h-[46px]">
                     <label className="flex items-center gap-2 text-sm cursor-pointer">
@@ -350,7 +349,7 @@ export const CreateProfileView: React.FC<CreateProfileViewProps> = ({ onCancel, 
             )}
             
             {/* Linha 4 - Seleção de Perfis Estilo Emenda */}
-            <div className="md:col-span-5 flex flex-col gap-3 w-full mt-2">
+            <div className="md:col-span-6 flex flex-col gap-3 w-full mt-2">
               <label className="text-[10px] uppercase font-bold text-gray-500 ml-1">
                 Relação de Perfis <span className="text-red-500">*</span>
               </label>
@@ -410,7 +409,7 @@ export const CreateProfileView: React.FC<CreateProfileViewProps> = ({ onCancel, 
             </div>
 
             {!isEditing && (
-              <div className="md:col-span-5 grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <div className="md:col-span-6 grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                 <div className="col-span-1">
                   <ProfileInput 
                     label="Senha"
