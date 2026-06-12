@@ -119,8 +119,8 @@ export const AssociateListView: React.FC<AssociateListViewProps> = ({ onNavigate
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-xl border bg-white shadow-sm flex-1 overflow-y-auto">
-        <table className="w-full text-left whitespace-nowrap">
+      <div className="overflow-x-auto rounded-xl border bg-white shadow-sm flex-1 overflow-y-auto">
+        <table className="w-full text-left min-w-[1000px] whitespace-nowrap">
           <thead className="bg-[#007b63] text-white sticky top-0 z-10">
             <tr>
               <HeaderCell label="Nome" sortKey="name" />

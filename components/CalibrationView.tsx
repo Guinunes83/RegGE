@@ -171,8 +171,8 @@ export const CalibrationView: React.FC<CalibrationViewProps> = ({ userProfile, c
         )}
       </div>
 
-      <div className="overflow-hidden rounded-xl border bg-white shadow-sm flex-1 overflow-y-auto">
-        <table className="w-full text-left">
+      <div className="overflow-x-auto rounded-xl border bg-white shadow-sm flex-1 overflow-y-auto">
+        <table className="w-full text-left min-w-[800px] whitespace-nowrap">
           <thead className="bg-[#007b63] text-white sticky top-0 z-10">
             <tr>
               <th className="px-6 py-3 text-xs font-bold uppercase tracking-wider">Patrimônio</th>

@@ -714,8 +714,8 @@ export const StudyForm: React.FC<StudyFormProps> = ({ study, mode, onSave, onCan
               </button>
             </div>
           )}
-          <div className="overflow-hidden border rounded-lg bg-white shadow-sm">
-            <table className="w-full text-left text-sm">
+          <div className="overflow-x-auto border rounded-lg bg-white shadow-sm">
+            <table className="w-full text-left text-sm min-w-[650px] whitespace-nowrap">
               <thead className="bg-[#007b63] text-white">
                 <tr>
                   <th className="px-4 py-2">Monitor(a)</th>
@@ -757,8 +757,8 @@ export const StudyForm: React.FC<StudyFormProps> = ({ study, mode, onSave, onCan
               </button>
             </div>
           )}
-          <div className="overflow-hidden border rounded-lg bg-white shadow-sm">
-            <table className="w-full text-left text-sm">
+          <div className="overflow-x-auto border rounded-lg bg-white shadow-sm">
+            <table className="w-full text-left text-sm min-w-[750px] whitespace-nowrap">
               <thead className="bg-[#007b63] text-white">
                 <tr>
                   <th className="px-4 py-2">Nome Participante</th>
