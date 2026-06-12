@@ -613,8 +613,8 @@ export const TeamForm: React.FC<TeamFormProps> = ({ member, mode, onSave, onCanc
                 </button>
               </div>
             )}
-            <div className="overflow-hidden border rounded-lg bg-white shadow-sm">
-              <table className="w-full text-left text-sm">
+            <div className="overflow-x-auto border rounded-lg bg-white shadow-sm">
+              <table className="w-full text-left text-sm min-w-[650px] whitespace-nowrap">
                 <thead className="bg-[#007b63] text-white">
                   <tr>
                     <th className="px-4 py-2">Estudo</th>
@@ -698,8 +698,8 @@ export const TeamForm: React.FC<TeamFormProps> = ({ member, mode, onSave, onCanc
                </button>
             </div>
           )}
-          <div className="overflow-hidden border rounded-lg bg-white shadow-sm">
-            <table className="w-full text-left text-sm select-none">
+          <div className="overflow-x-auto border rounded-lg bg-white shadow-sm">
+            <table className="w-full text-left text-sm select-none min-w-[750px] whitespace-nowrap">
               <thead className="bg-[#007b63] text-white font-semibold">
                 <tr>
                   <th className="px-4 py-2 cursor-pointer hover:bg-[#006b56]" onClick={() => handlePlatformSort('name')}>

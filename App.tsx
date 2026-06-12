@@ -546,8 +546,8 @@ export default function App() {
                 {hasPermission('create_team') && <button onClick={() => navigate('PI', { mode: 'edit' })} className="bg-[#007b63] text-white px-4 py-2 rounded-lg shadow-md font-bold text-xs uppercase">+ Novo</button>}
               </div>
             </div>
-            <div className="overflow-hidden rounded-xl border bg-white shadow-sm flex-1 overflow-y-auto">
-              <table className="w-full text-left">
+            <div className="overflow-x-auto rounded-xl border bg-white shadow-sm flex-1 overflow-y-auto">
+              <table className="w-full text-left min-w-[800px] whitespace-nowrap">
                 <thead className="bg-[#007b63] text-white sticky top-0">
                   <tr>
                     <HeaderCell label="Nome" sortKey="name" onClick={() => handleSort('name')} />
@@ -695,8 +695,8 @@ export default function App() {
                 {hasPermission('create_studies') && <button onClick={() => navigate('Studies', { mode: 'edit' })} className="bg-[#007b63] text-white px-4 py-2 rounded-lg shadow-md font-bold text-xs uppercase">+ Novo</button>}
               </div>
             </div>
-            <div className="overflow-hidden rounded-xl border bg-white shadow-sm flex-1 overflow-y-auto">
-              <table className="w-full text-left">
+            <div className="overflow-x-auto rounded-xl border bg-white shadow-sm flex-1 overflow-y-auto">
+              <table className="w-full text-left min-w-[800px] whitespace-nowrap">
                 <thead className="bg-[#007b63] text-white sticky top-0">
                   <tr>
                     <HeaderCell label="Nome" sortKey="name" onClick={() => handleSort('name')} />
@@ -784,8 +784,8 @@ export default function App() {
               <h2 className="text-xl font-black text-[#007b63] uppercase tracking-tighter">Patrocinadores</h2>
               {hasPermission('create_sponsors') && <button onClick={() => navigate('Sponsors', { mode: 'edit' })} className="bg-[#007b63] text-white px-4 py-2 rounded-lg shadow-md font-bold text-xs uppercase">+ Novo</button>}
             </div>
-            <div className="overflow-hidden rounded-xl border bg-white shadow-sm flex-1 overflow-y-auto">
-              <table className="w-full text-left">
+            <div className="overflow-x-auto rounded-xl border bg-white shadow-sm flex-1 overflow-y-auto">
+              <table className="w-full text-left min-w-[800px] whitespace-nowrap">
                 <thead className="bg-[#007b63] text-white sticky top-0">
                   <tr>
                     <HeaderCell label="Nome" sortKey="name" onClick={() => handleSort('name')} />
@@ -843,8 +843,8 @@ export default function App() {
                    {hasPermission('create_participants') && <button onClick={() => navigate('Participants', { mode: 'edit' })} className="bg-[#007b63] text-white px-4 py-2 rounded-lg shadow-md font-bold text-xs uppercase">+ Novo</button>}
                  </div>
                </div>
-               <div className="overflow-hidden rounded-xl border bg-white shadow-sm flex-1 overflow-y-auto">
-                  <table className="w-full text-left">
+               <div className="overflow-x-auto rounded-xl border bg-white shadow-sm flex-1 overflow-y-auto">
+                  <table className="w-full text-left min-w-[800px] whitespace-nowrap">
                     <thead className="bg-[#007b63] text-white sticky top-0"><tr><HeaderCell label="Nome" sortKey="name" onClick={() => handleSort('name')} /><HeaderCell label="Estudo" /><HeaderCell label="Status" /></tr></thead>
                     <tbody className="divide-y">{getSortedData(patients).map((p: Patient) => (<tr key={p.id} onClick={() => navigate('Participants', { mode: 'view', patient: p })} className="hover:bg-gray-50 cursor-pointer"><td className="px-6 py-1 text-sm font-bold text-blue-600">{p.name}</td><td className="px-6 py-1 text-sm">{studies.find(s=>s.id===p.studyId)?.name}</td><td className="px-6 py-1 text-sm">{p.status}</td></tr>))}</tbody>
                   </table>
@@ -900,8 +900,8 @@ export default function App() {
                   <h2 className="text-xl font-black text-[#007b63] uppercase tracking-tighter">Monitores</h2>
                   {hasPermission('create_monitoria') && <button onClick={() => navigate('MonitoriaData', { mode: 'edit' })} className="bg-[#007b63] text-white px-4 py-2 rounded-lg shadow-md font-bold text-xs uppercase">+ Novo</button>}
                 </div>
-                <div className="overflow-hidden rounded-xl border bg-white shadow-sm flex-1 overflow-y-auto">
-                   <table className="w-full text-left">
+                <div className="overflow-x-auto rounded-xl border bg-white shadow-sm flex-1 overflow-y-auto">
+                   <table className="w-full text-left min-w-[800px] whitespace-nowrap">
                      <thead className="bg-[#007b63] text-white sticky top-0"><tr><HeaderCell label="Nome" sortKey="name" onClick={() => handleSort('name')} /><HeaderCell label="Estudo(s)" /><HeaderCell label="CRO" /></tr></thead>
                      <tbody className="divide-y">{getSortedData(monitors).map((m: MonitorEntry) => {
                          const mStudies = m.studyIds && m.studyIds.length > 0 

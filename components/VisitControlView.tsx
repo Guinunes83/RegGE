@@ -193,8 +193,8 @@ export const VisitControlView: React.FC = () => {
               </div>
 
               {/* Tabela de Visitas */}
-              <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-                <table className="w-full text-left text-xs">
+              <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-x-auto">
+                <table className="w-full text-left text-xs min-w-[700px] whitespace-nowrap">
                   <thead>
                     <tr className="bg-[#007b63] text-white uppercase text-[10px] tracking-wider font-bold">
                       <th className="px-4 py-3">Visita</th>
