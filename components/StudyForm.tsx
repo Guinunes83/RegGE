@@ -395,6 +395,14 @@ export const StudyForm: React.FC<StudyFormProps> = ({ study, mode, onSave, onCan
       showValidation('O campo Protocolo é obrigatório e precisa ser preenchido antes de salvar.');
       return false;
     }
+    if (formData.caae) {
+      const allStudies = await db.getAll<Study>('studies');
+      const duplicated = allStudies.find(s => s.caae === formData.caae && s.id !== formData.id);
+      if (duplicated) {
+        showValidation(`O C.A.A.E "${formData.caae}" já está cadastrado no estudo "${duplicated.name}".`);
+        return false;
+      }
+    }
     await onSave(formData);
     return true;
   };

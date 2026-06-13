@@ -73,6 +73,15 @@ export const SponsorForm: React.FC<SponsorFormProps> = ({ sponsor, studies, mode
       return false;
     }
 
+    if (formData.cnpj) {
+      const allSponsors = await db.getAll<Sponsor>('sponsors');
+      const duplicated = allSponsors.find(s => s.cnpj === formData.cnpj && s.id !== formData.id);
+      if (duplicated) {
+        showValidation(`O CNPJ "${formData.cnpj}" já está cadastrado para o patrocinador "${duplicated.name}".`);
+        return false;
+      }
+    }
+
     // Bidirectional sync
     // Iterate over all activeStudiesFull and update them if they changed state.
     const updatesToStudies: Study[] = [];

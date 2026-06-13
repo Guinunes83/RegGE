@@ -391,6 +391,14 @@ export const TeamForm: React.FC<TeamFormProps> = ({ member, mode, onSave, onCanc
       showValidation('O campo CPF é obrigatório e precisa ser preenchido antes de salvar.');
       return false;
     }
+    if (formData.cpf) {
+      const allTeam = await db.getAll<TeamMember>('team-members');
+      const duplicated = allTeam.find(t => t.cpf === formData.cpf && t.id !== formData.id);
+      if (duplicated) {
+        showValidation(`O CPF "${formData.cpf}" já está cadastrado para o membro "${duplicated.name}".`);
+        return false;
+      }
+    }
     if (formData.institutionalEmail && !formData.institutionalEmail.includes('@')) {
       showValidation('O campo E-mail Institucional deve conter o caractere "@" (arroba).');
       return false;
