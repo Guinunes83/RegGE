@@ -193,6 +193,7 @@ export type Patient = {
   contact?: string;
   secondaryContact?: string;
   tcleDate?: string;
+  cpf?: string;
 };
 
 export type Consultation = {

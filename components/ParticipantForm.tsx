@@ -157,6 +157,15 @@ export const ParticipantForm: React.FC<ParticipantFormProps> = ({ patient, studi
       return false;
     }
 
+    if (formData.cpf) {
+      const allPatients = await db.getAll<Patient>('patients');
+      const duplicated = allPatients.find(p => p.cpf === formData.cpf && p.id !== formData.id);
+      if (duplicated) {
+        showValidation(`O CPF "${formData.cpf}" já está cadastrado para o participante "${duplicated.name}".`);
+        return false;
+      }
+    }
+
     await onSave(formData);
     return true;
   };
@@ -258,7 +267,7 @@ export const ParticipantForm: React.FC<ParticipantFormProps> = ({ patient, studi
                span="md:col-span-1"
              />
              
-             {/* Linha 2: -CONTATO PRINCIPALX1, CONTATO SECUNDARIOX1, E-MAILX2; */}
+             {/* Linha 2: -CONTATO PRINCIPALX1, CONTATO SECUNDARIOX1, CPFX1, E-MAILX1; */}
              <ParticipantInput 
                label="Contato Principal" 
                value={formData.contact} 
@@ -278,12 +287,21 @@ export const ParticipantForm: React.FC<ParticipantFormProps> = ({ patient, studi
                span="md:col-span-1"
              />
              <ParticipantInput 
+               label="CPF" 
+               value={formData.cpf} 
+               onChange={(v: string) => setFormData({...formData, cpf: v})} 
+               isView={isView} 
+               mask="cpf"
+               placeholder="000.000.000-00"
+               span="md:col-span-1"
+             />
+             <ParticipantInput 
                label="E-mail" 
                value={formData.email} 
                onChange={(v: string) => setFormData({...formData, email: v})} 
                isView={isView} 
                placeholder="exemplo@email.com"
-               span="md:col-span-2"
+               span="md:col-span-1"
              />
 
              {/* Linha 3: -ESTUDOX1, Nº SCREENINGX1, Nº RAND.X1, Nº NO ESTUDO; */}
