@@ -52,15 +52,12 @@ export const UserListView: React.FC<UserListViewProps> = ({ onEditUser, onAddUse
         onCancel={() => setModalConfig({ isOpen: false, id: null })}
       />
 
-      <div className="bg-[#007b63] p-6 text-white rounded-xl shadow-md flex justify-between items-center">
+      <div className="bg-[#007b63] px-6 h-[60px] text-white rounded-xl shadow-md flex justify-between items-center">
         <div>
-          <h2 className="text-xl font-black uppercase tracking-tighter">Relação de Usuários</h2>
-          <p className="text-xs font-medium opacity-80 mt-1">Gerenciamento de credenciais do sistema</p>
+          <h2 className="text-lg font-black uppercase tracking-tighter leading-none">Relação de Usuários</h2>
+          <p className="text-[10px] font-medium opacity-80 mt-1 leading-none">Gerenciamento de credenciais do sistema</p>
         </div>
         <div className="flex items-center gap-4">
-          <div className="bg-white/20 px-3 py-1 rounded text-xs font-bold">
-            {users.length} Registros
-          </div>
           {onAddUser && (
             <button 
               onClick={onAddUser}

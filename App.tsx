@@ -70,6 +70,8 @@ export default function App() {
   const [successModal, setSuccessModal] = useState({ isOpen: false, title: '', message: '' });
   const [deleteTeamMemberPhase, setDeleteTeamMemberPhase] = useState<{phase: number, id: string | null}>({ phase: 0, id: null });
   const [deleteStudyPhase, setDeleteStudyPhase] = useState<{phase: number, id: string | null}>({ phase: 0, id: null });
+  const [deleteMonitorPhase, setDeleteMonitorPhase] = useState<{phase: number, id: string | null}>({ phase: 0, id: null });
+  const [deleteParticipantPhase, setDeleteParticipantPhase] = useState<{phase: number, id: string | null}>({ phase: 0, id: null });
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
 
   // File import state
@@ -554,29 +556,24 @@ export default function App() {
                     <HeaderCell label="Função" sortKey="role" onClick={() => handleSort('role')} />
                     <HeaderCell label="CPF" sortKey="cpf" onClick={() => handleSort('cpf')} />
                     <HeaderCell label="Celular" sortKey="cellphone" onClick={() => handleSort('cellphone')} />
-                    <HeaderCell label="Status" sortKey="active" onClick={() => handleSort('active')} />
                     {hasPermission('delete_team') && <th className="px-6 py-3 text-xs font-bold uppercase tracking-wider text-right">Ação</th>}
                   </tr>
                 </thead>
                 <tbody className="divide-y">
                   {getSortedData(showInactiveTeam ? team : team.filter(t => t.active !== false)).map((t: TeamMember) => (
                     <tr key={t.id} onClick={() => navigate('PI', { mode: 'view', pi: t })} className="hover:bg-gray-50 cursor-pointer transition-colors group">
-                      <td className="px-6 py-1 text-sm font-bold text-blue-600 hover:underline">{t.name}</td>
-                      <td className="px-6 py-1 text-sm text-gray-500">{t.role}</td>
-                      <td className="px-6 py-1 text-sm">{t.cpf}</td>
-                      <td className="px-6 py-1 text-sm text-gray-500">{t.cellphone || '-'}</td>
-                      <td className="px-6 py-1 text-sm text-gray-500">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${t.active !== false ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                            {t.active !== false ? 'Ativo' : 'Desativado'}
-                        </span>
-                      </td>
+                      <td className="px-6 py-0.5 text-xs font-bold text-blue-600 hover:underline">{t.name}</td>
+                      <td className="px-6 py-0.5 text-xs text-gray-500">{t.role}</td>
+                      <td className="px-6 py-0.5 text-xs">{t.cpf}</td>
+                      <td className="px-6 py-0.5 text-xs text-gray-500">{t.cellphone || '-'}</td>
                       {hasPermission('delete_team') && (
-                        <td className="px-6 py-1 text-sm text-right" onClick={(e) => e.stopPropagation()}>
+                        <td className="px-6 py-0.5 text-xs text-right" onClick={(e) => e.stopPropagation()}>
                           <button
                             onClick={() => setDeleteTeamMemberPhase({ phase: 1, id: t.id! })}
-                            className="text-red-500 hover:text-red-700 font-bold uppercase text-[10px] px-3 py-1 border border-red-200 hover:border-red-500 rounded bg-red-50 hover:bg-red-100 transition-colors"
+                            className="text-red-500 hover:text-red-700 p-1"
+                            title="Excluir"
                           >
-                            Excluir
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                           </button>
                         </td>
                       )}
@@ -703,51 +700,30 @@ export default function App() {
                     <HeaderCell label="Protocolo" sortKey="protocol" onClick={() => handleSort('protocol')} />
                     <HeaderCell label="PI" sortKey="pi" onClick={() => handleSort('pi')} />
                     <HeaderCell label="Patrocinador" sortKey="sponsor" onClick={() => handleSort('sponsor')} />
-                    <HeaderCell label="Status" sortKey="status" onClick={() => handleSort('status')} />
-                    {(hasPermission('edit_studies') || hasPermission('delete_studies')) && (
-                      <th className="px-6 py-3 text-xs font-bold uppercase tracking-wider text-right">Ação</th>
+                    <HeaderCell label="C.A.A.E." sortKey="caae" onClick={() => handleSort('caae')} />
+                    {hasPermission('delete_studies') && (
+                      <th className="w-16 px-6 py-3 text-xs font-bold uppercase tracking-wider text-right">Ação</th>
                     )}
                   </tr>
                 </thead>
                 <tbody className="divide-y">
                   {getSortedData(showInactiveStudies ? studies : studies.filter(s => s.active !== false)).map((s: Study) => (
                     <tr key={s.id} onClick={() => navigate('Studies', { mode: 'view', study: s })} className="hover:bg-gray-50 cursor-pointer transition-colors group">
-                      <td className="px-6 py-1 text-sm font-bold text-blue-600 hover:underline">{s.name}</td>
-                      <td className="px-6 py-1 text-sm">{s.protocol}</td>
-                      <td className="px-6 py-1 text-sm">{s.pi}</td>
-                      <td className="px-6 py-1 text-sm">{s.sponsor}</td>
-                      <td className="px-6 py-1 text-sm"><span className={`px-2 py-0.5 rounded text-xs font-bold ${s.active !== false ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{s.status}</span></td>
-                      {(hasPermission('edit_studies') || hasPermission('delete_studies')) && (
-                        <td className="px-6 py-1 text-sm text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                      <td className="px-6 py-0.5 text-xs font-bold text-blue-600 hover:underline">{s.name}</td>
+                      <td className="px-6 py-0.5 text-xs">{s.protocol}</td>
+                      <td className="px-6 py-0.5 text-xs">{s.pi}</td>
+                      <td className="px-6 py-0.5 text-xs">{s.sponsor}</td>
+                      <td className="px-6 py-0.5 text-xs">{s.caae || '-'}</td>
+                      {hasPermission('delete_studies') && (
+                        <td className="w-16 px-6 py-0.5 text-xs text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                           <div className="flex gap-2 justify-end items-center">
-                            {hasPermission('edit_studies') && (
-                              <>
-                                <button
-                                  onClick={() => navigate('Studies', { mode: 'edit', study: s })}
-                                  className="text-[#007b63] hover:text-[#006b56] font-bold uppercase text-[10px] px-2.5 py-1 border border-gray-200 hover:border-[#007b63] rounded bg-white transition-colors"
-                                >
-                                  Editar
-                                </button>
-                                <button
-                                  onClick={() => handleToggleStudyActive(s)}
-                                  className={`font-bold uppercase text-[10px] px-2.5 py-1 border rounded transition-colors ${
-                                    s.active !== false
-                                      ? 'text-amber-600 hover:text-amber-800 border-amber-200 hover:border-amber-600 bg-amber-50'
-                                      : 'text-emerald-600 hover:text-emerald-800 border-emerald-200 hover:border-emerald-600 bg-emerald-50'
-                                  }`}
-                                >
-                                  {s.active !== false ? 'Desativar' : 'Ativar'}
-                                </button>
-                              </>
-                            )}
-                            {hasPermission('delete_studies') && (
-                              <button
-                                onClick={() => setDeleteStudyPhase({ phase: 1, id: s.id })}
-                                className="text-red-500 hover:text-red-700 font-bold uppercase text-[10px] px-2.5 py-1 border border-red-200 hover:border-red-500 rounded bg-red-50 hover:bg-red-100 transition-colors"
-                              >
-                                Excluir
-                              </button>
-                            )}
+                            <button
+                              onClick={() => setDeleteStudyPhase({ phase: 1, id: s.id })}
+                              className="p-1 text-red-500 hover:text-red-700 transition-colors"
+                              title="Excluir"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            </button>
                           </div>
                         </td>
                       )}
@@ -790,34 +766,25 @@ export default function App() {
                   <tr>
                     <HeaderCell label="Nome" sortKey="name" onClick={() => handleSort('name')} />
                     <HeaderCell label="CRO" sortKey="cro" onClick={() => handleSort('cro')} />
-                    <HeaderCell label="Status" sortKey="active" onClick={() => handleSort('active')} />
-                    {true && <th className="px-6 py-3 text-xs font-bold uppercase tracking-wider">Ações</th>}
+                    <HeaderCell label="Qtd. Estudos" />
+                    {hasPermission('delete_sponsors') && <th className="w-16 px-6 py-3 text-xs font-bold uppercase tracking-wider text-right">Ação</th>}
                   </tr>
                 </thead>
                 <tbody className="divide-y">
                   {getSortedData(filteredSponsors).map((s: Sponsor) => (
                     <tr key={s.id} onClick={() => navigate('Sponsors', { mode: 'view', sponsor: s })} className="hover:bg-gray-50 cursor-pointer group">
-                      <td className="px-6 py-1 text-sm font-bold text-blue-600">{s.name}</td>
-                      <td className="px-6 py-1 text-sm">{s.cro}</td>
-                      <td className="px-6 py-1 text-sm">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${s.active !== false ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                          {s.active !== false ? 'Ativo' : 'Inativo'}
-                        </span>
-                      </td>
-                      {true && (
-                        <td className="px-6 py-1 text-sm" onClick={(e) => e.stopPropagation()}>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => handleToggleSponsorActive(s.id)}
-                              className={`px-2 py-1 rounded text-[10px] font-bold uppercase transition-colors ${s.active !== false ? 'bg-orange-100 text-orange-700 hover:bg-orange-200' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}
-                            >
-                              {s.active !== false ? 'Inativar' : 'Ativar'}
-                            </button>
+                      <td className="px-6 py-0.5 text-xs font-bold text-blue-600">{s.name}</td>
+                      <td className="px-6 py-0.5 text-xs">{s.cro}</td>
+                      <td className="px-6 py-0.5 text-xs">{studies.filter(st => st.sponsor === s.name).length}</td>
+                      {hasPermission('delete_sponsors') && (
+                        <td className="w-16 px-6 py-0.5 text-xs text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex gap-2 justify-end items-center">
                             <button
                               onClick={() => handleDeleteSponsor(s.id)}
-                              className="px-2 py-1 rounded text-[10px] font-bold uppercase bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
+                              className="p-1 text-red-500 hover:text-red-700 transition-colors"
+                              title="Excluir"
                             >
-                              Excluir
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                             </button>
                           </div>
                         </td>
@@ -845,8 +812,8 @@ export default function App() {
                </div>
                <div className="overflow-x-auto rounded-xl border bg-white shadow-sm flex-1 overflow-y-auto">
                   <table className="w-full text-left min-w-[800px] whitespace-nowrap">
-                    <thead className="bg-[#007b63] text-white sticky top-0"><tr><HeaderCell label="Nome" sortKey="name" onClick={() => handleSort('name')} /><HeaderCell label="Estudo" /><HeaderCell label="Status" /></tr></thead>
-                    <tbody className="divide-y">{getSortedData(patients).map((p: Patient) => (<tr key={p.id} onClick={() => navigate('Participants', { mode: 'view', patient: p })} className="hover:bg-gray-50 cursor-pointer"><td className="px-6 py-1 text-sm font-bold text-blue-600">{p.name}</td><td className="px-6 py-1 text-sm">{studies.find(s=>s.id===p.studyId)?.name}</td><td className="px-6 py-1 text-sm">{p.status}</td></tr>))}</tbody>
+                    <thead className="bg-[#007b63] text-white sticky top-0"><tr><HeaderCell label="Nome" sortKey="name" onClick={() => handleSort('name')} /><HeaderCell label="Estudo" /><HeaderCell label="Contato" sortKey="contact" onClick={() => handleSort('contact')} /><HeaderCell label="Status" sortKey="status" onClick={() => handleSort('status')} />{hasPermission('delete_participants') && <th className="w-16 px-6 py-3 text-xs font-bold uppercase tracking-wider text-right">Ação</th>}</tr></thead>
+                    <tbody className="divide-y">{getSortedData(patients).map((p: Patient) => (<tr key={p.id} onClick={() => navigate('Participants', { mode: 'view', patient: p })} className="hover:bg-gray-50 cursor-pointer"><td className="px-6 py-0.5 text-xs font-bold text-blue-600">{p.name}</td><td className="px-6 py-0.5 text-xs">{studies.find(s=>s.id===p.studyId)?.name}</td><td className="px-6 py-0.5 text-xs">{p.contact || '-'}</td><td className="px-6 py-0.5 text-xs">{p.status || '-'}</td>{hasPermission('delete_participants') && (<td className="w-16 px-6 py-0.5 text-xs text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}><div className="flex gap-2 justify-end items-center"><button onClick={() => setDeleteParticipantPhase({ phase: 1, id: p.id })} className="p-1 text-red-500 hover:text-red-700 transition-colors" title="Excluir"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button></div></td>)}</tr>))}</tbody>
                   </table>
                </div>
             </div>
@@ -902,12 +869,12 @@ export default function App() {
                 </div>
                 <div className="overflow-x-auto rounded-xl border bg-white shadow-sm flex-1 overflow-y-auto">
                    <table className="w-full text-left min-w-[800px] whitespace-nowrap">
-                     <thead className="bg-[#007b63] text-white sticky top-0"><tr><HeaderCell label="Nome" sortKey="name" onClick={() => handleSort('name')} /><HeaderCell label="Estudo(s)" /><HeaderCell label="CRO" /></tr></thead>
+                     <thead className="bg-[#007b63] text-white sticky top-0"><tr><HeaderCell label="Nome" sortKey="name" onClick={() => handleSort('name')} /><HeaderCell label="Estudo(s)" /><HeaderCell label="CRO" /><HeaderCell label="Contato" sortKey="contact" onClick={() => handleSort('contact')} />{hasPermission('delete_monitoria') && <th className="w-16 px-6 py-3 text-xs font-bold uppercase tracking-wider text-right">Ação</th>}</tr></thead>
                      <tbody className="divide-y">{getSortedData(monitors).map((m: MonitorEntry) => {
                          const mStudies = m.studyIds && m.studyIds.length > 0 
                              ? m.studyIds.map(id => studies.find(s=>s.id===id)?.name).filter(Boolean).join(', ')
                              : studies.find(s=>s.id===m.studyId)?.name || '';
-                         return (<tr key={m.id} onClick={() => navigate('MonitoriaData', { mode: 'view', monitor: m })} className="hover:bg-gray-50 cursor-pointer"><td className="px-6 py-1 text-sm font-bold text-blue-600">{m.name}</td><td className="px-6 py-1 text-sm">{mStudies}</td><td className="px-6 py-1 text-sm">{m.cro}</td></tr>);
+                         return (<tr key={m.id} onClick={() => navigate('MonitoriaData', { mode: 'view', monitor: m })} className="hover:bg-gray-50 cursor-pointer"><td className="px-6 py-0.5 text-xs font-bold text-blue-600">{m.name}</td><td className="px-6 py-0.5 text-xs">{mStudies}</td><td className="px-6 py-0.5 text-xs">{m.cro}</td><td className="px-6 py-0.5 text-xs">{m.contact || '-'}</td>{hasPermission('delete_monitoria') && (<td className="w-16 px-6 py-0.5 text-xs text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}><div className="flex gap-2 justify-end items-center"><button onClick={() => setDeleteMonitorPhase({ phase: 1, id: m.id })} className="p-1 text-red-500 hover:text-red-700 transition-colors" title="Excluir"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button></div></td>)}</tr>);
                      })}</tbody>
                    </table>
                 </div>
@@ -1020,6 +987,38 @@ export default function App() {
             onCancel={() => setDeleteStudyPhase({ phase: 0, id: null })}
             confirmText="SIM, EXCLUIR"
             cancelText="CANCELAR"
+          />
+          <ConfirmationModal
+            isOpen={deleteMonitorPhase.phase === 1}
+            title="Exclusão de Monitor"
+            message="Você deseja concluir a exclusão do monitor?"
+            onConfirm={async () => {
+              if (deleteMonitorPhase.id) {
+                await db.delete('monitors', deleteMonitorPhase.id);
+                showSuccess('Excluído', 'O monitor foi excluído permanentemente.');
+                refreshData();
+              }
+              setDeleteMonitorPhase({ phase: 0, id: null });
+            }}
+            onCancel={() => setDeleteMonitorPhase({ phase: 0, id: null })}
+            confirmText="SIM"
+            cancelText="NÃO"
+          />
+          <ConfirmationModal
+            isOpen={deleteParticipantPhase.phase === 1}
+            title="Exclusão de Participante"
+            message="Você deseja concluir a exclusão do participante?"
+            onConfirm={async () => {
+              if (deleteParticipantPhase.id) {
+                await db.delete('patients', deleteParticipantPhase.id);
+                showSuccess('Excluído', 'O participante foi excluído permanentemente.');
+                refreshData();
+              }
+              setDeleteParticipantPhase({ phase: 0, id: null });
+            }}
+            onCancel={() => setDeleteParticipantPhase({ phase: 0, id: null })}
+            confirmText="SIM"
+            cancelText="NÃO"
           />
           {isChangePasswordModalOpen && (
             <ChangePasswordModal
