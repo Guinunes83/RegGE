@@ -1,11 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
-import { Notice, UserProfile } from '../types';
+import { Notice, UserProfile as UserProfileType, UserProfile } from '../types';
 import { db } from '../database';
 import { ConfirmationModal } from './ConfirmationModal';
 
 interface NoticeBoardViewProps {
-  userProfile?: UserProfile;
+  userProfile?: UserProfileType;
 }
 
 export const NoticeBoardView: React.FC<NoticeBoardViewProps> = ({ userProfile }) => {
@@ -14,15 +14,27 @@ export const NoticeBoardView: React.FC<NoticeBoardViewProps> = ({ userProfile })
     isOpen: boolean;
     id: string | null;
   }>({ isOpen: false, id: null });
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [newNotice, setNewNotice] = useState<Partial<Notice>>({
+    title: '',
+    message: '',
+    color: 'bg-yellow-200',
+    targetProfiles: Object.values(UserProfile).filter(p => typeof p === 'string') as string[]
+  });
 
   useEffect(() => {
     fetchNotices();
-  }, []);
+  }, [userProfile]);
 
   const fetchNotices = async () => {
     const data = await db.getAll<Notice>('notices');
+    // Filter notices based on userProfile if provided and not developer/admin
+    let filteredData = data;
+    if (userProfile && userProfile !== UserProfile.DEVELOPER && userProfile !== UserProfile.ADMIN) {
+      filteredData = data.filter(n => !n.targetProfiles || n.targetProfiles.includes(userProfile));
+    }
     // Ordenar por data (mais recente primeiro, ou lógica que preferir)
-    setNotices(data.reverse());
+    setNotices(filteredData.reverse());
   };
 
   const handleDelete = async () => {
@@ -38,6 +50,41 @@ export const NoticeBoardView: React.FC<NoticeBoardViewProps> = ({ userProfile })
     setModalConfig({ isOpen: true, id });
   };
 
+  const handleSaveNotice = async () => {
+    if (!newNotice.title || !newNotice.message) return;
+    
+    const noticeToSave: Notice = {
+      id: crypto.randomUUID(),
+      title: newNotice.title,
+      message: newNotice.message,
+      sector: 'Geral', // Or a configurable sector
+      date: new Date().toLocaleDateString('pt-BR'),
+      color: newNotice.color || 'bg-yellow-200',
+      targetProfiles: newNotice.targetProfiles || []
+    };
+
+    await db.upsert('notices', noticeToSave);
+    await fetchNotices();
+    setIsCreateModalOpen(false);
+    setNewNotice({
+      title: '',
+      message: '',
+      color: 'bg-yellow-200',
+      targetProfiles: Object.values(UserProfile).filter(p => typeof p === 'string') as string[]
+    });
+  };
+
+  const handleProfileToggle = (profile: string) => {
+    setNewNotice(prev => {
+      const targets = prev.targetProfiles || [];
+      if (targets.includes(profile)) {
+        return { ...prev, targetProfiles: targets.filter(p => p !== profile) };
+      } else {
+        return { ...prev, targetProfiles: [...targets, profile] };
+      }
+    });
+  };
+
   const isAdmin = true; // userProfile === UserProfile.ADMIN || userProfile === UserProfile.DEVELOPER;
 
   return (
@@ -50,6 +97,15 @@ export const NoticeBoardView: React.FC<NoticeBoardViewProps> = ({ userProfile })
            <h2 className="text-3xl font-black uppercase tracking-tighter text-gray-800" style={{ fontFamily: 'sans-serif' }}>Mural de Avisos</h2>
            <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Recados, Lembretes e Comunicados Internos</p>
         </div>
+        {isAdmin && (
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="flex items-center gap-2 bg-[#007b63] text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-[#005a48] transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/></svg>
+            Novo Aviso
+          </button>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto relative z-10 p-2">
@@ -104,6 +160,84 @@ export const NoticeBoardView: React.FC<NoticeBoardViewProps> = ({ userProfile })
           </div>
         )}
       </div>
+
+      {isCreateModalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-lg max-h-[90vh] flex flex-col">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">Novo Aviso</h3>
+            
+            <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Exibir para (Perfis):</label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {Object.values(UserProfile).map(profile => (
+                    <label key={profile} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-50 p-1 rounded">
+                      <input 
+                        type="checkbox" 
+                        className="rounded border-gray-300 text-[#007b63] focus:ring-[#007b63]"
+                        checked={(newNotice.targetProfiles || []).includes(profile)}
+                        onChange={() => handleProfileToggle(profile)}
+                      />
+                      <span className="text-gray-700 truncate" title={profile}>{profile}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Título</label>
+                <input 
+                  type="text" 
+                  value={newNotice.title || ''}
+                  onChange={(e) => setNewNotice(prev => ({ ...prev, title: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#007b63] focus:border-transparent outline-none transition-shadow"
+                  placeholder="Título do aviso"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Mensagem</label>
+                <textarea 
+                  value={newNotice.message || ''}
+                  onChange={(e) => setNewNotice(prev => ({ ...prev, message: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#007b63] focus:border-transparent outline-none transition-shadow resize-none h-32"
+                  placeholder="Texto do aviso..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Cor do Post-it</label>
+                <div className="flex gap-2">
+                  {['bg-yellow-200', 'bg-blue-200', 'bg-green-200', 'bg-pink-200', 'bg-purple-200'].map(color => (
+                    <button
+                      key={color}
+                      onClick={() => setNewNotice(prev => ({ ...prev, color }))}
+                      className={`w-6 h-6 rounded-full border-2 ${newNotice.color === color ? 'border-gray-800' : 'border-transparent'} ${color} shadow-sm hover:scale-110 transition-transform`}
+                      title="Selecionar cor"
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-4 mt-2 border-t flex justify-end gap-3 shrink-0">
+              <button 
+                onClick={() => setIsCreateModalOpen(false)}
+                className="px-4 py-2 border border-gray-300 text-gray-600 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={handleSaveNotice}
+                disabled={!newNotice.title || !newNotice.message || (newNotice.targetProfiles || []).length === 0}
+                className="px-4 py-2 bg-[#007b63] text-white rounded-lg font-bold shadow hover:bg-[#005a48] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Enviar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <ConfirmationModal 
         isOpen={modalConfig.isOpen}
