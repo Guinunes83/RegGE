@@ -71,19 +71,24 @@ export const Layout: React.FC<LayoutProps> = ({ onNavigate, onLogout, onSwitchPr
       icon: Icons.Home,
       children: [
         { label: 'Agenda', view: 'Calendar', permission: 'access_agenda' },
-        { label: 'Configurações', view: 'Settings', permission: 'access_settings' },
+        { 
+          label: 'Configurações', 
+          children: [
+            { label: 'Geral', view: 'Settings', permission: 'access_settings' },
+            { 
+              label: 'Perfil de Usuário', 
+              children: [
+                { label: 'Relação de Perfis', view: 'ManageRoles', permission: 'access_manage_roles' },
+                { label: 'Relação de Usuário', view: 'UserList', permission: 'manage_users' },
+                { label: 'Alterar Senha', action: 'openChangePassword' },
+              ]
+            }
+          ]
+        },
         { label: 'Dashboard', view: 'Dashboard', permission: 'access_dashboard' },
         { label: 'Links Úteis', view: 'RegulatoryLinks', permission: 'access_regulatory_links' },
         { label: 'Mural de Avisos', view: 'NoticeBoard' },
         { label: 'Notas', view: 'Notepad' },
-        { 
-          label: 'Perfil de Usuário', 
-          children: [
-            { label: 'Relação de Perfis', view: 'ManageRoles', permission: 'access_manage_roles' },
-            { label: 'Relação de Usuário', view: 'UserList', permission: 'manage_users' },
-            { label: 'Alterar Senha', action: 'openChangePassword' },
-          ]
-        },
         { label: 'Sair', view: 'Exit' },
       ]
     },
@@ -114,6 +119,13 @@ export const Layout: React.FC<LayoutProps> = ({ onNavigate, onLogout, onSwitchPr
           children: [
             { label: 'Aniversários', view: 'BirthdayFilter', permission: 'access_birthday' },
             { label: 'Associados', view: 'Associates', permission: 'access_associates' },
+            { 
+              label: 'Financeiro', 
+              children: [
+                { label: 'Lançamento & NFs', view: 'FinanceTransactions', permission: 'access_finance_transactions' },
+                { label: 'Relatório de lançamentos', view: 'FinanceReport', permission: 'access_finance_report' },
+              ]
+            },
             { label: 'Geral', view: 'Admin', permission: 'access_adm_general' },
             { label: 'Patrimônio', view: 'FinanceAssets', permission: 'access_assets' },
             { 
@@ -144,13 +156,6 @@ export const Layout: React.FC<LayoutProps> = ({ onNavigate, onLogout, onSwitchPr
           ]
         },
         { label: 'Farmácia', view: 'Pharmacy', permission: 'access_pharmacy' },
-        { 
-          label: 'Financeiro', 
-          children: [
-            { label: 'Lançamento & NFs', view: 'FinanceTransactions', permission: 'access_finance_transactions' },
-            { label: 'Relatório de lançamentos', view: 'FinanceReport', permission: 'access_finance_report' },
-          ]
-        },
         { 
           label: 'Recepção', 
           children: [
