@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FinancialTransaction, CompanyAsset, VacationRecord, TeamMember, TransactionCategory, InventoryItem } from '../types';
 import { db } from '../database';
+import { ConfirmationModal } from './ConfirmationModal';
 
 interface FinanceDashboardViewProps {
   onShowSuccess: (title: string, message: string) => void;
@@ -26,6 +27,7 @@ export const FinanceDashboardView: React.FC<FinanceDashboardViewProps> = ({ onSh
   const [showTransactionModal, setShowTransactionModal] = useState(false);
   const [showAssetModal, setShowAssetModal] = useState(false);
   const [showVacationModal, setShowVacationModal] = useState(false);
+  const [deleteConfig, setDeleteConfig] = useState<{isOpen: boolean; collection: string; id: string | null}>({ isOpen: false, collection: '', id: null });
 
   // Form states
   const [transactionForm, setTransactionForm] = useState<Partial<FinancialTransaction>>({ type: 'EXPENSE', status: 'PENDING' });
@@ -202,12 +204,17 @@ export const FinanceDashboardView: React.FC<FinanceDashboardViewProps> = ({ onSh
     loadData();
   };
 
-  const handleDelete = async (collection: string, id: string) => {
-    if (window.confirm('Deseja realmente excluir este registro?')) {
-      await db.delete(collection, id);
+  const handleDelete = (collection: string, id: string) => {
+    setDeleteConfig({ isOpen: true, collection, id });
+  };
+
+  const confirmDelete = async () => {
+    if (deleteConfig.id) {
+      await db.delete(deleteConfig.collection, deleteConfig.id);
       onShowSuccess('Excluído', 'Registro excluído com sucesso.');
       loadData();
     }
+    setDeleteConfig({ isOpen: false, collection: '', id: null });
   };
 
   // --- Resumo Calculations ---
@@ -349,9 +356,9 @@ export const FinanceDashboardView: React.FC<FinanceDashboardViewProps> = ({ onSh
                 + Novo Lançamento
               </button>
             </div>
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex-1">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-auto flex-1 relative min-h-[300px]">
               <table className="w-full text-left">
-                <thead className="bg-gray-50 border-b border-gray-200">
+                <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10 shadow-sm">
                   <tr>
                     <th className="px-4 py-3 text-xs font-bold text-gray-500 uppercase">Data</th>
                     <th className="px-4 py-3 text-xs font-bold text-gray-500 uppercase">Descrição</th>
@@ -412,9 +419,9 @@ export const FinanceDashboardView: React.FC<FinanceDashboardViewProps> = ({ onSh
                 + Novo Bem
               </button>
             </div>
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex-1">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-auto flex-1 relative min-h-[300px]">
               <table className="w-full text-left">
-                <thead className="bg-gray-50 border-b border-gray-200">
+                <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10 shadow-sm">
                   <tr>
                     <th className="px-4 py-3 text-xs font-bold text-gray-500 uppercase">Código</th>
                     <th className="px-4 py-3 text-xs font-bold text-gray-500 uppercase">Nome/Descrição</th>
@@ -459,51 +466,126 @@ export const FinanceDashboardView: React.FC<FinanceDashboardViewProps> = ({ onSh
           <div className="flex flex-col gap-4 h-full">
             <div className="flex justify-between items-center">
               <h2 className="text-lg font-bold text-gray-800">Controle de Férias</h2>
-              <button onClick={() => { setVacationForm({ status: 'PLANNED' }); setShowVacationModal(true); }} className="bg-[#007b63] text-white px-4 py-2 rounded-lg shadow-md font-bold text-xs uppercase hover:bg-[#005a48] transition-colors">
-                + Nova Solicitação
-              </button>
             </div>
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex-1">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-auto flex-1 relative min-h-[300px]">
               <table className="w-full text-left">
-                <thead className="bg-gray-50 border-b border-gray-200">
+                <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10 shadow-sm">
                   <tr>
                     <th className="px-4 py-3 text-xs font-bold text-gray-500 uppercase">Funcionário</th>
                     <th className="px-4 py-3 text-xs font-bold text-gray-500 uppercase">Função</th>
+                    <th className="px-4 py-3 text-xs font-bold text-gray-500 uppercase">Dias Pendentes</th>
                     <th className="px-4 py-3 text-xs font-bold text-gray-500 uppercase">Início</th>
                     <th className="px-4 py-3 text-xs font-bold text-gray-500 uppercase">Fim</th>
                     <th className="px-4 py-3 text-xs font-bold text-gray-500 uppercase">Dias</th>
                     <th className="px-4 py-3 text-xs font-bold text-gray-500 uppercase">Status</th>
+                    <th className="px-4 py-3 text-xs font-bold text-gray-500 uppercase">Dias Restantes</th>
                     <th className="px-4 py-3 text-xs font-bold text-gray-500 uppercase text-right">Ações</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {vacations.sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()).map(v => {
-                    const employee = team.find(t => t.id === v.employeeId);
-                    const days = Math.ceil((new Date(v.endDate).getTime() - new Date(v.startDate).getTime()) / (1000 * 3600 * 24)) + 1;
-                    return (
-                      <tr key={v.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-3 text-sm font-medium text-gray-800">{employee?.name || 'Desconhecido'}</td>
-                        <td className="px-4 py-3 text-sm text-gray-600">{employee?.role || '-'}</td>
-                        <td className="px-4 py-3 text-sm text-gray-600">{v.startDate.split('-').reverse().join('/')}</td>
-                        <td className="px-4 py-3 text-sm text-gray-600">{v.endDate.split('-').reverse().join('/')}</td>
-                        <td className="px-4 py-3 text-sm text-gray-600">{days} dias</td>
-                        <td className="px-4 py-3 text-sm">
-                          <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${
-                            v.status === 'TAKEN' ? 'bg-green-100 text-green-700' : 
-                            v.status === 'IN_PROGRESS' ? 'bg-yellow-100 text-yellow-700' : 
-                            v.status === 'CANCELLED' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
-                          }`}>
-                            {v.status === 'TAKEN' ? 'Gozadas' : v.status === 'IN_PROGRESS' ? 'Em progresso' : v.status === 'CANCELLED' ? 'Canceladas' : 'Programadas'}
-                          </span>
+                  {(() => {
+                    const rows: any[] = [];
+                    for (const employee of team) {
+                      let totalAccrued = 0;
+                      if (employee.admissionDate) {
+                        const admission = new Date(employee.admissionDate);
+                        const now = new Date();
+                        if (!isNaN(admission.getTime())) {
+                          let yearsWorked = now.getFullYear() - admission.getFullYear();
+                          if (now.getMonth() < admission.getMonth() || (now.getMonth() === admission.getMonth() && now.getDate() < admission.getDate())) {
+                            yearsWorked--;
+                          }
+                          if (yearsWorked > 0) {
+                            totalAccrued = yearsWorked * 30;
+                          }
+                        }
+                      }
+
+                      const employeeVacations = vacations.filter(v => v.employeeId === employee.id && v.status !== 'CANCELLED')
+                        .sort((a,b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
+
+                      if (totalAccrued === 0 && employeeVacations.length === 0) continue;
+
+                      let currentPending = totalAccrued;
+                      for (const v of employeeVacations) {
+                        const vStart = new Date(v.startDate + 'T00:00:00');
+                        const vEnd = new Date(v.endDate + 'T23:59:59');
+                        const daysTaken = Math.ceil((vEnd.getTime() - vStart.getTime()) / (1000 * 3600 * 24));
+                        const daysSold = v.daysSold || 0;
+                        const totalDeducted = daysTaken + daysSold;
+                        
+                        const pendingBefore = currentPending;
+                        const pendingAfter = currentPending - totalDeducted;
+                        currentPending = pendingAfter;
+                        
+                        rows.push({
+                          id: v.id, type: 'RECORD', record: v, employee,
+                          pendingBefore, pendingAfter, daysTaken, daysSold,
+                          sortDate: new Date(v.startDate).getTime()
+                        });
+                      }
+
+                      if (currentPending > 0 || (totalAccrued > 0 && employeeVacations.length === 0)) {
+                        rows.push({
+                          id: `avail_${employee.id}`, type: 'AVAILABLE', employee,
+                          pendingBefore: currentPending, pendingAfter: currentPending,
+                          daysTaken: 0, daysSold: 0, sortDate: new Date().getTime()
+                        });
+                      }
+                    }
+
+                    rows.sort((a,b) => {
+                      if (a.employee.id === b.employee.id) {
+                         if (a.type !== b.type) return a.type === 'AVAILABLE' ? 1 : -1;
+                         return a.sortDate - b.sortDate;
+                      }
+                      return a.employee.name.localeCompare(b.employee.name);
+                    });
+
+                    if (rows.length === 0) return <tr><td colSpan={9} className="text-center py-8 text-gray-500 text-sm">Nenhum funcionário com direito a férias.</td></tr>;
+
+                    return rows.map(r => (
+                      <tr key={r.id} className={`hover:bg-gray-50 ${r.type === 'AVAILABLE' ? 'bg-orange-50/30' : ''}`}>
+                        <td className="px-4 py-3 text-sm font-medium text-gray-800">{r.employee.name || 'Desconhecido'}</td>
+                        <td className="px-4 py-3 text-sm text-gray-600">{r.employee.role || '-'}</td>
+                        <td className="px-4 py-3 text-sm text-gray-600">{r.pendingBefore}</td>
+                        <td className="px-4 py-3 text-sm text-gray-600">{r.type === 'RECORD' ? r.record.startDate.split('-').reverse().join('/') : '-'}</td>
+                        <td className="px-4 py-3 text-sm text-gray-600">{r.type === 'RECORD' ? r.record.endDate.split('-').reverse().join('/') : '-'}</td>
+                        <td className="px-4 py-3 text-sm text-gray-600">
+                          {r.type === 'RECORD' ? (
+                            <>
+                              {r.daysTaken} gozados
+                              {r.daysSold > 0 && <span className="block text-[10px] text-gray-500">{r.daysSold} vendidos</span>}
+                            </>
+                          ) : '-'}
                         </td>
+                        <td className="px-4 py-3 text-sm">
+                          {r.type === 'RECORD' ? (
+                            <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${
+                              r.record.status === 'TAKEN' ? 'bg-green-100 text-green-700' : 
+                              r.record.status === 'IN_PROGRESS' ? 'bg-yellow-100 text-yellow-700' : 
+                              r.record.status === 'CANCELLED' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
+                            }`}>
+                              {r.record.status === 'TAKEN' ? 'Gozadas' : r.record.status === 'IN_PROGRESS' ? 'Em progresso' : r.record.status === 'CANCELLED' ? 'Canceladas' : 'Programadas'}
+                            </span>
+                          ) : (
+                            <span className="px-2 py-1 rounded text-[10px] font-bold uppercase bg-orange-100 text-orange-700">Aguardando</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-sm font-bold text-gray-800">{r.pendingAfter}</td>
                         <td className="px-4 py-3 text-sm text-right">
-                          <button onClick={() => { setVacationForm(v); setShowVacationModal(true); }} className="text-blue-600 hover:text-blue-800 mr-3 font-medium text-xs">Editar</button>
-                          <button onClick={() => handleDelete('vacations', v.id)} className="text-red-600 hover:text-red-800 font-medium text-xs">Excluir</button>
+                          {r.type === 'AVAILABLE' ? (
+                            <button onClick={() => { setVacationForm({ employeeId: r.employee.id, status: 'PLANNED' }); setShowVacationModal(true); }} className="text-[#007b63] hover:text-[#005a48] font-bold text-xs bg-[#007b63]/10 px-3 py-1.5 rounded uppercase">Lançar Férias</button>
+                          ) : (
+                            <>
+                              <button onClick={() => { setVacationForm(r.record); setShowVacationModal(true); }} className="text-blue-600 hover:text-blue-800 mr-3 font-medium text-xs">Editar</button>
+                              <button onClick={() => handleDelete('vacations', r.record.id)} className="text-red-600 hover:text-red-800 font-medium text-xs">Excluir</button>
+                            </>
+                          )}
                         </td>
                       </tr>
-                    );
-                  })}
-                  {vacations.length === 0 && <tr><td colSpan={7} className="text-center py-8 text-gray-500 text-sm">Nenhuma férias encontrada.</td></tr>}
+                    ));
+                  })()}
                 </tbody>
               </table>
             </div>
@@ -826,6 +908,19 @@ export const FinanceDashboardView: React.FC<FinanceDashboardViewProps> = ({ onSh
                   <label className="text-[10px] uppercase font-bold text-gray-500">Data de Fim</label>
                   <input type="date" className="border border-gray-300 rounded-md px-3 py-2 text-sm" value={vacationForm.endDate || ''} onChange={e => setVacationForm({...vacationForm, endDate: e.target.value})} />
                 </div>
+                <div className="flex flex-col gap-1 col-span-2 mt-2 pt-2 border-t border-gray-100">
+                  <h4 className="text-xs font-bold text-gray-800 mb-1">Abono Pecuniário (Dias Abatidos)</h4>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[10px] uppercase font-bold text-gray-500">Dias Vendidos</label>
+                      <input type="number" min="0" max="30" className="border border-gray-300 rounded-md px-3 py-2 text-sm" value={vacationForm.daysSold || ''} onChange={e => setVacationForm({...vacationForm, daysSold: Number(e.target.value)})} />
+                    </div>
+                    <div className="flex flex-col gap-1 col-span-2">
+                      <label className="text-[10px] uppercase font-bold text-gray-500">Motivo</label>
+                      <input type="text" placeholder="Opcional" className="border border-gray-300 rounded-md px-3 py-2 text-sm" value={vacationForm.soldReason || ''} onChange={e => setVacationForm({...vacationForm, soldReason: e.target.value})} />
+                    </div>
+                  </div>
+                </div>
                 <div className="flex flex-col gap-1 col-span-2">
                   <label className="text-[10px] uppercase font-bold text-gray-500">Observações</label>
                   <textarea className="border border-gray-300 rounded-md px-3 py-2 text-sm resize-none h-20" value={vacationForm.notes || ''} onChange={e => setVacationForm({...vacationForm, notes: e.target.value})}></textarea>
@@ -839,6 +934,17 @@ export const FinanceDashboardView: React.FC<FinanceDashboardViewProps> = ({ onSh
           </div>
         </div>
       )}
+
+      {/* Modal de Confirmação de Exclusão */}
+      <ConfirmationModal
+        isOpen={deleteConfig.isOpen}
+        title="Exclusão de Registro"
+        message="Deseja realmente excluir este registro? Essa ação é permanente e irreversível."
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteConfig({ isOpen: false, collection: '', id: null })}
+        confirmText="SIM, EXCLUIR"
+        cancelText="NÃO"
+      />
 
     </div>
   );

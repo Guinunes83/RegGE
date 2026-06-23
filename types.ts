@@ -91,6 +91,7 @@ export type Notice = {
   message: string;
   date: string;
   color: string; // Cor do post-it
+  targetProfiles?: string[]; // Perfis que devem ver o aviso
 };
 
 export type PlatformAccess = {
@@ -559,6 +560,8 @@ export type VacationRecord = {
   endDate: string;
   status: 'PLANNED' | 'IN_PROGRESS' | 'TAKEN' | 'CANCELLED';
   notes?: string;
+  daysSold?: number; // Dias abatidos (abono pecuniário)
+  soldReason?: string; // Motivo dos dias abatidos
 };
 
 // MDI Window Type Definition
