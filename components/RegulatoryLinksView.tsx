@@ -76,7 +76,7 @@ export const RegulatoryLinksView: React.FC = () => {
             {isEditing ? 'Editar Cadastro' : 'Novo Cadastro'}
          </h3>
          <div className="flex flex-col md:flex-row gap-3 items-end">
-           <div className="flex flex-col gap-1 w-full md:w-1/3">
+           <div className="flex flex-col gap-1 w-full md:w-1/2">
               <label className="text-[10px] uppercase font-bold text-gray-500 ml-1">Nome da Plataforma</label>
               <input 
                 className="border border-gray-300 rounded px-3 py-2 text-sm bg-white outline-none focus:ring-2 focus:ring-[#007b63]"
@@ -85,16 +85,7 @@ export const RegulatoryLinksView: React.FC = () => {
                 placeholder="Ex: Plataforma Brasil"
               />
            </div>
-           <div className="flex flex-col gap-1 w-full md:w-1/3">
-              <label className="text-[10px] uppercase font-bold text-gray-500 ml-1">Obs.:</label>
-              <input 
-                className="border border-gray-300 rounded px-3 py-2 text-sm bg-white outline-none focus:ring-2 focus:ring-[#007b63]"
-                value={newLink.notes || ''}
-                onChange={e => setNewLink({ ...newLink, notes: e.target.value })}
-                placeholder="Ex: Utilizar login institucional"
-              />
-           </div>
-           <div className="flex flex-col gap-1 w-full md:w-1/3">
+           <div className="flex flex-col gap-1 w-full md:w-1/2">
               <label className="text-[10px] uppercase font-bold text-gray-500 ml-1">Link</label>
               <input 
                 className="border border-gray-300 rounded px-3 py-2 text-sm bg-white outline-none focus:ring-2 focus:ring-[#007b63]"
@@ -144,8 +135,7 @@ export const RegulatoryLinksView: React.FC = () => {
              <table className="w-full text-left text-sm border-collapse">
                <thead className="bg-gray-100 text-gray-600 font-bold border-b border-gray-200">
                  <tr>
-                   <th className="px-4 py-2 w-1/4">Plataforma</th>
-                   <th className="px-4 py-2 w-1/3">Obs.</th>
+                   <th className="px-4 py-2 w-1/3">Plataforma</th>
                    <th className="px-4 py-2">Link</th>
                    <th className="px-4 py-2 text-right w-24">Ação</th>
                  </tr>
@@ -154,7 +144,6 @@ export const RegulatoryLinksView: React.FC = () => {
                  {links.map(link => (
                    <tr key={link.id} className={`transition-colors group ${newLink.id === link.id ? 'bg-blue-50' : 'hover:bg-gray-50'}`}>
                      <td className="px-4 py-3 font-bold text-gray-800">{link.name}</td>
-                     <td className="px-4 py-3 text-gray-600 italic">{link.notes || '-'}</td>
                      <td className="px-4 py-3">
                        <a 
                          href={link.url} 
