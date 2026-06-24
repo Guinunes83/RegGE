@@ -41,6 +41,7 @@ import { FinanceReportView } from './components/FinanceReportView';
 import { ManageRolesView } from './components/ManageRolesView';
 import { ValidationModal } from './components/ValidationModal';
 import { ConfirmationModal } from './components/ConfirmationModal';
+import { ImportCsvView } from './components/ImportCsvView';
 import { Associate } from './types';
 import { NavigationContext } from './contexts/NavigationContext';
 import { GoogleOAuthProvider } from '@react-oauth/google';
@@ -73,49 +74,6 @@ export default function App() {
   const [deleteMonitorPhase, setDeleteMonitorPhase] = useState<{phase: number, id: string | null}>({ phase: 0, id: null });
   const [deleteParticipantPhase, setDeleteParticipantPhase] = useState<{phase: number, id: string | null}>({ phase: 0, id: null });
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
-
-  // File import state
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [importTarget, setImportTarget] = useState<'studies'|'team'|'participants'|null>(null);
-
-  const triggerImport = (target: 'studies'|'team'|'participants') => {
-    setImportTarget(target);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''; // Reset
-      fileInputRef.current.click();
-    }
-  };
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !importTarget) return;
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      // Tenta enviar para o backend Java (Spring Boot)
-      const response = await fetch(`http://localhost:8080/api/import/${importTarget}`, {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        alert(`Erro na importação: ${errorText || response.statusText}`);
-        return;
-      }
-
-      const result = await response.json();
-      showSuccess('Importação concluída', result.message || 'Arquivo importado com sucesso.');
-      refreshData();
-    } catch (error: any) {
-      // Fallback amigável caso o backend não esteja rodando
-      alert(`Falha ao contactar o servidor (Java Backend). ${error.message}`);
-    } finally {
-      setImportTarget(null);
-    }
-  };
 
   // Visibility toggles
   const [showInactiveStudies, setShowInactiveStudies] = useState(false);
@@ -491,6 +449,8 @@ export default function App() {
         return <NotepadView />;
       case 'Settings':
         return <SettingsView currentLogo={appConfig.logo} currentText={appConfig.text} onConfigUpdate={handleConfigUpdate} />;
+      case 'ImportCsv':
+        return <ImportCsvView onShowSuccess={showSuccess} onRefreshData={refreshData} />;
       case 'CreateProfile':
         return <CreateProfileView onCancel={() => navigate('Dashboard')} onSave={() => navigate('UserList')} userToEdit={activeProps.userToEdit} />;
       case 'ManageRoles':
@@ -544,7 +504,6 @@ export default function App() {
                 </div>
               </div>
               <div className="flex gap-2">
-                {hasPermission('create_team') && <button onClick={() => triggerImport('team')} className="bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300 px-4 py-2 rounded-lg shadow-sm font-bold text-xs uppercase transition-colors">Importar CSV</button>}
                 {hasPermission('create_team') && <button onClick={() => navigate('PI', { mode: 'edit' })} className="bg-[#007b63] text-white px-4 py-2 rounded-lg shadow-md font-bold text-xs uppercase">+ Novo</button>}
               </div>
             </div>
@@ -688,7 +647,6 @@ export default function App() {
                 </div>
               </div>
               <div className="flex gap-2">
-                {hasPermission('create_studies') && <button onClick={() => triggerImport('studies')} className="bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300 px-4 py-2 rounded-lg shadow-sm font-bold text-xs uppercase transition-colors">Importar CSV</button>}
                 {hasPermission('create_studies') && <button onClick={() => navigate('Studies', { mode: 'edit' })} className="bg-[#007b63] text-white px-4 py-2 rounded-lg shadow-md font-bold text-xs uppercase">+ Novo</button>}
               </div>
             </div>
@@ -806,7 +764,6 @@ export default function App() {
                <div className="flex justify-between items-center border-b border-gray-200 pb-4">
                  <h2 className="text-xl font-black text-[#007b63] uppercase tracking-tighter">Participantes</h2>
                  <div className="flex gap-2">
-                   {hasPermission('create_participants') && <button onClick={() => triggerImport('participants')} className="bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300 px-4 py-2 rounded-lg shadow-sm font-bold text-xs uppercase transition-colors">Importar CSV</button>}
                    {hasPermission('create_participants') && <button onClick={() => navigate('Participants', { mode: 'edit' })} className="bg-[#007b63] text-white px-4 py-2 rounded-lg shadow-md font-bold text-xs uppercase">+ Novo</button>}
                  </div>
                </div>
@@ -1031,13 +988,6 @@ export default function App() {
             />
           )}
           <ValidationModal />
-          <input 
-            type="file" 
-            accept=".csv"
-            ref={fileInputRef} 
-            className="hidden" 
-            onChange={handleFileChange} 
-          />
         </Layout>
       </NavigationContext.Provider>
     </GoogleOAuthProvider>

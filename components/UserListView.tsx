@@ -82,7 +82,6 @@ export const UserListView: React.FC<UserListViewProps> = ({ onEditUser, onAddUse
                    <th className="px-6 py-3">Nome</th>
                    <th className="px-6 py-3">Login</th>
                    <th className="px-6 py-3">Função</th>
-                   <th className="px-6 py-3">Perfil</th>
                    <th className="px-6 py-3">Status</th>
                    <th className="px-6 py-3 text-right">Ação</th>
                  </tr>
@@ -98,11 +97,6 @@ export const UserListView: React.FC<UserListViewProps> = ({ onEditUser, onAddUse
                      <td className="px-6 py-1 font-bold text-gray-800 group-hover:text-[#007b63] transition-colors">{user.name}</td>
                      <td className="px-6 py-1 text-gray-600">{user.login}</td>
                      <td className="px-6 py-1 text-gray-600">{user.jobTitle}</td>
-                     <td className="px-6 py-1">
-                       <span className="bg-[#d1e7e4] text-[#007b63] px-2 py-0.5 rounded text-[10px] font-bold uppercase border border-[#007b63]/20">
-                         {getProfileLabel(user.profile)}
-                       </span>
-                     </td>
                      <td className="px-6 py-1">
                         <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${user.active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                           {user.active ? 'Ativo' : 'Inativo'}

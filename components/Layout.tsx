@@ -75,12 +75,13 @@ export const Layout: React.FC<LayoutProps> = ({ onNavigate, onLogout, onSwitchPr
           label: 'Configurações', 
           children: [
             { label: 'Geral', view: 'Settings', permission: 'access_settings' },
+            { label: 'Importação .CSV', view: 'ImportCsv', permission: 'access_import_csv' },
             { 
               label: 'Perfil de Usuário', 
               children: [
-                { label: 'Relação de Perfis', view: 'ManageRoles', permission: 'access_manage_roles' },
+                { label: 'Perfis', view: 'ManageRoles', permission: 'access_manage_roles' },
                 { label: 'Relação de Usuário', view: 'UserList', permission: 'manage_users' },
-                { label: 'Alterar Senha', action: 'openChangePassword' },
+                { label: 'Alterar Senha', action: 'openChangePassword', permission: 'access_change_password' },
               ]
             }
           ]
@@ -99,12 +100,6 @@ export const Layout: React.FC<LayoutProps> = ({ onNavigate, onLogout, onSwitchPr
         { label: 'Calibrações', view: 'Calibrations', permission: 'access_calibrations' },
         { label: 'Equipe', view: 'PI', permission: 'access_team' },
         { label: 'Estudos', view: 'Studies', permission: 'access_studies' },
-        { 
-          label: 'Índices', 
-          children: [
-            { label: 'Regulatórios', view: 'RegulatoryIndices', permission: 'access_indices' }
-          ]
-        },
         { label: 'Monitor', view: 'MonitoriaData', permission: 'access_monitoria' },
         { label: 'Participantes', view: 'Participants', permission: 'access_participants' },
         { label: 'Patrocinador', view: 'Sponsors', permission: 'access_sponsors' },
@@ -165,6 +160,7 @@ export const Layout: React.FC<LayoutProps> = ({ onNavigate, onLogout, onSwitchPr
         { 
           label: 'Regulatório',
           children: [
+            { label: 'Índices', view: 'RegulatoryIndices', permission: 'access_indices' },
             { label: 'Relatórios Parciais', view: 'RegulatoryPartialReport', permission: 'access_regulatory_partial_report' },
             { label: 'Reunião CEP', view: 'CEPMeeting', permission: 'access_cep_meeting' },
           ] 

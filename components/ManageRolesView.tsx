@@ -23,6 +23,7 @@ const AVAILABLE_PERMISSIONS: Permission[] = [
   { id: 'edit_agenda', name: 'Acesso ao botão "+NOVO EVENTO"', description: 'Permite criar novos eventos na Agenda.', category: 'Início', subcategory: 'Agenda', dependsOn: 'access_agenda' },
   
   { id: 'access_settings', name: 'Acesso à Configurações', description: 'Permite acessar as configurações do sistema.', category: 'Início', subcategory: 'Configuração' },
+  { id: 'access_import_csv', name: 'Acesso à Importação .CSV', description: 'Permite acessar e importar arquivos .CSV.', category: 'Início', subcategory: 'Configuração' },
   
   { id: 'access_dashboard', name: 'Acesso ao Dashboard', description: 'Permite visualizar o Dashboard.', category: 'Início', subcategory: 'Dashboard' },
   { id: 'access_notepad', name: 'Acesso ao Bloco de Notas', description: 'Permite acessar o Bloco de Notas.', category: 'Início', subcategory: 'Bloco de notas' },
@@ -32,6 +33,7 @@ const AVAILABLE_PERMISSIONS: Permission[] = [
   { id: 'access_manage_roles', name: 'Acesso à Relação de Perfis', description: 'O perfil que tiver esta caixa de seleção marcada, terá acesso e verá o menu Relação de Perfis.', category: 'Perfil de Usuário', subcategory: 'Perfil' },
   { id: 'manage_permissions', name: 'Gerenciamento de Permissões', description: 'Pode atribuir e restringir permissões os perfis.', category: 'Perfil de Usuário', subcategory: 'Perfil' },
   { id: 'manage_users', name: 'Gerenciar Usuários', description: 'Pode cadastrar novos usuarios no sistema.', category: 'Perfil de Usuário', subcategory: 'Perfil' },
+  { id: 'access_change_password', name: 'Acesso à Alterar Senha', description: 'Permite acessar o menu Alterar Senha.', category: 'Perfil de Usuário', subcategory: 'Perfil' },
 
   // DADOS
   { id: 'access_calibrations', name: 'Acesso à Calibrações', description: 'Permite visualizar as calibrações.', category: 'Dados', subcategory: 'Calibrações' },
@@ -123,8 +125,8 @@ export const ManageRolesView: React.FC<ManageRolesViewProps> = ({ onShowSuccess,
       id: `doc_notify_${d.name}`,
       name: d.name,
       description: `Notifica ao aprovar o documento ${d.name} na Reunião CEP.`,
-      category: 'Documentos Emenda',
-      subcategory: 'Documentos'
+      category: 'Avisos',
+      subcategory: 'Documentos CEP'
     }));
     setDynamicPermissions(dynamicPerms);
   };
