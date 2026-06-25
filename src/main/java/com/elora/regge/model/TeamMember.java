@@ -19,16 +19,18 @@ public class TeamMember {
     private String id;
 
     private Boolean active;
-    private String email; 
-    private String institutionalEmail;
-    private String systemLogin;
-    private String systemPassword;
     private String sex;
     private String name;
     private String role;
-    private String email; // Keeping for DB backward compat if needed, or remove if safe  
+    
+    private String email; 
     private String institutionalEmail;
     private String personalEmail;
+    
+    // Atributos inseridos para sincronizar com o CsvImportService
+    private String systemLogin;
+    private String systemPassword;
+    
     private String cvLattes;
     private String profile;
     private String phone;
