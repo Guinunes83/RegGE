@@ -26,8 +26,6 @@ public class TeamMember {
     private String institutionalEmail;
     private String personalEmail;
     private String cvLattes;
-    private String systemLogin;
-    private String systemPassword;
     private String profile;
     private String phone;
     private String cellphone;

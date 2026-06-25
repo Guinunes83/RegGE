@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { User, UserProfile } from '../types';
+import { User, UserProfile, TeamMember } from '../types';
 import { db } from '../database';
 import { DROPDOWN_OPTIONS } from '../constants';
 
@@ -116,17 +116,55 @@ export const CreateProfileView: React.FC<CreateProfileViewProps> = ({ onCancel, 
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+
   const [customRoles, setCustomRoles] = useState<string[]>([]);
   const [showAddRoleModal, setShowAddRoleModal] = useState(false);
   const [newRole, setNewRole] = useState('');
 
   useEffect(() => {
-    const loadCustomRoles = async () => {
+    const loadData = async () => {
       const roles = await db.getAll<{id: string, name: string}>('customRoles');
       setCustomRoles(roles.map(r => r.name));
+
+      const members = await db.getAll<TeamMember>('team-members');
+      setTeamMembers(members);
     };
-    loadCustomRoles();
+    loadData();
   }, []);
+
+  const [manuallyEditedLogin, setManuallyEditedLogin] = useState(!!userToEdit?.login);
+
+  const generateLogin = (name: string) => {
+    if (!name) return '';
+    const cleanName = name.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9\s]/g, "");
+    const parts = cleanName.split(/\s+/);
+    if (parts.length === 0 || !parts[0]) return '';
+    if (parts.length === 1) return parts[0].toLowerCase();
+    return `${parts[0]}.${parts[parts.length - 1]}`.toLowerCase();
+  };
+
+  const handleNameSelect = (name: string) => {
+    const member = teamMembers.find(tm => tm.name === name);
+    const newLogin = generateLogin(name);
+
+    if (member) {
+      setFormData(prev => ({
+        ...prev,
+        name: member.name,
+        contact: member.cellphone || member.phone || prev.contact,
+        jobTitle: member.role || prev.jobTitle,
+        cpf: member.cpf || prev.cpf,
+        login: manuallyEditedLogin ? prev.login : newLogin,
+      }));
+    } else {
+      setFormData(prev => ({ 
+        ...prev, 
+        name, 
+        login: manuallyEditedLogin ? prev.login : newLogin 
+      }));
+    }
+  };
 
   const handleAddCustomRole = async () => {
     if (newRole.trim()) {
@@ -208,6 +246,7 @@ export const CreateProfileView: React.FC<CreateProfileViewProps> = ({ onCancel, 
           active: true
         });
         setConfirmPassword('');
+        setManuallyEditedLogin(false);
     }
 
     if(onSave) setTimeout(onSave, 1000);
@@ -283,8 +322,9 @@ export const CreateProfileView: React.FC<CreateProfileViewProps> = ({ onCancel, 
               <ProfileInput 
                 label="Nome Completo" 
                 value={formData.name || ''} 
-                onChange={(v: string) => setFormData({...formData, name: v})} 
-                placeholder="Ex: João da Silva"
+                onChange={handleNameSelect} 
+                placeholder="Selecione um membro"
+                options={teamMembers.map(tm => tm.name)}
                 required 
               />
             </div>
@@ -293,7 +333,10 @@ export const CreateProfileView: React.FC<CreateProfileViewProps> = ({ onCancel, 
               <ProfileInput 
                 label="Login de Usuário" 
                 value={formData.login || ''} 
-                onChange={(v: string) => setFormData({...formData, login: v})} 
+                onChange={(v: string) => {
+                  setManuallyEditedLogin(true);
+                  setFormData({...formData, login: v});
+                }} 
                 placeholder="usuario.sobrenome"
                 required 
               />

@@ -525,22 +525,6 @@ export const TeamForm: React.FC<TeamFormProps> = ({ member, mode, onSave, onCanc
               isView={isView} 
             />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
-            {/* Linha 4 (Acesso a Plataformas) */}
-            <TeamInput 
-              label="Login Plataformas" 
-              value={formData.systemLogin} 
-              onChange={(v: string) => handleFieldChange('systemLogin', v)} 
-              isView={isView} 
-            />
-            <TeamInput 
-              label="Senha Plataformas" 
-              value={formData.systemPassword} 
-              onChange={(v: string) => handleFieldChange('systemPassword', v)} 
-              type="text"
-              isView={isView} 
-            />
-          </div>
         </section>
 
         <section>

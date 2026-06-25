@@ -188,9 +188,8 @@ export const ParticipantForm: React.FC<ParticipantFormProps> = ({ patient, studi
 
   const currentStudyName = studies.find(s => s.id === formData.studyId)?.name;
   
-  // Filter only active studies for selection
+  // Map all studies for selection
   const studyOptions = studies
-    .filter(s => s.active !== false)
     .map(s => ({ id: s.id, name: s.name }));
 
   const calculateBMI = (weight: string, height: string) => {

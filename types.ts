@@ -126,8 +126,6 @@ export type PIEntry = {
   platforms: PlatformAccess[];
   systemAccess?: boolean;
   profiles?: UserProfile[];
-  systemLogin?: string;
-  systemPassword?: string;
   studyRoles?: { studyId: string; role: string }[];
 };
 
@@ -154,8 +152,6 @@ export type TeamMember = {
   profile: UserProfile;
   profiles?: UserProfile[]; // Múltiplos perfis
   systemAccess?: boolean; // Se tem acesso ao sistema
-  systemLogin?: string;
-  systemPassword?: string;
   phone: string;
   cellphone: string;
   birthDate: string;
