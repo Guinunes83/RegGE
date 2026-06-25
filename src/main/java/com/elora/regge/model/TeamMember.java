@@ -19,6 +19,10 @@ public class TeamMember {
     private String id;
 
     private Boolean active;
+    private String email; 
+    private String institutionalEmail;
+    private String systemLogin;
+    private String systemPassword;
     private String sex;
     private String name;
     private String role;
