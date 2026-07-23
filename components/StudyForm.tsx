@@ -35,7 +35,9 @@ const StudyInput = ({
   options, 
   isForcedDropdown = false,
   span,
-  onAdd // Prop para função de adicionar novo item
+  onAdd, // Prop para função de adicionar novo item
+  isTextArea = false,
+  isBulletList = false
 }: any) => {
   const formatDate = (dateString?: string) => {
     if (!dateString) return '';
@@ -64,6 +66,37 @@ const StudyInput = ({
             {[...(options || [])].sort((a: string, b: string) => a.localeCompare(b)).map((o: string) => <option key={o} value={o}>{o}</option>)}
           </select>
         ) : (
+          isTextArea ? (
+            <textarea
+              readOnly={isView}
+              rows={3}
+              className={`border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-[#007b63] outline-none transition-all flex-1 w-full resize-y overflow-y-auto ${isView ? 'bg-gray-100 cursor-text text-gray-800 font-medium' : 'bg-white'}`}
+              value={displayValue || ''}
+              onChange={(e) => onChange(e.target.value)}
+              onKeyDown={(e) => {
+                if (isBulletList && e.key === 'Enter') {
+                  e.preventDefault();
+                  const target = e.target;
+                  const start = target.selectionStart;
+                  const end = target.selectionEnd;
+                  const value = target.value;
+                  const newValue = value.substring(0, start) + '\n• ' + value.substring(end);
+                  onChange(newValue);
+                  
+                  // Need to move cursor after bullet in next tick
+                  setTimeout(() => {
+                    target.selectionStart = target.selectionEnd = start + 3;
+                  }, 0);
+                }
+              }}
+              onFocus={(e) => {
+                if (isBulletList && !e.target.value) {
+                  onChange('• ');
+                }
+              }}
+              placeholder={isView ? '' : `Digite ${label.toLowerCase()}...`}
+            />
+          ) : (
           <input 
             type={isView ? (type === 'password' || type === 'date' ? 'text' : type) : type}
             readOnly={isView}
@@ -72,6 +105,7 @@ const StudyInput = ({
             onChange={(e) => onChange(e.target.value)}
             placeholder={isView ? '' : `Digite ${label.toLowerCase()}...`}
           />
+          )
         )}
         {!isView && onAdd && (
           <button 
@@ -510,7 +544,7 @@ export const StudyForm: React.FC<StudyFormProps> = ({ study, mode, onSave, onCan
             <StudyInput label="C.A.A.E" value={formData.caae} onChange={(v: string) => handleChange('caae', v)} isView={isView} />
             <StudyInput label="Nº Centro" value={formData.centerNumber} onChange={(v: string) => handleChange('centerNumber', v)} isView={isView} />
             <div className="md:col-span-2">
-              <StudyInput label="Obs.:" value={formData.regulatoryObs} onChange={(v: string) => handleChange('regulatoryObs', v)} isView={isView} />
+              <StudyInput label="Observação (Caso o estudo possua alguma necessidade especial relevante)" value={formData.regulatoryObs} onChange={(v: string) => handleChange('regulatoryObs', v)} isView={isView} isTextArea={true} isBulletList={true} />
             </div>
           </div>
         </section>

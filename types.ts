@@ -36,6 +36,7 @@ export type ViewState =
   | 'UserList'
   | 'Exit'
   | 'Settings'
+  | 'ImportCsv'
   | 'Studies' 
   | 'PI'
   | 'Sponsors'
@@ -111,7 +112,7 @@ export type NoteItem = {
 export type PIEntry = {
   id: string;
   name: string;
-  email: string; // Novo campo adicionado
+  email?: string; // Novo campo adicionado
   sex: 'M' | 'F'; 
   role: string;
   phone: string;
@@ -176,17 +177,16 @@ export type TeamMember = {
 export type Patient = {
   id: string;
   participantNumber: string;
-  screeningNumber?: string; // Novo campo
+  screeningNumber?: string;
+  prontuario?: string;
   name: string;
-  email?: string; // Novo campo
   birthDate: string;
-  sex?: 'M' | 'F'; // Novo campo Sexo
+  sex?: 'M' | 'F';
   studyId: string;
   treatment?: string;
   randomization?: string;
   status: string;
   observations?: string;
-  initials?: string;
   contact?: string;
   secondaryContact?: string;
   tcleDate?: string;
@@ -227,7 +227,7 @@ export type MonitorEntry = {
   name: string;
   role: string;
   contact: string;
-  email: string;
+  email?: string;
   cro: string;
   studyId?: string;
   studyIds?: string[];

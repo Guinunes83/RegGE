@@ -241,9 +241,9 @@ export const MOCK_TEAM: TeamMember[] = [
 
 // PIs para Dropdown (sincronizado com o Oncologista do time e mais 2)
 export const MOCK_PIS: PIEntry[] = [
-  { id: 'pi1', name: 'Fernando Mendes', email: 'fernando.mendes@elora.com', sex: 'M', role: 'Oncologista', phone: '(11) 3000-1000', cellphone: '(11) 99999-1000', birthDate: '1975-03-15', cpf: '111.222.333-00', crm: '90909', rqe: '1234', license: 'CRM-SP 90909', cvDate: '2023-01-10', gcpDate: '2023-02-15', platforms: [] },
-  { id: 'pi2', name: 'Mariana Rocha', email: 'mariana.rocha@elora.com', sex: 'F', role: 'Oncologista', phone: '(11) 3000-4000', cellphone: '(11) 96666-4000', birthDate: '1980-08-12', cpf: '444.555.666-33', crm: '80808', rqe: '5678', license: 'CRM-SP 80808', cvDate: '2023-06-01', gcpDate: '2023-06-10', platforms: [] },
-  { id: 'pi3', name: 'Roberto Alencar', email: 'roberto.alencar@elora.com', sex: 'M', role: 'Hematologista', phone: '(11) 3000-5000', cellphone: '(11) 95555-5000', birthDate: '1972-12-25', cpf: '555.666.777-44', crm: '70707', rqe: '9012', license: 'CRM-SP 70707', cvDate: '2023-07-20', gcpDate: '2023-08-01', platforms: [] }
+  { id: 'pi1', name: 'Fernando Mendes', sex: 'M', role: 'Oncologista', phone: '(11) 3000-1000', cellphone: '(11) 99999-1000', birthDate: '1975-03-15', cpf: '111.222.333-00', crm: '90909', rqe: '1234', license: 'CRM-SP 90909', cvDate: '2023-01-10', gcpDate: '2023-02-15', platforms: [] },
+  { id: 'pi2', name: 'Mariana Rocha', sex: 'F', role: 'Oncologista', phone: '(11) 3000-4000', cellphone: '(11) 96666-4000', birthDate: '1980-08-12', cpf: '444.555.666-33', crm: '80808', rqe: '5678', license: 'CRM-SP 80808', cvDate: '2023-06-01', gcpDate: '2023-06-10', platforms: [] },
+  { id: 'pi3', name: 'Roberto Alencar', sex: 'M', role: 'Hematologista', phone: '(11) 3000-5000', cellphone: '(11) 95555-5000', birthDate: '1972-12-25', cpf: '555.666.777-44', crm: '70707', rqe: '9012', license: 'CRM-SP 70707', cvDate: '2023-07-20', gcpDate: '2023-08-01', platforms: [] }
 ];
 
 // 3 Estudos (ACRUE, AMPLITUDE, EMERALD-2)
@@ -270,16 +270,16 @@ export const MOCK_STUDIES: Study[] = [
 
 // 3 Monitores (Viculados aos estudos)
 export const MOCK_AVAILABLE_MONITORS: MonitorEntry[] = [
-  { id: 'm1', name: 'Pedro Alves', role: 'CRA', contact: '(11) 91111-1111', email: 'pedro@iqvia.com', cro: 'IQVIA', studyId: 's1', logins: [] },
-  { id: 'm2', name: 'Sofia Martins', role: 'Lead CRA', contact: '(21) 92222-2222', email: 'sofia@ppd.com', cro: 'PPD', studyId: 's2', logins: [] },
-  { id: 'm3', name: 'Marcos Vinicius', role: 'SMA', contact: '(31) 93333-3333', email: 'marcos@icon.com', cro: 'Icon', studyId: 's3', logins: [] }
+  { id: 'm1', name: 'Pedro Alves', role: 'CRA', contact: '(11) 91111-1111', cro: 'IQVIA', studyId: 's1', logins: [] },
+  { id: 'm2', name: 'Sofia Martins', role: 'Lead CRA', contact: '(21) 92222-2222', cro: 'PPD', studyId: 's2', logins: [] },
+  { id: 'm3', name: 'Marcos Vinicius', role: 'SMA', contact: '(31) 93333-3333', cro: 'Icon', studyId: 's3', logins: [] }
 ];
 
 // 3 Participantes
 export const MOCK_PATIENTS: Patient[] = [
-  { id: 'p1', participantNumber: '001-001', screeningNumber: 'SCR-01', name: 'João Silva', birthDate: '1960-05-10', studyId: 's1', status: 'Ativo', treatment: 'Droga A', randomization: 'RND-100', email: 'joao@email.com', contact: '(11) 90000-0001' },
-  { id: 'p2', participantNumber: '002-005', screeningNumber: 'SCR-05', name: 'Maria Souza', birthDate: '1975-11-20', studyId: 's2', status: 'Screening', treatment: 'Placebo', randomization: '', email: 'maria@email.com', contact: '(11) 90000-0002' },
-  { id: 'p3', participantNumber: '003-010', screeningNumber: 'SCR-10', name: 'Carlos Pereira', birthDate: '1955-02-28', studyId: 's3', status: 'Concluiu', treatment: 'Padrão', randomization: 'RND-500', email: 'carlos@email.com', contact: '(11) 90000-0003' }
+  { id: 'p1', participantNumber: '001-001', screeningNumber: 'SCR-01', name: 'João Silva', birthDate: '1960-05-10', studyId: 's1', status: 'Ativo', treatment: 'Droga A', randomization: 'RND-100', contact: '(11) 90000-0001' },
+  { id: 'p2', participantNumber: '002-005', screeningNumber: 'SCR-05', name: 'Maria Souza', birthDate: '1975-11-20', studyId: 's2', status: 'Screening', treatment: 'Placebo', randomization: '', contact: '(11) 90000-0002' },
+  { id: 'p3', participantNumber: '003-010', screeningNumber: 'SCR-10', name: 'Carlos Pereira', birthDate: '1955-02-28', studyId: 's3', status: 'Concluiu', treatment: 'Padrão', randomization: 'RND-500', contact: '(11) 90000-0003' }
 ];
 
 // 3 Emendas/Reuniões CEP

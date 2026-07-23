@@ -183,21 +183,21 @@ public class CsvImportService {
                 if (data.length < 1) continue;
                 
                 Patient patient = new Patient();
-                patient.setParticipantNumber(safeGet(data, 0));
-                patient.setScreeningNumber(safeGet(data, 1));
-                patient.setName(safeGet(data, 2));
-                patient.setEmail(safeGet(data, 3));
-                patient.setBirthDate(safeGetDate(data, 4));
-                patient.setSex(safeGet(data, 5));
-                patient.setStudyId(safeGet(data, 6));
-                patient.setTreatment(safeGet(data, 7));
-                patient.setRandomization(safeGet(data, 8));
-                patient.setStatus(safeGet(data, 9));
-                patient.setObservations(safeGet(data, 10));
-                patient.setInitials(safeGet(data, 11));
-                patient.setContact(safeGet(data, 12));
-                patient.setSecondaryContact(safeGet(data, 13));
-                patient.setTcleDate(safeGetDate(data, 14));
+                patient.setStudyId(safeGet(data, 0)); // Estudo
+                // patient.setParticipantNumber(safeGet(data, ...)); // Retirado conforme solicitado
+                patient.setScreeningNumber(safeGet(data, 1)); // Número de Triagem
+                patient.setProntuario(safeGet(data, 2)); // Nº Prontuário (antigo ID do Estudo)
+                patient.setName(safeGet(data, 3)); // Nome
+                patient.setCpf(safeGet(data, 4)); // CPF
+                patient.setBirthDate(safeGetDate(data, 5)); // Data de Nascimento
+                patient.setSex(safeGet(data, 6)); // Sexo
+                patient.setTreatment(safeGet(data, 7)); // Tratamento
+                patient.setRandomization(safeGet(data, 8)); // Randomização
+                patient.setStatus(safeGet(data, 9)); // Status
+                patient.setObservations(safeGet(data, 10)); // Observações
+                patient.setContact(safeGet(data, 11)); // Contato
+                patient.setSecondaryContact(safeGet(data, 12)); // Contato Secundário
+                patient.setTcleDate(safeGetDate(data, 13)); // Data TCLE
                 
                 patients.add(patient);
             }

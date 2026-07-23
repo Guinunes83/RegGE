@@ -17,6 +17,13 @@ interface ParticipantFormProps {
   onOpenMonitor?: () => void;
 }
 
+
+const SectionTitle = ({ title }: { title: string }) => (
+  <div className="bg-[#d1e7e4] text-[#007b63] font-bold text-center py-1.5 uppercase tracking-widest text-xs mb-4 border-b border-[#007b63]/20">
+    {title}
+  </div>
+);
+
 const ParticipantInput = ({ 
   label, 
   value, 
@@ -238,151 +245,149 @@ export const ParticipantForm: React.FC<ParticipantFormProps> = ({ patient, studi
         )}
 
         {/* DADOS CADASTRAIS */}
-        <section>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-             {/* Linha 1: -NOME COMPLETO x2, SEXOx1, DATA NASC.x1; */}
-             <ParticipantInput 
-               label="Nome Completo" 
-               value={formData.name} 
-               onChange={(v: string) => setFormData({...formData, name: v})} 
-               isView={isView} 
-               span="md:col-span-2"
-               required
-             />
-             <ParticipantInput 
-               label="Sexo" 
-               value={formData.sex} 
-               onChange={(v: string) => setFormData({...formData, sex: v as 'M' | 'F'})} 
-               options={['M', 'F']}
-               isView={isView}
-               span="md:col-span-1"
-             />
-             <ParticipantInput 
-               label="Data Nasc." 
-               value={formData.birthDate} 
-               onChange={(v: string) => setFormData({...formData, birthDate: v})} 
-               type="date" 
-               isView={isView} 
-               span="md:col-span-1"
-             />
-             
-             {/* Linha 2: -CONTATO PRINCIPALX1, CONTATO SECUNDARIOX1, CPFX1, E-MAILX1; */}
-             <ParticipantInput 
-               label="Contato Principal" 
-               value={formData.contact} 
-               onChange={(v: string) => setFormData({...formData, contact: v})} 
-               isView={isView} 
-               mask="phone"
-               placeholder="(00) 00000-0000"
-               span="md:col-span-1"
-             />
-             <ParticipantInput 
-               label="Contato Secundário" 
-               value={formData.secondaryContact} 
-               onChange={(v: string) => setFormData({...formData, secondaryContact: v})} 
-               isView={isView} 
-               mask="phone"
-               placeholder="(00) 00000-0000"
-               span="md:col-span-1"
-             />
-             <ParticipantInput 
-               label="CPF" 
-               value={formData.cpf} 
-               onChange={(v: string) => setFormData({...formData, cpf: v})} 
-               isView={isView} 
-               mask="cpf"
-               placeholder="000.000.000-00"
-               span="md:col-span-1"
-             />
-             <ParticipantInput 
-               label="E-mail" 
-               value={formData.email} 
-               onChange={(v: string) => setFormData({...formData, email: v})} 
-               isView={isView} 
-               placeholder="exemplo@email.com"
-               span="md:col-span-1"
-             />
-
-             {/* Linha 3: -ESTUDOX1, Nº SCREENINGX1, Nº RAND.X1, Nº NO ESTUDO; */}
-             <ParticipantInput 
-               label="Estudo" 
-               value={formData.studyId} 
-               onChange={(v: string) => setFormData({...formData, studyId: v})} 
-               options={studyOptions} 
-               displayValue={currentStudyName} 
-               isView={isView} 
-               span="md:col-span-1"
-             />
-             <ParticipantInput 
-               label="Nº Screening" 
-               value={formData.screeningNumber} 
-               onChange={(v: string) => setFormData({...formData, screeningNumber: v})} 
-               isView={isView} 
-               span="md:col-span-1"
-             />
-             <ParticipantInput 
-               label="Nº Rand." 
-               value={formData.randomization} 
-               onChange={(v: string) => setFormData({...formData, randomization: v})} 
-               isView={isView}
-               span="md:col-span-1"
-             />
-             <ParticipantInput 
-               label="Nº No Estudo" 
-               value={formData.participantNumber} 
-               onChange={(v: string) => setFormData({...formData, participantNumber: v})} 
-               isView={isView}
-               span="md:col-span-1"
-             />
-
-             {/* Linha 4: -TRATAMENTOX2, STATUSX1, DATA ASSIN. TCLEX1; */}
-             <ParticipantInput 
-               label="Tratamento" 
-               value={formData.treatment} 
-               onChange={(v: string) => setFormData({...formData, treatment: v})} 
-               isView={isView} 
-               span="md:col-span-2"
-             />
-             <ParticipantInput 
-               label="Status" 
-               value={formData.status} 
-               onChange={(v: string) => setFormData({...formData, status: v})} 
-               options={DROPDOWN_OPTIONS.participantStatus} 
-               isView={isView} 
-               span="md:col-span-1"
-             />
-             <ParticipantInput 
-               label="Data Assin. TCLE" 
-               value={formData.tcleDate} 
-               onChange={(v: string) => setFormData({...formData, tcleDate: v})} 
-               type="date" 
-               isView={isView} 
-               span="md:col-span-1"
-             />
-
-             {/* Linha 5: -OBSERVAÇÃOX4; */}
-             <div className="md:col-span-4">
+        <div className="flex flex-col gap-6 w-full">
+          <section>
+            <SectionTitle title="GERAL" />
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+               {/* Linha 1 */}
                <ParticipantInput 
-                 label="Observação" 
-                 value={formData.observations} 
-                 onChange={(v: string) => setFormData({...formData, observations: v})} 
+                 label="Nome Completo" 
+                 value={formData.name} 
+                 onChange={(v: string) => setFormData({...formData, name: v})} 
                  isView={isView} 
-                 isTextArea={true} 
+                 span="md:col-span-2"
+                 required
                />
-             </div>
-          </div>
-        </section>
+               <ParticipantInput 
+                 label="Sexo" 
+                 value={formData.sex} 
+                 onChange={(v: string) => setFormData({...formData, sex: v as 'M' | 'F'})} 
+                 options={['M', 'F']}
+                 isView={isView}
+                 span="md:col-span-1"
+               />
+               <ParticipantInput 
+                 label="Data Nasc." 
+                 value={formData.birthDate} 
+                 onChange={(v: string) => setFormData({...formData, birthDate: v})} 
+                 type="date" 
+                 isView={isView} 
+                 span="md:col-span-1"
+               />
+               
+               {/* Linha 2 */}
+               <ParticipantInput 
+                 label="Contato Principal" 
+                 value={formData.contact} 
+                 onChange={(v: string) => setFormData({...formData, contact: v})} 
+                 isView={isView} 
+                 mask="phone"
+                 placeholder="(00) 00000-0000"
+                 span="md:col-span-1"
+               />
+               <ParticipantInput 
+                 label="Contato Secundário" 
+                 value={formData.secondaryContact} 
+                 onChange={(v: string) => setFormData({...formData, secondaryContact: v})} 
+                 isView={isView} 
+                 mask="phone"
+                 placeholder="(00) 00000-0000"
+                 span="md:col-span-1"
+               />
+               <ParticipantInput 
+                 label="CPF" 
+                 value={formData.cpf} 
+                 onChange={(v: string) => setFormData({...formData, cpf: v})} 
+                 isView={isView} 
+                 mask="cpf"
+                 placeholder="000.000.000-00"
+                 span="md:col-span-1"
+               />
+               <ParticipantInput 
+                 label="Nº Prontuário" 
+                 value={formData.prontuario} 
+                 onChange={(v: string) => setFormData({...formData, prontuario: v})} 
+                 isView={isView} 
+                 span="md:col-span-1"
+               />
+               
+               {/* Linha 3 */}
+               <ParticipantInput 
+                 label="Nº Screening" 
+                 value={formData.screeningNumber} 
+                 onChange={(v: string) => setFormData({...formData, screeningNumber: v})} 
+                 isView={isView} 
+                 span="md:col-span-1"
+               />
+               <ParticipantInput 
+                 label="Nº Rand." 
+                 value={formData.randomization} 
+                 onChange={(v: string) => setFormData({...formData, randomization: v})} 
+                 isView={isView}
+                 span="md:col-span-1"
+               />
+            </div>
+          </section>
+
+          <section>
+            <SectionTitle title="INF. DO ESTUDO" />
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+               {/* Linha 4 */}
+               <ParticipantInput 
+                 label="Estudo" 
+                 value={formData.studyId} 
+                 onChange={(v: string) => setFormData({...formData, studyId: v})} 
+                 options={studyOptions} 
+                 displayValue={currentStudyName} 
+                 isView={isView} 
+                 span="md:col-span-1"
+               />
+               <ParticipantInput 
+                 label="Tratamento" 
+                 value={formData.treatment} 
+                 onChange={(v: string) => setFormData({...formData, treatment: v})} 
+                 isView={isView} 
+                 span="md:col-span-1"
+               />
+               <ParticipantInput 
+                 label="Status" 
+                 value={formData.status} 
+                 onChange={(v: string) => setFormData({...formData, status: v})} 
+                 options={DROPDOWN_OPTIONS.participantStatus} 
+                 isView={isView} 
+                 span="md:col-span-1"
+               />
+               <ParticipantInput 
+                 label="Data Assin. TCLE" 
+                 value={formData.tcleDate} 
+                 onChange={(v: string) => setFormData({...formData, tcleDate: v})} 
+                 type="date" 
+                 isView={isView} 
+                 span="md:col-span-1"
+               />
+
+               {/* Linha 5 */}
+               <div className="md:col-span-4">
+                 <ParticipantInput 
+                   label="Observação" 
+                   value={formData.observations} 
+                   onChange={(v: string) => setFormData({...formData, observations: v})} 
+                   isView={isView} 
+                   isTextArea={true} 
+                 />
+               </div>
+            </div>
+          </section>
+        </div>
 
         {/* HISTÓRICO DE CONSULTAS (APENAS VIEW MODE SE JÁ EXISTIR PACIENTE) */}
         {patient?.id && (
-            <section className="border-t border-gray-200 pt-6">
-                <h3 className="text-[#007b63] font-black uppercase text-xs tracking-widest mb-4 border-b border-[#007b63]/20 pb-2">
-                    Histórico de Consultas & Sinais Vitais
-                </h3>
+            <section>
+                <SectionTitle title="HISTÓRICO DE CONSULTAS & SINAIS VITAIS" />
                 
-                <div className="overflow-hidden border rounded-xl bg-white shadow-sm">
-                    <table className="w-full text-left text-xs">
-                        <thead className="bg-[#007b63] text-white uppercase tracking-tighter">
+                <div className="overflow-x-auto border rounded-lg bg-white shadow-sm">
+                    <table className="w-full text-left text-sm min-w-[650px] whitespace-nowrap">
+                        <thead className="bg-[#007b63] text-white">
                             <tr>
                                 <th className="px-4 py-3 w-8"></th>
                                 <th className="px-4 py-3">Data</th>
@@ -392,7 +397,7 @@ export const ParticipantForm: React.FC<ParticipantFormProps> = ({ patient, studi
                                 <th className="px-4 py-3">Peso (kg)</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100">
+                        <tbody className="divide-y">
                             {consultations.length === 0 ? (
                                 <tr><td colSpan={6} className="px-4 py-6 text-center italic text-gray-400">Nenhuma consulta registrada para este paciente.</td></tr>
                             ) : (

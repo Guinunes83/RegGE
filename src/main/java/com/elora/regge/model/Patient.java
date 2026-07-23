@@ -20,7 +20,8 @@ public class Patient {
     private String participantNumber;
     private String screeningNumber;
     private String name;
-    private String email;
+    private String cpf;
+    private String prontuario;
     private LocalDate birthDate;
     private String sex;
     private String studyId;
@@ -31,7 +32,6 @@ public class Patient {
     @Column(columnDefinition = "TEXT")
     private String observations;
     
-    private String initials;
     private String contact;
     private String secondaryContact;
     private LocalDate tcleDate;
